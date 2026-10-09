@@ -1128,9 +1128,15 @@
   let idleT = 0;
   let resizeTimer = 0;
 
+  let capturing = false;
+
   function frame(now) {
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
+    if (capturing) {
+      requestAnimationFrame(frame);
+      return;
+    }
     if (readMode) {
       idleT += dt;
       fieldDim = lerp(fieldDim, isMobile ? 0.28 : 0.42, 0.05);
@@ -1176,7 +1182,30 @@
   });
   mqMobile.addEventListener('change', measure);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
-  window.__naxa = { seek, get t() { return t; }, TOTAL, scenes, setPlaying, setRead };
+  window.__naxa = {
+    seek,
+    get t() {
+      return t;
+    },
+    TOTAL,
+    scenes,
+    setPlaying,
+    setRead,
+    // Frame-by-frame rendering for recording a video of the film.
+    capture(on) {
+      capturing = on;
+      playing = false;
+      syncButtons();
+      if (on) ctl.classList.remove('paused'); // the video should show the film as playing
+    },
+    step(dt) {
+      t = clamp(t + dt, 0, TOTAL);
+      renderDom(t);
+      fieldDim = lerp(fieldDim, isMobile ? frontScene.dimM : 1, 0.06);
+      drawField(t);
+      updateUI();
+    },
+  };
 
   try {
     start();
