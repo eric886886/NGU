@@ -26,22 +26,53 @@
 
   /* ------------------------------------------------------------------ split headings into words */
 
+  // Wraps every word of an element in its own span, keeping inline tags such as <em>.
+  function splitWords(el, make) {
+    let i = 0;
+    const walk = (node, into) => {
+      Array.from(node.childNodes).forEach((n) => {
+        if (n.nodeType === 3) {
+          n.textContent.split(/(\s+)/).forEach((part) => {
+            if (!part) return;
+            if (/^\s+$/.test(part)) into.appendChild(document.createTextNode(' '));
+            else into.appendChild(make(part, i++));
+          });
+        } else if (n.nodeType === 1) {
+          const c = n.cloneNode(false);
+          into.appendChild(c);
+          walk(n, c);
+        }
+      });
+    };
+    const frag = document.createDocumentFragment();
+    walk(el, frag);
+    el.textContent = '';
+    el.appendChild(frag);
+  }
+
+  const word = (cls, text, at, dur) => {
+    const s = document.createElement('span');
+    s.className = cls;
+    s.textContent = text;
+    s.dataset.at = at.toFixed(3);
+    s.dataset.dur = dur;
+    return s;
+  };
+
+  // Headings: words rise in one after another.
   $$('[data-split]').forEach((el) => {
     const at = parseFloat(el.dataset.at || '0');
     const st = parseFloat(el.dataset.stagger || '0.06');
     const dur = el.dataset.dur || '0.9';
-    const words = el.textContent.trim().split(/\s+/);
-    el.textContent = '';
-    words.forEach((w, i) => {
-      const s = document.createElement('span');
-      s.className = 'm m-word';
-      s.textContent = w;
-      s.dataset.at = (at + i * st).toFixed(3);
-      s.dataset.dur = dur;
-      el.appendChild(s);
-      if (i < words.length - 1) el.appendChild(document.createTextNode(' '));
-    });
+    splitWords(el, (w, i) => word('m m-word', w, at + i * st, dur));
     el.removeAttribute('data-at');
+  });
+
+  // Read-along paragraphs: the paragraph fades in dim, then lights up word by word at reading pace.
+  $$('[data-read]').forEach((el) => {
+    const at = parseFloat(el.dataset.read);
+    const rate = parseFloat(el.dataset.rate || '0.12');
+    splitWords(el, (w, i) => word('rw', w, at + i * rate, '0.35'));
   });
 
   /* ------------------------------------------------------------------ scenes & timeline */
@@ -74,8 +105,11 @@
         dur: num(c.dataset.dur, 0.9),
         out: num(c.dataset.out, null),
         outm: num(c.dataset.outm, null),
+        land: num(c.dataset.land, null),
+        ldur: num(c.dataset.ldur, 1),
         p: -1,
         o: -1,
+        l: -1,
       };
       s.cues.push(cue);
       if (c.dataset.key) (s.keyed[c.dataset.key] = s.keyed[c.dataset.key] || []).push(cue);
@@ -123,12 +157,37 @@
     pathHead: 0,
     cubeBuild: 0,
     cubePulse: 0,
+    roiDim: 1,
     storm: 0,
     flowActive: -1,
   };
 
   const flowNum = $('#flowNum');
   const flowFill = $('#flowFill');
+  const flowWord = $('#flowWord');
+  const flowDesc = $('#flowDesc');
+  const flowSteps = $$('.s-flow .gate').map((g) => ({ name: $('strong', g).textContent, desc: $('.gate-d', g).textContent }));
+  const roiRow = $('#roiRow');
+
+  // Deterministic "decoding" text: unrevealed letters cycle through glyphs, then settle left to right.
+  const GLYPHS = 'abcdefghijklmnopqrstuvwxyz#%&*+=/<>';
+  const hash = (a, b) => {
+    let h = (Math.imul(a + 1, 374761393) + Math.imul(b + 7, 668265263)) | 0;
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+  };
+  const decode = (text, q, tick) => {
+    if (q >= 1) return text;
+    let out = '';
+    for (let j = 0; j < text.length; j++) {
+      const reveal = (j / text.length) * 0.65 + hash(j, 3) * 0.3;
+      out += q >= reveal + 0.05 || text[j] === ' ' ? text[j] : GLYPHS[Math.floor(hash(j, tick) * GLYPHS.length)];
+    }
+    return out;
+  };
+  const setText = (el, v) => {
+    if (el.textContent !== v) el.textContent = v;
+  };
 
   const cueAct = (c, lt, lead = 0, len = 1.3) => easeInOut(clamp((lt - c.at + lead) / len));
 
@@ -139,12 +198,28 @@
         if (lt >= o.on) k = i;
       });
       fx.flowActive = k;
-      const label = '0' + Math.max(1, k + 1);
-      if (flowNum.textContent !== label) flowNum.textContent = label;
+      setText(flowNum, '0' + Math.max(1, k + 1));
       flowFill.style.setProperty('--f', clamp((lt - 2) / 11.9).toFixed(4));
+      if (k < 0) {
+        setText(flowWord, '');
+        setText(flowDesc, '');
+        return;
+      }
+      const q = clamp((lt - s.ons[k].on) / 0.75);
+      setText(flowWord, decode(flowSteps[k].name, q, Math.floor(lt * 22)));
+      setText(flowDesc, flowSteps[k].desc);
+      flowDesc.style.setProperty('--dq', smooth(0.35, 0.95, q).toFixed(3));
     },
     pain(lt, s) {
-      fx.storm = (s.keyed.note || []).reduce((a, c) => a + clamp((lt - c.at) / c.dur), 0) / 6;
+      const notes = s.keyed.note || [];
+      fx.storm = notes.reduce((a, c) => a + clamp((lt - c.at) / c.dur), 0) / 6;
+      // the collage trembles harder as the storm grows
+      const amp = 0.5 + fx.storm * 2.6;
+      notes.forEach((c, i) => {
+        const el = c.inner || (c.inner = $('.pain-in', c.el));
+        el.style.setProperty('--jx', (Math.sin(lt * 13 + i * 1.7) * amp).toFixed(2) + 'px');
+        el.style.setProperty('--jy', (Math.cos(lt * 11.3 + i * 2.3) * amp).toFixed(2) + 'px');
+      });
     },
     solutions(lt, s) {
       (s.keyed.sol || []).forEach((c, i) => (fx.hubAct[i] = cueAct(c, lt, 0.25, 1.4)));
@@ -154,7 +229,18 @@
       fx.riseRev = list.reduce((a, c) => a + cueAct(c, lt, 0.35, 1.2), 0) / Math.max(1, list.length);
     },
     roi(lt, s) {
-      (s.keyed.roi || []).forEach((c, i) => (fx.roiAct[i] = cueAct(c, lt, 0, 1.8)));
+      let spot = false;
+      let spotness = 0;
+      (s.keyed.roi || []).forEach((c, i) => {
+        fx.roiAct[i] = easeInOut(clamp((lt - c.land) / c.ldur));
+        spotness = Math.max(spotness, smooth(c.at, c.at + 0.4, lt) * (1 - smooth(c.land, c.land + c.ldur * 0.6, lt)));
+        const on = lt >= c.at && lt < c.land + c.ldur * 0.6;
+        spot = spot || on;
+        const item = c.item || (c.item = c.el.closest('.roi-item'));
+        if (item.classList.contains('in-spot') !== on) item.classList.toggle('in-spot', on);
+      });
+      if (roiRow.classList.contains('spot') !== spot) roiRow.classList.toggle('spot', spot);
+      fx.roiDim = 1 - 0.75 * spotness;
     },
     founders(lt, s) {
       const marks = [...(s.keyed.step || []), ...(s.keyed.cta || [])];
@@ -194,6 +280,7 @@
       const o = outT != null ? easeInOut(clamp((lt - outT) / 0.6)) : 0;
       setVar(c.el, '--p', p, c, 'p');
       setVar(c.el, '--o', o, c, 'o');
+      if (c.land != null) setVar(c.el, '--land', easeInOut(clamp((lt - c.land) / c.ldur)), c, 'l');
     }
     for (const o of s.ons) {
       const st = lt >= o.off ? 'done' : lt >= o.on ? 'on' : '';
@@ -325,6 +412,7 @@
     calm: { x: 0, y: 0, r: 1 },
     core: { x: 0, y: 0, r: 1 },
     sol: [],
+    orbit: null,
     rise: null,
     roi: [],
     roiTop: 0,
@@ -466,8 +554,8 @@
       const a = R1[i] * TAU + t * w;
       o.x = c.x + Math.cos(a) * r * 1.3 + Math.sin(t * 6.3 + R4[i] * 40) * 3.5 * lvl;
       o.y = c.y + Math.sin(a) * r * 0.9 + Math.cos(t * 5.1 + R5[i] * 40) * 3.5 * lvl;
-      o.a = 0.4 + 0.45 * R5[i];
-      o.s = 1;
+      o.a = 0.22 + 0.3 * R5[i];
+      o.s = 0.9;
       o.h = R4[i] < 0.12 + fx.storm * 0.16 ? 1 : 0;
     },
 
@@ -488,6 +576,15 @@
       const k = i % 7;
       o.h = 0;
       if (!k || !sats[k - 1]) {
+        if (L.orbit && R2[i] < 0.55) {
+          // the lower half of the orbit the agents sit on
+          const oa = ((R1[i] + t * 0.012) % 1) * Math.PI;
+          o.x = L.orbit.x + Math.cos(oa) * L.orbit.rx;
+          o.y = L.orbit.y + Math.sin(oa) * L.orbit.ry + (R3[i] - 0.5) * 3;
+          o.a = 0.32;
+          o.s = 0.7;
+          return;
+        }
         // the core: a small, dense sphere
         const ca = R1[i] * TAU + t * 0.6;
         const cr = core.r * Math.sqrt(R3[i]);
@@ -515,11 +612,11 @@
         o.s = 0.75;
       } else {
         const sa = R1[i] * TAU + t * 1.1;
-        const sr = 6 + R3[i] * 16;
+        const sr = 3 + R3[i] * 9;
         o.x = lerp(rx, sat.x + Math.cos(sa) * sr, act);
         o.y = lerp(ry, sat.y + Math.sin(sa) * sr, act);
-        o.a = lerp(0.3, 0.6, act);
-        o.s = 0.9;
+        o.a = lerp(0.3, 0.42, act);
+        o.s = 0.8;
       }
     },
 
@@ -575,8 +672,8 @@
       const spread = c.w * 0.4 * (1 - u * 0.5);
       o.x = c.x + (R2[i] - 0.5) * 2 * spread + Math.sin(t + R5[i] * 9) * 2;
       o.y = c.base - u * h;
-      o.a = (0.2 + 0.65 * (1 - u)) * act;
-      o.s = 0.9;
+      o.a = (0.15 + 0.5 * (1 - u)) * act * fx.roiDim;
+      o.s = 0.85;
     },
 
     path(i, t, o) {
@@ -599,8 +696,8 @@
         const r = 3 + R3[i] * R3[i] * 20;
         o.x = PRE.px + Math.cos(a) * r;
         o.y = PRE.py + Math.sin(a) * r;
-        o.a = 0.7;
-        o.s = 1;
+        o.a = 0.42;
+        o.s = 0.9;
       }
     },
 
@@ -796,25 +893,16 @@
     const [core] = anchors('core');
     if (core) L.core = { x: core.x, y: core.y, r: isMobile ? 10 : 30 };
     L.sol = anchors('sol');
+    const [orbit] = anchors('orbit');
+    L.orbit = orbit && core && !isMobile ? { x: core.x, y: core.y, rx: orbit.w * 0.46, ry: orbit.h * 0.52 } : null;
 
     const outs = anchors('out');
-    const oneRow = outs.length === 6 && Math.abs(outs[5].y - outs[0].y) < outs[0].h * 0.6;
-    if (oneRow && !isMobile) {
-      // tiles climb like a staircase: the line runs over their tops
-      const ctrl = [{ x: outs[0].l - 70, y: outs[0].t + 50 }];
-      outs.forEach((r) => ctrl.push({ x: r.x, y: r.t - 26 }));
-      ctrl.push({ x: Math.min(W - 24, outs[5].r + 40), y: outs[5].t - 96 });
+    if (outs.length === 6 && !isMobile) {
+      // the growth line runs through every outcome's dot and ends in an arrow
+      const ctrl = [{ x: outs[0].x - 80, y: outs[0].y + 50 }];
+      outs.forEach((r) => ctrl.push({ x: r.x, y: r.y }));
+      ctrl.push({ x: Math.min(W - 24, outs[5].x + 70), y: outs[5].y - 46 });
       L.rise = spline(ctrl);
-    } else if (outs.length === 6 && !isMobile) {
-      // tiles in several rows: one diagonal sweep across the grid
-      const l = Math.min(...outs.map((r) => r.l)), r = Math.max(...outs.map((q) => q.r));
-      const top = Math.min(...outs.map((q) => q.t)), bot = Math.max(...outs.map((q) => q.b));
-      L.rise = spline([
-        { x: l - 40, y: bot - 10 },
-        { x: lerp(l, r, 0.35), y: lerp(bot, top, 0.45) },
-        { x: lerp(l, r, 0.7), y: lerp(bot, top, 0.8) },
-        { x: Math.min(W - 24, r + 20), y: top - 60 },
-      ]);
     } else {
       L.rise = spline([
         { x: W * 0.02, y: H * 0.86 },
@@ -826,14 +914,29 @@
     }
 
     L.roi = anchors('roi').map((r, k) => {
-      const base = r.b - 12;
-      return { x: r.x, w: r.w, base, ph: (r.h + (isMobile ? 6 : 46)) * [0.72, 1, 0.86][k] };
+      const base = r.b + 8;
+      return { x: r.x, w: r.w * 0.95, base, ph: (r.h + (isMobile ? 20 : 70)) * [0.75, 1, 0.85][k] };
     });
+    // keynote numbers: offset from their seat to centre stage, in the wrap's own (unscaled) pixels
+    const row = $('#roiRow');
+    if (row) {
+      const rr = row.getBoundingClientRect();
+      const fit = parseFloat($('.s-roi .wrap').style.getPropertyValue('--fit')) || 1;
+      $$('.fly').forEach((el) => {
+        const r = rectOf(el);
+        const sx = W / 2, sy = isMobile ? rr.top + 70 : rr.top + rr.height * 0.42;
+        const fs = isMobile ? Math.min(1.6, (W * 0.8) / r.w) : Math.min(2.1, (W * 0.6) / r.w);
+        el.style.setProperty('--dx', ((sx - r.x) / fit).toFixed(1) + 'px');
+        el.style.setProperty('--dy', ((sy - r.y) / fit).toFixed(1) + 'px');
+        el.style.setProperty('--fs', fs.toFixed(3));
+      });
+    }
 
     const steps = anchors('step');
     const [end] = anchors('pathEnd');
+    const [journey] = anchors('journey');
     if (steps.length === 3 && end) {
-      const p0 = isMobile ? { x: W * 0.5, y: H - L.ctl - 50 } : { x: steps[0].x - 120, y: steps[0].y - 34 };
+      const p0 = isMobile || !journey ? { x: W * 0.5, y: H - L.ctl - 50 } : { x: journey.l - 30, y: journey.b + 10 };
       const ctrl = [p0, ...steps.map((r) => ({ x: r.x, y: r.y })), { x: end.x, y: end.y }];
       L.path = spline(ctrl);
       L.pathMs = L.path.ms;
