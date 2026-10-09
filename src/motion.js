@@ -24,16 +24,44 @@
 
   doc.classList.remove('no-js');
 
+  const ZH = (doc.lang || '').toLowerCase().startsWith('zh');
+  const UI = ZH
+    ? { play: '播放', pause: '暂停', replay: '重新播放', read: '按页面阅读', film: '按短片播放' }
+    : { play: 'Play', pause: 'Pause', replay: 'Replay', read: 'Read as page', film: 'Play as film' };
+
   /* ------------------------------------------------------------------ split headings into words */
 
   // Wraps every word of an element in its own span, keeping inline tags such as <em>.
+  // Latin text splits into words; Chinese into single characters, each keeping the punctuation that follows it.
+  const TOKENS = /\s+|[\u2e80-\u2fff\u3040-\u9fff\uf900-\ufaff][\u3000-\u303f\uff00-\uffef]*|[\u3000-\u303f\uff00-\uffef]+|[^\s\u2e80-\u2fff\u3000-\u9fff\uf900-\ufaff\uff00-\uffef]+[\u3000-\u303f\uff00-\uffef]*/g;
+
+  const HAS_CJK = /[\u2e80-\u2fff\u3040-\u9fff\uf900-\ufaff]/;
+  const SEG = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter('zh', { granularity: 'word' }) : null;
+
   function splitWords(el, make) {
     let i = 0;
     const walk = (node, into) => {
       Array.from(node.childNodes).forEach((n) => {
-        if (n.nodeType === 3) {
-          n.textContent.split(/(\s+)/).forEach((part) => {
-            if (!part) return;
+        if (n.nodeType === 3 && SEG && HAS_CJK.test(n.textContent)) {
+          // Chinese: characters animate one by one, but each word is kept on one line (no breaks inside 销售, 行政 …)
+          let group = null;
+          for (const { segment, isWordLike } of SEG.segment(n.textContent)) {
+            if (/^\s+$/.test(segment)) {
+              into.appendChild(document.createTextNode(' '));
+              group = null;
+              continue;
+            }
+            if (!isWordLike && group) {
+              (segment.match(TOKENS) || [segment]).forEach((part) => group.appendChild(make(part, i++)));
+              continue;
+            }
+            group = document.createElement('span');
+            group.className = 'wg';
+            into.appendChild(group);
+            (segment.match(TOKENS) || [segment]).forEach((part) => group.appendChild(make(part, i++)));
+          }
+        } else if (n.nodeType === 3) {
+          (n.textContent.match(TOKENS) || []).forEach((part) => {
             if (/^\s+$/.test(part)) into.appendChild(document.createTextNode(' '));
             else into.appendChild(make(part, i++));
           });
@@ -71,7 +99,7 @@
   // Read-along paragraphs: the paragraph fades in dim, then lights up word by word at reading pace.
   $$('[data-read]').forEach((el) => {
     const at = parseFloat(el.dataset.read);
-    const rate = parseFloat(el.dataset.rate || '0.12');
+    const rate = parseFloat(el.dataset.rate || (ZH ? '0.065' : '0.12'));
     splitWords(el, (w, i) => word('rw', w, at + i * rate, '0.35'));
   });
 
@@ -170,7 +198,7 @@
   const roiRow = $('#roiRow');
 
   // Deterministic "decoding" text: unrevealed letters cycle through glyphs, then settle left to right.
-  const GLYPHS = 'abcdefghijklmnopqrstuvwxyz#%&*+=/<>';
+  const GLYPHS = ZH ? '数据系统流程智能执行优化整理构建捕捉想法行动客户销售回复跟进营销内容资料方案' : 'abcdefghijklmnopqrstuvwxyz#%&*+=/<>';
   const hash = (a, b) => {
     let h = (Math.imul(a + 1, 374761393) + Math.imul(b + 7, 668265263)) | 0;
     h = Math.imul(h ^ (h >>> 13), 1274126177);
@@ -999,7 +1027,7 @@
   function syncButtons() {
     ctl.classList.toggle('paused', !playing && !ended);
     ctl.classList.toggle('ended', ended);
-    playBtn.setAttribute('aria-label', ended ? 'Replay' : playing ? 'Pause' : 'Play');
+    playBtn.setAttribute('aria-label', ended ? UI.replay : playing ? UI.pause : UI.play);
   }
 
   function seek(nt) {
@@ -1105,7 +1133,7 @@
   function setRead(v) {
     readMode = v;
     doc.classList.toggle('read', v);
-    readBtn.textContent = v ? 'Play as film' : 'Read as page';
+    readBtn.textContent = v ? UI.film : UI.read;
     if (v) {
       showAllFinal();
       scenes.forEach((s) => {

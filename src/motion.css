@@ -451,6 +451,11 @@ ul {
   filter: blur(calc((1 - var(--p)) * 6px));
 }
 
+/* a Chinese word whose characters animate separately but must stay on one line */
+.wg {
+  white-space: nowrap;
+}
+
 /* read-along: a paragraph arrives dim and lights up word by word at reading pace */
 .rw {
   --p: 0;
@@ -1399,6 +1404,7 @@ ul {
 
 .foot p {
   margin-bottom: 10px;
+  text-wrap: balance;
 }
 
 .foot nav {
@@ -2063,6 +2069,111 @@ ul {
 
   .tbtn {
     padding: 0 11px;
+  }
+}
+
+/* ---------- Chinese page (zh.html): CJK fonts, upright serif accents, looser line-height ---------- */
+
+html:lang(zh) {
+  --display: "Instrument Sans", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  --serif: "Noto Serif SC", "Songti SC", "STSong", "SimSun", serif;
+  --text: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+}
+
+html:lang(zh) .h-xl {
+  font-size: clamp(38px, 4.7vw, 72px);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+
+html:lang(zh) .h-xl .serif {
+  font-size: 0.96em;
+  line-height: 1.16;
+}
+
+html:lang(zh) .h-l {
+  font-size: clamp(28px, 3.2vw, 48px);
+  line-height: 1.24;
+  letter-spacing: 0;
+}
+
+html:lang(zh) .serif,
+html:lang(zh) .h-l em,
+html:lang(zh) .h-l em .m-word,
+html:lang(zh) .statement .accent,
+html:lang(zh) .roi-item h4,
+html:lang(zh) .journey-title,
+html:lang(zh) .callouts-title,
+html:lang(zh) .flow-desc {
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+html:lang(zh) .h-l em {
+  font-size: 1em;
+}
+
+html:lang(zh) .statement.lines {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+html:lang(zh) .statement .accent {
+  font-size: 1.04em;
+}
+
+html:lang(zh) .lead,
+html:lang(zh) .body,
+html:lang(zh) .roi-note {
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+}
+
+html:lang(zh) .t,
+html:lang(zh) .pain p,
+html:lang(zh) .node p,
+html:lang(zh) .pt p,
+html:lang(zh) .roi-item p {
+  line-height: 1.65;
+}
+
+html:lang(zh) .eyebrow {
+  letter-spacing: 0.12em;
+}
+
+html:lang(zh) .flow-word {
+  font-size: clamp(96px, 16vw, 240px);
+  letter-spacing: 0.04em;
+}
+
+html:lang(zh) .pain h3,
+html:lang(zh) .node h3,
+html:lang(zh) .pt h3,
+html:lang(zh) .mile strong,
+html:lang(zh) .call strong,
+html:lang(zh) .gate strong {
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+@media (max-width: 759px) {
+  html:lang(zh) .h-xl {
+    font-size: clamp(36px, 10.5vw, 50px);
+  }
+
+  html:lang(zh) .h-l {
+    font-size: clamp(24px, 6.6vw, 30px);
+  }
+
+  html:lang(zh) .flow-word {
+    font-size: clamp(80px, 24vw, 110px);
+  }
+
+  html:lang(zh) .lead,
+  html:lang(zh) .body {
+    line-height: 1.75;
   }
 }
 

@@ -1,5 +1,7 @@
 # NaxaStudio 动态首页（Motion 版）
 
+英文版 `index.html`，中文版 `zh.html`。两个版本共用同一套样式和播放引擎，右上角的 EN / 中文 互相链接。
+
 把 naxastudio.com 首页的全部内容重新设计成一部自动播放的"短片"：打开网页就从头开始播放，依次展示每一部分内容，约 2 分 53 秒。
 
 ## 创意
@@ -25,6 +27,18 @@
 
 原首页的文字全部保留，一字未改，所有链接也指向原来的页面（`business-review.html`、`demo-center.html`、`zh.html` 等）。只多了三处衔接文字：开场光点旁的 "Idea"、开场的 "AI execution systems"（取自原页头），以及在痛点和方案两章之间重复了一次原标题里的 "It’s not as hard as you think."。
 
+## 中文版
+
+`zh.html` 对应 naxastudio.com/zh：内容一字未改，链接都指向中文页面（`zh-business-review.html` 等），右上角 "EN" 回到英文版。针对中文的处理：
+
+- 标题按字逐个出现，正文按阅读速度逐字点亮；借助浏览器自带的中文分词（`Intl.Segmenter`），只在词与词之间换行，不会把"销售""行政"拆到两行
+- 强调短语用思源宋体（Noto Serif SC），中文不做斜体
+- "实时执行流程"的大字用汉字乱码来解码
+- 播放条、按钮、章节名都是中文
+- 苹果设备使用本机的苹方字体，其他系统使用思源黑体（Noto Sans SC）
+
+和英文版一样，只多了三处衔接文字：开场光点旁的"想法"（取自原页的"想法 → 行动"）、开场的"AI 执行力系统"（取自原页头），以及在痛点和方案两章之间重复了一次原标题"没有你想象的那么难。"。
+
 ## 怎么看
 
 直接用浏览器打开 `index.html` 即可（在 Claude App 或 GitHub 里点开只会显示源代码，要先下载，再用 Safari / Chrome 打开）。所有代码、样式和 Logo 数据都已经打包在这一个文件里。
@@ -43,12 +57,14 @@
 ## 文件结构
 
 ```
-index.html             构建好的单文件页面（直接用这个）
-src/index.html         页面内容和每个元素的出场时间
+index.html             构建好的英文单文件页面（直接用这个）
+zh.html                构建好的中文单文件页面
+src/index.html         英文页面内容和每个元素的出场时间
+src/zh.html            中文页面内容和每个元素的出场时间
 src/motion.css         样式
 src/motion.js          播放引擎和粒子
 assets/                官网 Logo 原图，以及从中采样的粒子坐标、页头小图标
-tools/build.js         把 src/ 和 assets/ 打包成 index.html
+tools/build.js         把 src/ 和 assets/ 打包成 index.html 和 zh.html
 tools/sample-logo.js   从 Logo 图片采样粒子坐标（需要 Playwright）
 ```
 
@@ -60,7 +76,7 @@ tools/sample-logo.js   从 Logo 图片采样粒子坐标（需要 Playwright）
 node tools/build.js
 ```
 
-时间都写在 `src/index.html` 里：
+时间都写在 `src/index.html` 和 `src/zh.html` 里：
 
 - 每一章 `<section>` 上的 `data-dur` 是这一章的时长（秒）
 - 元素上的 `data-at` 是它在本章第几秒出现，`data-dur` 是出现动画的时长
