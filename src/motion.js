@@ -2541,6 +2541,10 @@
 
   // keyboard
   addEventListener('keydown', (e) => {
+    if (menuOpen && e.key === 'Escape') {
+      navToggle.click();
+      return;
+    }
     if (readMode || menuOpen || modalOpen() || typing(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
     const tag = (e.target.tagName || '').toLowerCase();
     if (e.key === ' ' || e.key === 'k') {
@@ -2644,6 +2648,10 @@
     e.preventDefault();
     const auto = playing || resumeAt != null || (menuOpen && wasPlayingBeforeMenu);
     closeMenu();
+    if (readMode) {
+      target.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
     jumpTo(target, auto);
   });
 
@@ -2652,12 +2660,41 @@
     if (e.target.closest('[data-demo-agent]') && (playing || resumeAt != null)) setPlaying(false);
   });
 
-  // mobile menu
+  // The chapters: the whole page as a table of contents. The film's chapters are listed from its scenes;
+  // the other pages are links (to their own pages, so search engines still find them) that scroll here.
   const nav = $('#nav');
   const navToggle = $('#navToggle');
-  const menu = $('.menu', nav);
+  const filmList = $('.chap-film', nav);
+  const chapLinks = [];
+  scenes.forEach((sc, k) => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + sc.el.dataset.scene;
+    a.dataset.scene = String(k);
+    const n = sc.el.querySelector('[data-n]');
+    a.innerHTML = `<span class="cn">${n ? n.dataset.n : '·'}</span><span class="cl"></span>`;
+    a.querySelector('.cl').textContent = sc.label;
+    li.appendChild(a);
+    filmList.appendChild(li);
+    chapLinks.push({ a, ch: k });
+  });
+  $$('.chap-pages > li > a', nav).forEach((a) => {
+    const m = (a.getAttribute('href') || '').match(/^(?:zh-)?([a-z-]+)\.html/);
+    const sec = m && tsecs.findIndex((x) => x.id === PAGE_IDS[m[1]]);
+    if (sec >= 0) chapLinks.push({ a, ch: scenes.length + sec });
+  });
+  $$('.chap-list > li', nav).forEach((li, i) => li.style.setProperty('--i', i));
+
+  // mark where the reader is: chapters already seen, the one playing, the ones still ahead
+  function markChapters() {
+    const now = t < FILM && window.scrollY < H * 0.5 ? scenes.indexOf(frontScene) : currentIndex();
+    chapLinks.forEach(({ a, ch }) => {
+      a.classList.toggle('is-now', ch === now);
+      a.classList.toggle('is-past', ch < now);
+    });
+  }
+
   function closeMenu() {
-    if (menu.open && !nav.classList.contains('open')) menu.open = false;
     if (!nav.classList.contains('open')) return;
     menuOpen = false;
     nav.classList.remove('open');
@@ -2665,20 +2702,42 @@
   }
   navToggle.addEventListener('click', () => {
     menuOpen = !nav.classList.contains('open');
+    if (menuOpen) markChapters();
     nav.classList.toggle('open', menuOpen);
     navToggle.setAttribute('aria-expanded', String(menuOpen));
     if (menuOpen) {
-      menu.open = true;
       wasPlayingBeforeMenu = playing || resumeAt != null;
       if (playing) setPlaying(false);
     } else if (wasPlayingBeforeMenu && !readMode) {
       setPlaying(true);
     }
   });
-  // close the desktop dropdown when clicking elsewhere
-  document.addEventListener('click', (e) => {
-    if (!nav.classList.contains('open') && menu.open && !menu.contains(e.target)) menu.open = false;
+  // a chapter of the film: play from its beginning
+  nav.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-scene]');
+    if (!a) return;
+    e.preventDefault();
+    const sc = scenes[+a.dataset.scene];
+    closeMenu();
+    if (readMode) {
+      sc.el.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    seek(sc.start + 0.01);
+    setPlaying(true);
   });
+  // a click on the veil around the list closes it
+  nav.addEventListener('click', (e) => {
+    if (e.target === nav) {
+      closeMenu();
+      if (wasPlayingBeforeMenu && !readMode) setPlaying(true);
+    }
+  });
+
+  // While the film plays and nobody touches anything, the header steps back to just the logo.
+  let lastAct = 0;
+  const wake = () => (lastAct = tclock);
+  ['pointermove', 'pointerdown', 'keydown', 'touchstart', 'wheel'].forEach((ev) => addEventListener(ev, wake, { passive: true }));
 
   /* ------------------------------------------------------------------ main loop */
 
@@ -2923,6 +2982,7 @@
   function frame(now) {
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
+    doc.classList.toggle('chrome-rest', playing && !readMode && !menuOpen && !modalOpen() && tclock - lastAct > 2.6);
     if (capturing) {
       requestAnimationFrame(frame);
       return;

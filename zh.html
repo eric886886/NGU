@@ -191,193 +191,333 @@ ul {
   color: var(--dim);
 }
 
-.nav {
+/* the header keeps three things: the language, the chapters, and the one action that matters */
+.brand,
+.hdr-tools {
+  position: relative;
+  z-index: 31;
+}
+
+.hdr-tools {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 8px;
   font-size: 14px;
 }
 
-.nav > a,
-.menu > summary {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 12px;
+.hdr-tools .lang,
+.chap-foot .lang {
+  padding: 8px 13px;
   border-radius: 999px;
+  border: 1px solid var(--card-b);
   color: var(--muted);
   text-decoration: none;
-  cursor: pointer;
   white-space: nowrap;
   transition: color 0.2s, background 0.2s;
 }
 
-.nav > a:hover,
-.menu > summary:hover,
-.nav > a[aria-current] {
+.hdr-tools .lang:hover {
   color: var(--ink);
   background: rgba(255, 255, 255, 0.07);
 }
 
-.menu {
+.chap-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 16px 0 13px;
+  border-radius: 999px;
+  border: 1px solid var(--card-b);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  font: 500 14px var(--text);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.chap-btn:hover,
+.chap-btn[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(159, 208, 255, 0.45);
+}
+
+.chap-ico {
   position: relative;
-}
-
-.menu > summary {
-  list-style: none;
-}
-
-.menu > summary::-webkit-details-marker {
-  display: none;
-}
-
-.menu > summary::after {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: translateY(-2px) rotate(45deg);
-  transition: transform 0.2s;
-}
-
-.menu[open] > summary::after {
-  transform: translateY(1px) rotate(225deg);
-}
-
-.menu-panel {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
   display: grid;
-  min-width: 232px;
-  padding: 8px;
-  border-radius: 16px;
-  background: rgba(11, 15, 28, 0.96);
-  border: 1px solid var(--card-b);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  gap: 3px;
+  width: 14px;
 }
 
-.menu-panel a {
-  padding: 9px 12px;
-  border-radius: 10px;
-  color: var(--muted);
-  text-decoration: none;
-  white-space: nowrap;
+.chap-ico i {
+  display: block;
+  height: 1.5px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: transform 0.3s, opacity 0.3s, width 0.3s;
 }
 
-.menu-panel a:hover {
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--ink);
+.chap-ico i:nth-child(2) {
+  width: 9px;
 }
 
-.nav > .lang {
-  margin-left: 4px;
-  border: 1px solid var(--card-b);
+.chap-ico i:nth-child(3) {
+  width: 12px;
 }
 
-.nav > .cta {
-  margin-left: 6px;
+.chap-btn[aria-expanded="true"] .chap-ico i:nth-child(1) {
+  transform: translateY(4.5px) rotate(45deg);
+}
+
+.chap-btn[aria-expanded="true"] .chap-ico i:nth-child(2) {
+  opacity: 0;
+}
+
+.chap-btn[aria-expanded="true"] .chap-ico i:nth-child(3) {
+  width: 14px;
+  transform: translateY(-4.5px) rotate(-45deg);
+}
+
+.hdr-tools .cta,
+.chap-foot .cta {
+  padding: 9px 16px;
+  border-radius: 999px;
   background: #fff;
   color: #05070d;
   font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s;
 }
 
-.nav > .cta:hover {
+.hdr-tools .cta:hover {
   background: #e3ebfb;
-  color: #05070d;
 }
 
-.nav-toggle {
-  display: none;
-  position: relative;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid var(--card-b);
-  background: rgba(255, 255, 255, 0.04);
-  cursor: pointer;
+/* the chapters: the whole page as a table of contents, over a veil the particles show through */
+.chapters {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: calc(var(--hdr) + 28px) var(--gut) calc(var(--ctl) + 24px);
+  overflow-y: auto;
+  background: radial-gradient(ellipse 80% 60% at 75% 25%, rgba(47, 123, 255, 0.14), transparent 70%), rgba(3, 5, 11, 0.9);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.35s, visibility 0.35s;
 }
 
-.nav-toggle > span:not(.sr) {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  height: 1.5px;
-  background: var(--ink);
-  transition: transform 0.25s;
+.chapters.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
-.nav-toggle > span:nth-child(1) {
-  top: 16px;
+.chap-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  column-gap: clamp(36px, 7vw, 120px);
+  row-gap: 22px;
+  width: min(var(--maxw), 100%);
+  margin: auto;
 }
 
-.nav-toggle > span:nth-child(2) {
-  top: 24px;
+.chap-hint {
+  grid-column: 1 / -1;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(18px, 1.6vw, 24px);
+  color: var(--accent);
 }
 
-.nav-toggle[aria-expanded="true"] > span:nth-child(1) {
-  transform: translateY(4px) rotate(45deg);
+.chap-h {
+  margin-bottom: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
 }
 
-.nav-toggle[aria-expanded="true"] > span:nth-child(2) {
-  transform: translateY(-4px) rotate(-45deg);
+.chap-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-@media (max-width: 1023px) {
-  .nav-toggle {
-    display: block;
-  }
+.chap-list > li {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+}
 
-  .nav {
-    position: fixed;
-    inset: var(--hdr) 0 0 0;
-    z-index: 29;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 2px;
-    padding: 18px var(--gut) 40px;
-    overflow-y: auto;
-    font-size: 18px;
-    background: #04060d;
-    opacity: 0;
-    transform: translateY(-8px);
-    pointer-events: none;
-    visibility: hidden;
-    transition: opacity 0.25s, transform 0.25s, visibility 0.25s;
-  }
+.chapters.open .chap-list > li {
+  animation: chapin 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 35ms + 80ms);
+}
 
-  .nav.open {
+@keyframes chapin {
+  to {
     opacity: 1;
     transform: none;
-    pointer-events: auto;
-    visibility: visible;
+  }
+}
+
+.chap-list > li > a {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 5px 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cn {
+  flex: none;
+  width: 26px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  color: var(--azure);
+}
+
+/* chapters still ahead are outlines; those already seen are solid; the one playing is lit */
+.cl {
+  font-family: var(--display);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(159, 208, 255, 0.5);
+  transition: color 0.25s, -webkit-text-stroke-color 0.25s;
+}
+
+.chap-film .cl {
+  font-size: clamp(17px, 1.55vw, 23px);
+}
+
+.chap-pages .cl {
+  font-size: clamp(26px, 3vw, 46px);
+}
+
+.chap-list a.is-past .cl {
+  color: rgba(238, 242, 251, 0.5);
+  -webkit-text-stroke-color: transparent;
+}
+
+.chap-list a:hover .cl,
+.chap-list a.is-now .cl {
+  color: #fff;
+  -webkit-text-stroke-color: transparent;
+}
+
+.chap-list a.is-now .cl {
+  text-shadow: 0 0 24px rgba(120, 185, 255, 0.55);
+}
+
+.chap-list a.is-now::after {
+  content: "";
+  align-self: center;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6fb0ff;
+  box-shadow: 0 0 12px 2px rgba(79, 155, 255, 0.9);
+  animation: nowdot 1.6s ease-in-out infinite;
+}
+
+@keyframes nowdot {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+.chap-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  margin: 2px 0 8px 42px;
+}
+
+.chap-sub a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.chap-sub a + a::before {
+  content: "·";
+  margin: 0 9px;
+  color: var(--dim);
+}
+
+.chap-sub a:hover {
+  color: var(--ink);
+}
+
+.chap-foot {
+  display: none;
+}
+
+@media (max-width: 759px) {
+  .hdr-tools .cta,
+  .chap-txt {
+    display: none;
   }
 
-  .nav > a,
-  .menu > summary {
-    padding: 13px 14px;
-    border-radius: 14px;
-  }
-
-  .menu-panel {
-    position: static;
-    min-width: 0;
-    padding: 0 0 6px 14px;
-    background: none;
-    border: 0;
-    box-shadow: none;
-  }
-
-  .menu-panel a {
-    font-size: 16px;
-  }
-
-  .nav > .lang,
-  .nav > .cta {
-    margin: 10px 0 0;
+  .chap-btn {
+    width: 42px;
+    height: 42px;
+    padding: 0;
     justify-content: center;
+    border-radius: 12px;
   }
+
+  .chapters {
+    justify-content: flex-start;
+    padding-bottom: 40px;
+  }
+
+  .chap-inner {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 26px;
+  }
+
+  .chap-foot {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+/* while the film plays and nobody touches anything, the header steps back to just the logo */
+.hdr::before,
+.hdr .brand,
+.hdr-tools {
+  transition: opacity 0.6s;
+}
+
+html.chrome-rest .hdr-tools {
+  opacity: 0;
+}
+
+html.chrome-rest .hdr::before {
+  opacity: 0;
+}
+
+html.chrome-rest .hdr {
+  border-bottom-color: transparent;
+}
+
+html.chrome-rest .hdr .brand {
+  opacity: 0.5;
 }
 
 @media (max-width: 380px) {
@@ -3949,21 +4089,8 @@ html.no-js .s-fin {
     padding: 12px var(--gut);
   }
 
-  html.no-js .nav-toggle {
+  html.no-js .chap-btn {
     display: none;
-  }
-
-  html.no-js .nav {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    padding: 0;
-    font-size: 14px;
-    background: none;
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-    pointer-events: auto;
   }
 
   html.no-js .s-hero {
@@ -4046,29 +4173,40 @@ html.read #read {
         <span class="brand-tile"><img src="data:image/jpeg;base64,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" alt="" width="36" height="36" /></span>
         <span class="brand-text">纳想 NaxaStudio <small>AI 执行力系统</small></span>
       </a>
-      <nav class="nav" id="nav" aria-label="主导航">
-        <a href="zh.html" aria-current="page">首页</a>
-        <details class="menu">
-          <summary>AI 方案</summary>
-          <div class="menu-panel">
-            <a href="zh-ai-agents.html">所有 AI 方案</a>
-            <a href="zh-base-ai-agent.html">起步方案</a>
-            <a href="zh-ai-agents.html#ai-receptionist">AI 接待助手</a>
-            <a href="zh-ai-agents.html#ai-sales">AI 销售跟进助手</a>
-            <a href="zh-ai-agents.html#ai-marketing">AI 营销助手</a>
-            <a href="zh-ai-agents.html#ai-research">AI 研究助手</a>
-            <a href="zh-ai-agents.html#ai-workflow">AI 流程助手</a>
-          </div>
-        </details>
-        <a href="zh-demo-center.html">Demo</a>
-        <a href="zh-cases.html">案例</a>
-        <a href="zh-about.html">关于</a>
+      <div class="hdr-tools">
         <a href="index.html" class="lang" lang="en">EN</a>
+        <button class="chap-btn" id="navToggle" type="button" aria-expanded="false" aria-controls="nav">
+          <span class="chap-ico" aria-hidden="true"><i></i><i></i><i></i></span><span class="chap-txt">章节</span>
+        </button>
         <a href="zh-business-review.html" class="cta">预约业务诊断</a>
+      </div>
+      <!-- the chapters: the whole page as a table of contents (the film's chapters are filled in by motion.js) -->
+      <nav class="chapters" id="nav" aria-label="章节">
+        <div class="chap-inner">
+          <p class="chap-hint">点哪一章，就从哪里开始播放。</p>
+          <div class="chap-col">
+            <p class="chap-h">短片</p>
+            <ol class="chap-list chap-film"></ol>
+          </div>
+          <div class="chap-col">
+            <p class="chap-h">接着往下</p>
+            <ol class="chap-list chap-pages">
+            <li><a href="zh-about.html"><span class="cn">10</span><span class="cl">关于</span></a></li>
+            <li><a href="zh-ai-agents.html"><span class="cn">11</span><span class="cl">AI 方案</span></a>
+              <span class="chap-sub"><a href="zh-ai-agents.html#ai-receptionist">AI 接待助手</a><a href="zh-ai-agents.html#ai-sales">AI 销售跟进助手</a><a href="zh-ai-agents.html#ai-marketing">AI 营销助手</a><a href="zh-ai-agents.html#ai-research">AI 研究助手</a><a href="zh-ai-agents.html#ai-workflow">AI 流程助手</a></span></li>
+            <li><a href="zh-base-ai-agent.html"><span class="cn">12</span><span class="cl">起步方案</span></a></li>
+            <li><a href="zh-demo-center.html"><span class="cn">13</span><span class="cl">Demo</span></a></li>
+            <li><a href="zh-cases.html"><span class="cn">14</span><span class="cl">案例</span></a></li>
+            <li><a href="zh-business-review.html"><span class="cn">15</span><span class="cl">AI 业务诊断</span></a></li>
+            <li><a href="zh-contact.html"><span class="cn">16</span><span class="cl">联系</span></a></li>
+            </ol>
+          </div>
+          <div class="chap-foot">
+            <a href="index.html" class="lang" lang="en">EN</a>
+            <a href="zh-business-review.html" class="cta">预约业务诊断</a>
+          </div>
+        </div>
       </nav>
-      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="nav">
-        <span></span><span></span><span class="sr">菜单</span>
-      </button>
     </header>
 
     <main class="stage" id="stage">
@@ -7343,6 +7481,10 @@ html.read #read {
 
   // keyboard
   addEventListener('keydown', (e) => {
+    if (menuOpen && e.key === 'Escape') {
+      navToggle.click();
+      return;
+    }
     if (readMode || menuOpen || modalOpen() || typing(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
     const tag = (e.target.tagName || '').toLowerCase();
     if (e.key === ' ' || e.key === 'k') {
@@ -7446,6 +7588,10 @@ html.read #read {
     e.preventDefault();
     const auto = playing || resumeAt != null || (menuOpen && wasPlayingBeforeMenu);
     closeMenu();
+    if (readMode) {
+      target.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
     jumpTo(target, auto);
   });
 
@@ -7454,12 +7600,41 @@ html.read #read {
     if (e.target.closest('[data-demo-agent]') && (playing || resumeAt != null)) setPlaying(false);
   });
 
-  // mobile menu
+  // The chapters: the whole page as a table of contents. The film's chapters are listed from its scenes;
+  // the other pages are links (to their own pages, so search engines still find them) that scroll here.
   const nav = $('#nav');
   const navToggle = $('#navToggle');
-  const menu = $('.menu', nav);
+  const filmList = $('.chap-film', nav);
+  const chapLinks = [];
+  scenes.forEach((sc, k) => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = '#' + sc.el.dataset.scene;
+    a.dataset.scene = String(k);
+    const n = sc.el.querySelector('[data-n]');
+    a.innerHTML = `<span class="cn">${n ? n.dataset.n : '·'}</span><span class="cl"></span>`;
+    a.querySelector('.cl').textContent = sc.label;
+    li.appendChild(a);
+    filmList.appendChild(li);
+    chapLinks.push({ a, ch: k });
+  });
+  $$('.chap-pages > li > a', nav).forEach((a) => {
+    const m = (a.getAttribute('href') || '').match(/^(?:zh-)?([a-z-]+)\.html/);
+    const sec = m && tsecs.findIndex((x) => x.id === PAGE_IDS[m[1]]);
+    if (sec >= 0) chapLinks.push({ a, ch: scenes.length + sec });
+  });
+  $$('.chap-list > li', nav).forEach((li, i) => li.style.setProperty('--i', i));
+
+  // mark where the reader is: chapters already seen, the one playing, the ones still ahead
+  function markChapters() {
+    const now = t < FILM && window.scrollY < H * 0.5 ? scenes.indexOf(frontScene) : currentIndex();
+    chapLinks.forEach(({ a, ch }) => {
+      a.classList.toggle('is-now', ch === now);
+      a.classList.toggle('is-past', ch < now);
+    });
+  }
+
   function closeMenu() {
-    if (menu.open && !nav.classList.contains('open')) menu.open = false;
     if (!nav.classList.contains('open')) return;
     menuOpen = false;
     nav.classList.remove('open');
@@ -7467,20 +7642,42 @@ html.read #read {
   }
   navToggle.addEventListener('click', () => {
     menuOpen = !nav.classList.contains('open');
+    if (menuOpen) markChapters();
     nav.classList.toggle('open', menuOpen);
     navToggle.setAttribute('aria-expanded', String(menuOpen));
     if (menuOpen) {
-      menu.open = true;
       wasPlayingBeforeMenu = playing || resumeAt != null;
       if (playing) setPlaying(false);
     } else if (wasPlayingBeforeMenu && !readMode) {
       setPlaying(true);
     }
   });
-  // close the desktop dropdown when clicking elsewhere
-  document.addEventListener('click', (e) => {
-    if (!nav.classList.contains('open') && menu.open && !menu.contains(e.target)) menu.open = false;
+  // a chapter of the film: play from its beginning
+  nav.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-scene]');
+    if (!a) return;
+    e.preventDefault();
+    const sc = scenes[+a.dataset.scene];
+    closeMenu();
+    if (readMode) {
+      sc.el.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    seek(sc.start + 0.01);
+    setPlaying(true);
   });
+  // a click on the veil around the list closes it
+  nav.addEventListener('click', (e) => {
+    if (e.target === nav) {
+      closeMenu();
+      if (wasPlayingBeforeMenu && !readMode) setPlaying(true);
+    }
+  });
+
+  // While the film plays and nobody touches anything, the header steps back to just the logo.
+  let lastAct = 0;
+  const wake = () => (lastAct = tclock);
+  ['pointermove', 'pointerdown', 'keydown', 'touchstart', 'wheel'].forEach((ev) => addEventListener(ev, wake, { passive: true }));
 
   /* ------------------------------------------------------------------ main loop */
 
@@ -7725,6 +7922,7 @@ html.read #read {
   function frame(now) {
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
+    doc.classList.toggle('chrome-rest', playing && !readMode && !menuOpen && !modalOpen() && tclock - lastAct > 2.6);
     if (capturing) {
       requestAnimationFrame(frame);
       return;

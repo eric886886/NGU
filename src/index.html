@@ -70,29 +70,40 @@
         <span class="brand-tile"><img src="{{LOGO_ICON}}" alt="" width="36" height="36" /></span>
         <span class="brand-text">NaxaStudio <small>纳想 · AI execution systems</small></span>
       </a>
-      <nav class="nav" id="nav" aria-label="Primary navigation">
-        <a href="index.html" aria-current="page">Home</a>
-        <details class="menu">
-          <summary>AI Solutions</summary>
-          <div class="menu-panel">
-            <a href="ai-agents.html">All AI Solutions</a>
-            <a href="base-ai-agent.html">Startup AI Solution</a>
-            <a href="ai-agents.html#ai-receptionist">AI Receptionist</a>
-            <a href="ai-agents.html#ai-sales">AI Sales Agent</a>
-            <a href="ai-agents.html#ai-marketing">AI Marketing Agent</a>
-            <a href="ai-agents.html#ai-research">AI Research Agent</a>
-            <a href="ai-agents.html#ai-workflow">AI Workflow Agent</a>
-          </div>
-        </details>
-        <a href="demo-center.html">Demo</a>
-        <a href="cases.html">Cases</a>
-        <a href="about.html">About</a>
+      <div class="hdr-tools">
         <a href="zh.html" class="lang" lang="zh">中文</a>
+        <button class="chap-btn" id="navToggle" type="button" aria-expanded="false" aria-controls="nav">
+          <span class="chap-ico" aria-hidden="true"><i></i><i></i><i></i></span><span class="chap-txt">Chapters</span>
+        </button>
         <a href="business-review.html" class="cta">Book a Business Review</a>
+      </div>
+      <!-- the chapters: the whole page as a table of contents (the film's chapters are filled in by motion.js) -->
+      <nav class="chapters" id="nav" aria-label="Chapters">
+        <div class="chap-inner">
+          <p class="chap-hint">Pick a chapter to play from there.</p>
+          <div class="chap-col">
+            <p class="chap-h">The film</p>
+            <ol class="chap-list chap-film"></ol>
+          </div>
+          <div class="chap-col">
+            <p class="chap-h">And then</p>
+            <ol class="chap-list chap-pages">
+            <li><a href="about.html"><span class="cn">10</span><span class="cl">About</span></a></li>
+            <li><a href="ai-agents.html"><span class="cn">11</span><span class="cl">AI Solutions</span></a>
+              <span class="chap-sub"><a href="ai-agents.html#ai-receptionist">AI Receptionist</a><a href="ai-agents.html#ai-sales">AI Sales Agent</a><a href="ai-agents.html#ai-marketing">AI Marketing Agent</a><a href="ai-agents.html#ai-research">AI Research Agent</a><a href="ai-agents.html#ai-workflow">AI Workflow Agent</a></span></li>
+            <li><a href="base-ai-agent.html"><span class="cn">12</span><span class="cl">Startup AI Solution</span></a></li>
+            <li><a href="demo-center.html"><span class="cn">13</span><span class="cl">Demo</span></a></li>
+            <li><a href="cases.html"><span class="cn">14</span><span class="cl">Cases</span></a></li>
+            <li><a href="business-review.html"><span class="cn">15</span><span class="cl">AI Business Review</span></a></li>
+            <li><a href="contact.html"><span class="cn">16</span><span class="cl">Contact</span></a></li>
+            </ol>
+          </div>
+          <div class="chap-foot">
+            <a href="zh.html" class="lang" lang="zh">中文</a>
+            <a href="business-review.html" class="cta">Book a Business Review</a>
+          </div>
+        </div>
       </nav>
-      <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="nav">
-        <span></span><span></span><span class="sr">Menu</span>
-      </button>
     </header>
 
     <main class="stage" id="stage">

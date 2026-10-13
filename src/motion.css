@@ -176,193 +176,333 @@ ul {
   color: var(--dim);
 }
 
-.nav {
+/* the header keeps three things: the language, the chapters, and the one action that matters */
+.brand,
+.hdr-tools {
+  position: relative;
+  z-index: 31;
+}
+
+.hdr-tools {
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 8px;
   font-size: 14px;
 }
 
-.nav > a,
-.menu > summary {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 8px 12px;
+.hdr-tools .lang,
+.chap-foot .lang {
+  padding: 8px 13px;
   border-radius: 999px;
+  border: 1px solid var(--card-b);
   color: var(--muted);
   text-decoration: none;
-  cursor: pointer;
   white-space: nowrap;
   transition: color 0.2s, background 0.2s;
 }
 
-.nav > a:hover,
-.menu > summary:hover,
-.nav > a[aria-current] {
+.hdr-tools .lang:hover {
   color: var(--ink);
   background: rgba(255, 255, 255, 0.07);
 }
 
-.menu {
+.chap-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 16px 0 13px;
+  border-radius: 999px;
+  border: 1px solid var(--card-b);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  font: 500 14px var(--text);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.chap-btn:hover,
+.chap-btn[aria-expanded="true"] {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(159, 208, 255, 0.45);
+}
+
+.chap-ico {
   position: relative;
-}
-
-.menu > summary {
-  list-style: none;
-}
-
-.menu > summary::-webkit-details-marker {
-  display: none;
-}
-
-.menu > summary::after {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  transform: translateY(-2px) rotate(45deg);
-  transition: transform 0.2s;
-}
-
-.menu[open] > summary::after {
-  transform: translateY(1px) rotate(225deg);
-}
-
-.menu-panel {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
   display: grid;
-  min-width: 232px;
-  padding: 8px;
-  border-radius: 16px;
-  background: rgba(11, 15, 28, 0.96);
-  border: 1px solid var(--card-b);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  gap: 3px;
+  width: 14px;
 }
 
-.menu-panel a {
-  padding: 9px 12px;
-  border-radius: 10px;
-  color: var(--muted);
-  text-decoration: none;
-  white-space: nowrap;
+.chap-ico i {
+  display: block;
+  height: 1.5px;
+  border-radius: 1px;
+  background: currentColor;
+  transition: transform 0.3s, opacity 0.3s, width 0.3s;
 }
 
-.menu-panel a:hover {
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--ink);
+.chap-ico i:nth-child(2) {
+  width: 9px;
 }
 
-.nav > .lang {
-  margin-left: 4px;
-  border: 1px solid var(--card-b);
+.chap-ico i:nth-child(3) {
+  width: 12px;
 }
 
-.nav > .cta {
-  margin-left: 6px;
+.chap-btn[aria-expanded="true"] .chap-ico i:nth-child(1) {
+  transform: translateY(4.5px) rotate(45deg);
+}
+
+.chap-btn[aria-expanded="true"] .chap-ico i:nth-child(2) {
+  opacity: 0;
+}
+
+.chap-btn[aria-expanded="true"] .chap-ico i:nth-child(3) {
+  width: 14px;
+  transform: translateY(-4.5px) rotate(-45deg);
+}
+
+.hdr-tools .cta,
+.chap-foot .cta {
+  padding: 9px 16px;
+  border-radius: 999px;
   background: #fff;
   color: #05070d;
   font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s;
 }
 
-.nav > .cta:hover {
+.hdr-tools .cta:hover {
   background: #e3ebfb;
-  color: #05070d;
 }
 
-.nav-toggle {
-  display: none;
-  position: relative;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  border: 1px solid var(--card-b);
-  background: rgba(255, 255, 255, 0.04);
-  cursor: pointer;
+/* the chapters: the whole page as a table of contents, over a veil the particles show through */
+.chapters {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: calc(var(--hdr) + 28px) var(--gut) calc(var(--ctl) + 24px);
+  overflow-y: auto;
+  background: radial-gradient(ellipse 80% 60% at 75% 25%, rgba(47, 123, 255, 0.14), transparent 70%), rgba(3, 5, 11, 0.9);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.35s, visibility 0.35s;
 }
 
-.nav-toggle > span:not(.sr) {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  height: 1.5px;
-  background: var(--ink);
-  transition: transform 0.25s;
+.chapters.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
-.nav-toggle > span:nth-child(1) {
-  top: 16px;
+.chap-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  column-gap: clamp(36px, 7vw, 120px);
+  row-gap: 22px;
+  width: min(var(--maxw), 100%);
+  margin: auto;
 }
 
-.nav-toggle > span:nth-child(2) {
-  top: 24px;
+.chap-hint {
+  grid-column: 1 / -1;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(18px, 1.6vw, 24px);
+  color: var(--accent);
 }
 
-.nav-toggle[aria-expanded="true"] > span:nth-child(1) {
-  transform: translateY(4px) rotate(45deg);
+.chap-h {
+  margin-bottom: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
 }
 
-.nav-toggle[aria-expanded="true"] > span:nth-child(2) {
-  transform: translateY(-4px) rotate(-45deg);
+.chap-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-@media (max-width: 1023px) {
-  .nav-toggle {
-    display: block;
-  }
+.chap-list > li {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+}
 
-  .nav {
-    position: fixed;
-    inset: var(--hdr) 0 0 0;
-    z-index: 29;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 2px;
-    padding: 18px var(--gut) 40px;
-    overflow-y: auto;
-    font-size: 18px;
-    background: #04060d;
-    opacity: 0;
-    transform: translateY(-8px);
-    pointer-events: none;
-    visibility: hidden;
-    transition: opacity 0.25s, transform 0.25s, visibility 0.25s;
-  }
+.chapters.open .chap-list > li {
+  animation: chapin 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 35ms + 80ms);
+}
 
-  .nav.open {
+@keyframes chapin {
+  to {
     opacity: 1;
     transform: none;
-    pointer-events: auto;
-    visibility: visible;
+  }
+}
+
+.chap-list > li > a {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 5px 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.cn {
+  flex: none;
+  width: 26px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.1em;
+  color: var(--azure);
+}
+
+/* chapters still ahead are outlines; those already seen are solid; the one playing is lit */
+.cl {
+  font-family: var(--display);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(159, 208, 255, 0.5);
+  transition: color 0.25s, -webkit-text-stroke-color 0.25s;
+}
+
+.chap-film .cl {
+  font-size: clamp(17px, 1.55vw, 23px);
+}
+
+.chap-pages .cl {
+  font-size: clamp(26px, 3vw, 46px);
+}
+
+.chap-list a.is-past .cl {
+  color: rgba(238, 242, 251, 0.5);
+  -webkit-text-stroke-color: transparent;
+}
+
+.chap-list a:hover .cl,
+.chap-list a.is-now .cl {
+  color: #fff;
+  -webkit-text-stroke-color: transparent;
+}
+
+.chap-list a.is-now .cl {
+  text-shadow: 0 0 24px rgba(120, 185, 255, 0.55);
+}
+
+.chap-list a.is-now::after {
+  content: "";
+  align-self: center;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #6fb0ff;
+  box-shadow: 0 0 12px 2px rgba(79, 155, 255, 0.9);
+  animation: nowdot 1.6s ease-in-out infinite;
+}
+
+@keyframes nowdot {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.7);
+  }
+}
+
+.chap-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  margin: 2px 0 8px 42px;
+}
+
+.chap-sub a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.chap-sub a + a::before {
+  content: "·";
+  margin: 0 9px;
+  color: var(--dim);
+}
+
+.chap-sub a:hover {
+  color: var(--ink);
+}
+
+.chap-foot {
+  display: none;
+}
+
+@media (max-width: 759px) {
+  .hdr-tools .cta,
+  .chap-txt {
+    display: none;
   }
 
-  .nav > a,
-  .menu > summary {
-    padding: 13px 14px;
-    border-radius: 14px;
-  }
-
-  .menu-panel {
-    position: static;
-    min-width: 0;
-    padding: 0 0 6px 14px;
-    background: none;
-    border: 0;
-    box-shadow: none;
-  }
-
-  .menu-panel a {
-    font-size: 16px;
-  }
-
-  .nav > .lang,
-  .nav > .cta {
-    margin: 10px 0 0;
+  .chap-btn {
+    width: 42px;
+    height: 42px;
+    padding: 0;
     justify-content: center;
+    border-radius: 12px;
   }
+
+  .chapters {
+    justify-content: flex-start;
+    padding-bottom: 40px;
+  }
+
+  .chap-inner {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 26px;
+  }
+
+  .chap-foot {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+/* while the film plays and nobody touches anything, the header steps back to just the logo */
+.hdr::before,
+.hdr .brand,
+.hdr-tools {
+  transition: opacity 0.6s;
+}
+
+html.chrome-rest .hdr-tools {
+  opacity: 0;
+}
+
+html.chrome-rest .hdr::before {
+  opacity: 0;
+}
+
+html.chrome-rest .hdr {
+  border-bottom-color: transparent;
+}
+
+html.chrome-rest .hdr .brand {
+  opacity: 0.5;
 }
 
 @media (max-width: 380px) {
@@ -3934,21 +4074,8 @@ html.no-js .s-fin {
     padding: 12px var(--gut);
   }
 
-  html.no-js .nav-toggle {
+  html.no-js .chap-btn {
     display: none;
-  }
-
-  html.no-js .nav {
-    position: static;
-    flex-direction: row;
-    flex-wrap: wrap;
-    padding: 0;
-    font-size: 14px;
-    background: none;
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-    pointer-events: auto;
   }
 
   html.no-js .s-hero {
