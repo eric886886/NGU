@@ -3415,6 +3415,83 @@ html.no-js .readbar {
   display: none;
 }
 
+/* typed text: while the autopilot runs, letters appear one by one (motion.js fades in the newest) */
+html.tour-auto .tour .rc {
+  opacity: 0;
+}
+
+html.tour-auto .tour .rc.on {
+  opacity: 1;
+}
+
+html:not(.tour-auto) .tour .rc {
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+/* narrator lines between the sections (added text, not from the original pages) */
+.bridge {
+  padding: clamp(40px, 8vh, 90px) 0;
+}
+
+.bridge-line {
+  max-width: 900px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(30px, 3.6vw, 54px);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #eef2fb;
+}
+
+.bridge-line::before {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 1px;
+  margin-bottom: 26px;
+  background: linear-gradient(90deg, var(--azure), transparent);
+}
+
+html:not(.read):not(.no-js) .bridge {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(100vh - var(--hdr) - var(--ctl) - 16vh);
+  min-height: calc(100svh - var(--hdr) - var(--ctl) - 16vh);
+}
+
+@media (min-width: 760px) {
+  html:not(.read):not(.no-js) .bridge-line {
+    max-width: min(820px, 58%);
+  }
+}
+
+@media (max-width: 759px) {
+  html:not(.read):not(.no-js) .bridge {
+    justify-content: flex-end;
+    min-height: calc(100svh - var(--hdr) - var(--ctl) - 60px);
+  }
+
+  .bridge-line {
+    font-size: clamp(26px, 7.4vw, 32px);
+  }
+}
+
+html:lang(zh) .bridge-line {
+  font-style: normal;
+  font-weight: 600;
+  font-size: clamp(26px, 3vw, 44px);
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 759px) {
+  html:lang(zh) .bridge-line {
+    font-size: clamp(22px, 6.2vw, 27px);
+  }
+}
+
 /* ---------- Chinese page (zh.html): CJK fonts, upright serif accents, looser line-height ---------- */
 
 html:lang(zh) {
@@ -4160,23 +4237,26 @@ html.read #read {
       <!-- 10 · 关于 (zh-about.html) -->
       <section class="tsec t-about" data-icon="bulb" id="about" data-tour data-label="关于" data-form="logoH">
         <div class="twrap">
+          <div class="bridge" data-stop>
+            <p class="bridge-line m m-fade" data-r data-icon="none">先说说，纳想为什么存在。</p>
+          </div>
           <header class="thead" data-stop>
             <p class="eyebrow m m-rise" data-r data-n="10">关于纳想 NaxaStudio</p>
             <h2 class="t-title" data-rs>陪你借助 AI 的力量，<em>把想法变成现实。</em></h2>
           </header>
           <div class="manifesto" data-stop>
             <p class="mf m m-fade" data-icon="bulb" data-r data-rr>NaxaStudio 是为那些有想法、但需要一个方法把想法变成现实的人而存在的。</p>
-            <p class="mf m m-fade" data-icon="route" data-r="0.2" data-rr>不管你是想发展一门生意，做一个有意义的项目，实现一个梦想，还是想走过业务里的某个卡点，最难的往往不是想法本身，而是踏出第一步，并持续推进下去。</p>
+            <p class="mf m m-fade" data-icon="stairs" data-r="0.2" data-rr>不管你是想发展一门生意，做一个有意义的项目，实现一个梦想，还是想走过业务里的某个卡点，最难的往往不是想法本身，而是踏出第一步，并持续推进下去。</p>
           </div>
           <div class="manifesto" data-stop>
-            <p class="mf m m-fade" data-icon="growth" data-r data-rr>我们相信 AI 不应该是冰冷、遥远、复杂的技术。它应该成为一个实用的解决方案，帮助人从想法走向行动，从行动走向真实的结果。</p>
+            <p class="mf m m-fade" data-icon="flow3" data-r data-rr>我们相信 AI 不应该是冰冷、遥远、复杂的技术。它应该成为一个实用的解决方案，帮助人从想法走向行动，从行动走向真实的结果。</p>
             <p class="mf mf-last m m-blur" data-icon="logo" data-r="0.4">NaxaStudio 存在的原因，就是陪你借助 AI 的力量，把想法变成现实。</p>
           </div>
-          <div class="reality" data-icon="route" data-stop>
+          <div class="reality" data-icon="stairs" data-stop>
             <h3 class="t-sub" data-rs>先把想法变成<em>可以执行的<span class="wg">第一步。</span></em></h3>
             <div class="reality-cols">
               <p class="lead m m-fade" data-r="0.3" data-rr data-icon="checklist">客户来了怎么回、线索怎么跟、资料怎么整理、内容怎么持续做，这些问题比技术本身更重要。我们帮你先把这些环节理顺，再用 AI 把行动持续推进下去。</p>
-              <p class="lead m m-fade" data-r="0.6" data-rr data-icon="coins">我们的团队有业务咨询经验，也有服务私人客户和小商户的银行相关经验。这个背景让我们更理解小企业的预算压力、现金流压力、客户跟进压力和日常运营卡点。</p>
+              <p class="lead m m-fade" data-r="0.6" data-rr data-icon="bank">我们的团队有业务咨询经验，也有服务私人客户和小商户的银行相关经验。这个背景让我们更理解小企业的预算压力、现金流压力、客户跟进压力和日常运营卡点。</p>
             </div>
           </div>
           <div class="practice" data-icon="checklist" data-stop>
@@ -4186,6 +4266,9 @@ html.read #read {
               <li class="m m-rise" data-r="0.6" data-icon="target"><span class="pr-n">02</span><strong>优先解决最影响收入的流程</strong><span class="t">从容易漏客户、拖跟进、重复耗时的地方开始。</span></li>
               <li class="m m-rise" data-r="0.9" data-icon="checklist"><span class="pr-n">03</span><strong>做小企业真正用得上的方案</strong><span class="t">清楚、实用、可执行，而不是复杂昂贵的大项目。</span></li>
             </ul>
+          </div>
+          <div class="bridge" data-stop>
+            <p class="bridge-line m m-fade" data-r data-icon="none">那落到实际，我们能帮你做什么？</p>
           </div>
         </div>
       </section>
@@ -4225,13 +4308,16 @@ html.read #read {
               <p class="spec-d">把重复行政工作变成清单、模板、交接记录和下一步提醒。</p>
             </li>
           </ol>
-          <aside class="t-callout m m-rise" data-r data-stop>
+          <aside class="t-callout m m-rise" data-r data-stop data-icon="question">
             <div>
               <h3>不知道先做哪个？</h3>
               <p>先做 AI 业务诊断，找出最影响时间、成本和销售机会的流程。</p>
             </div>
             <a class="btn primary" href="zh-business-review.html">先做业务诊断</a>
           </aside>
+          <div class="bridge" data-stop>
+            <p class="bridge-line m m-fade" data-r data-icon="none">还没准备好用全部助手？可以先从一层开始。</p>
+          </div>
         </div>
       </section>
 
@@ -4248,7 +4334,7 @@ html.read #read {
             </div>
           </header>
           <div class="layers-wrap" data-stop>
-            <div class="layers-text">
+            <div class="layers-text" data-icon="team">
               <h3 class="t-sub" data-rs>适合<span class="wg">刚开始</span>创业或团队<span class="wg">还很小的</span>阶段。</h3>
               <p class="lead m m-fade" data-r="0.4" data-rr>如果你暂时还不想马上雇前台、销售助理、营销助理或行政人员，可以先用一个实用 AI 方案处理最重复、最耗时的工作。</p>
             </div>
@@ -4257,10 +4343,13 @@ html.read #read {
               <ol>
                 <li class="layer m m-lift" data-icon="chat" style="--i: 0" data-r="0.6"><span class="layer-n">01</span><strong>收集客户信息</strong><span class="t">把客户需求、联系方式、服务类型和紧急程度整理清楚。</span></li>
                 <li class="layer m m-lift" data-icon="document" style="--i: 1" data-r="0.9"><span class="layer-n">02</span><strong>生成摘要和下一步</strong><span class="t">让老板快速知道客户要什么、还缺什么、下一步该做什么。</span></li>
-                <li class="layer m m-lift" data-icon="envelope" style="--i: 2" data-r="1.2"><span class="layer-n">03</span><strong>准备回复草稿</strong><span class="t">让回复更快、更专业，也减少重复打字。</span></li>
+                <li class="layer m m-lift" data-icon="pen" style="--i: 2" data-r="1.2"><span class="layer-n">03</span><strong>准备回复草稿</strong><span class="t">让回复更快、更专业，也减少重复打字。</span></li>
                 <li class="layer m m-lift" data-icon="checklist" style="--i: 3" data-r="1.5"><span class="layer-n">04</span><strong>建立流程清单</strong><span class="t">把重复工作整理成清楚的步骤和模板。</span></li>
               </ol>
             </div>
+          </div>
+          <div class="bridge" data-stop>
+            <p class="bridge-line m m-fade" data-r data-icon="none">做决定之前，先看看它实际怎么工作。</p>
           </div>
         </div>
       </section>
@@ -4341,6 +4430,9 @@ html.read #read {
               <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
             </article>
           </div>
+          <div class="bridge" data-stop>
+            <p class="bridge-line m m-fade" data-r data-icon="none">放进真实的生意里，是这样的。</p>
+          </div>
         </div>
       </section>
 
@@ -4352,43 +4444,43 @@ html.read #read {
             <h2 class="t-title" data-rs>看 AI 方案如何解决<span class="wg">小企业</span><em><span class="wg">最耗时间、</span><span class="wg">最容易</span><span class="wg">漏单的</span>问题。</em></h2>
             <p class="lead m m-fade" data-r="0.5" data-rr>这些是案例式场景，用来说明客户遇到什么麻烦、适合用哪个 AI 方案、最后能改善什么业务结果。</p>
           </header>
-          <article class="case" data-icon="storm" data-stop>
+          <article class="case" data-icon="phone" data-stop>
             <p class="eyebrow m m-rise" data-r>本地服务行业</p>
             <h3 class="case-h" data-rs>漏接电话正在变成漏掉订单。</h3>
             <dl class="case-flow">
-              <div class="cf cf-p m m-rise" data-r="0.4"><dt>问题</dt><dd>老板经常在现场忙，电话、表单和私信不能及时回复，客户很容易转去找别人。</dd></div>
+              <div class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>问题</dt><dd>老板经常在现场忙，电话、表单和私信不能及时回复，客户很容易转去找别人。</dd></div>
               <div class="cf cf-s m m-rise" data-icon="chat" data-r="0.8"><dt>AI 方案</dt><dd>AI 接待助手先收集服务需求、地点、紧急程度、联系方式和缺失信息，再整理成清楚的客户摘要。</dd></div>
               <div class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>改善</dt><dd>客户更快得到回应，老板看到的是整理好的需求，咨询更不容易冷掉。</dd></div>
             </dl>
           </article>
-          <article class="case" data-icon="storm" data-stop>
+          <article class="case" data-icon="chat" data-stop>
             <p class="eyebrow m m-rise" data-r>专业服务</p>
             <h3 class="case-h" data-rs>潜在客户<span class="wg">问完一次，</span>就没有<span class="wg">后续。</span></h3>
             <dl class="case-flow">
-              <div class="cf cf-p m m-rise" data-r="0.4"><dt>问题</dt><dd>客户发来的信息很短，团队很难判断谁比较认真，也不知道下一步该问什么。</dd></div>
+              <div class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>问题</dt><dd>客户发来的信息很短，团队很难判断谁比较认真，也不知道下一步该问什么。</dd></div>
               <div class="cf cf-s m m-rise" data-icon="funnel" data-r="0.8"><dt>AI 方案</dt><dd>AI 销售跟进助手整理购买意向、时间、预算信号和缺失背景，并准备跟进草稿。</dd></div>
               <div class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>改善</dt><dd>老板更容易判断优先级，跟进更稳定，也更容易推动合适的客户进入下一步。</dd></div>
             </dl>
           </article>
-          <article class="case" data-icon="storm" data-stop>
+          <article class="case" data-icon="calendar" data-stop>
             <p class="eyebrow m m-rise" data-r>创业公司</p>
             <h3 class="case-h" data-rs><span class="wg">一忙起来，</span><span class="wg">营销</span>内容<span class="wg">就停了。</span></h3>
             <dl class="case-flow">
-              <div class="cf cf-p m m-rise" data-r="0.4"><dt>问题</dt><dd>老板有服务想法和客户故事，但没有时间持续写帖子、邮件或活动文案。</dd></div>
+              <div class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>问题</dt><dd>老板有服务想法和客户故事，但没有时间持续写帖子、邮件或活动文案。</dd></div>
               <div class="cf cf-s m m-rise" data-icon="megaphone" data-r="0.8"><dt>AI 方案</dt><dd>AI 营销助手把服务笔记变成内容方向、帖子草稿、行动号召和可重复使用的表达。</dd></div>
               <div class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>改善</dt><dd>营销更容易持续，内容从结构化草稿开始，老板不用每次都从空白页面开始写。</dd></div>
             </dl>
           </article>
-          <article class="case" data-icon="storm" data-stop>
+          <article class="case" data-icon="papers" data-stop>
             <p class="eyebrow m m-rise" data-r>成长型运营</p>
             <h3 class="case-h" data-rs>重复行政工作<span class="wg">拖慢</span><span class="wg">每一次</span>交接。</h3>
             <dl class="case-flow">
-              <div class="cf cf-p m m-rise" data-r="0.4"><dt>问题</dt><dd>客户资料分散在邮件、表单、笔记和表格里，团队反复复制、整理、确认下一步。</dd></div>
+              <div class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>问题</dt><dd>客户资料分散在邮件、表单、笔记和表格里，团队反复复制、整理、确认下一步。</dd></div>
               <div class="cf cf-s m m-rise" data-icon="checklist" data-r="0.8"><dt>AI 方案</dt><dd>AI 流程助手把流程整理成清单、交接记录、缺失资料提醒和重复任务提示。</dd></div>
               <div class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>改善</dt><dd>团队交接更清楚，重复解释更少，日常工作更容易稳定推进。</dd></div>
             </dl>
           </article>
-          <div class="t-quote" data-icon="target" data-stop>
+          <div class="t-quote" data-icon="hourglass" data-stop>
             <p class="eyebrow m m-rise" data-r>核心逻辑</p>
             <h3 class="quote-big" data-rs>先找出正在<em>损失时间、客户或跟进机会</em>的流程。</h3>
             <p class="body m m-fade" data-r="0.6" data-rr>AI 方案不是因为听起来高级才做，而是因为某个重复问题正在消耗注意力、回复速度或销售机会。</p>
@@ -4396,6 +4488,9 @@ html.read #read {
               <a class="btn primary" href="zh-business-review.html">预约业务诊断</a>
               <a class="btn ghost" href="zh-demo-center.html">查看 Demo</a>
             </div>
+          </div>
+          <div class="bridge" data-stop>
+            <p class="bridge-line m m-fade" data-r data-icon="none">那第一步从哪里开始？先看清你的生意。</p>
           </div>
         </div>
       </section>
@@ -4420,7 +4515,7 @@ html.read #read {
             </div>
             <ol class="lean-steps">
               <li class="m m-rise" data-r="0.6" data-icon="bulb"><span class="ls-n">01</span><strong>从想法到服务</strong><span class="t">先明确你卖什么、卖给谁、客户为什么愿意买。</span></li>
-              <li class="m m-rise" data-r="0.9" data-icon="route"><span class="ls-n">02</span><strong>低成本启动流程</strong><span class="t">在请完整团队之前，先规划咨询、跟进、内容和行政怎么跑起来。</span></li>
+              <li class="m m-rise" data-r="0.9" data-icon="rocket"><span class="ls-n">02</span><strong>低成本启动流程</strong><span class="t">在请完整团队之前，先规划咨询、跟进、内容和行政怎么跑起来。</span></li>
               <li class="m m-rise" data-r="1.2" data-icon="gear"><span class="ls-n">03</span><strong>第一个 AI 方案</strong><span class="t">先做一个能节省时间、降低成本、支持早期增长的实用方案。</span></li>
             </ol>
           </div>
@@ -4431,10 +4526,13 @@ html.read #read {
               <article class="area m m-rise" data-r="0.3" data-icon="chat"><h4>客户咨询</h4><p>哪些信息经常缺失？客户第一次联系后有没有被及时回应？</p></article>
               <article class="area m m-rise" data-r="0.45" data-icon="funnel"><h4>销售跟进</h4><p>哪些潜在客户没有下一步？哪些跟进容易忘记或拖延？</p></article>
               <article class="area m m-rise" data-r="0.6" data-icon="megaphone"><h4>营销任务</h4><p>哪些内容、活动或客户沟通长期不稳定？</p></article>
-              <article class="area m m-rise" data-r="0.75" data-icon="document"><h4>资料整理</h4><p>哪些信息需要反复复制、总结、检查或分类？</p></article>
-              <article class="area m m-rise" data-r="0.9" data-icon="gear"><h4>行政流程</h4><p>哪些日常工作最耗时间，但又必须重复做？</p></article>
+              <article class="area m m-rise" data-r="0.75" data-icon="papers"><h4>资料整理</h4><p>哪些信息需要反复复制、总结、检查或分类？</p></article>
+              <article class="area m m-rise" data-r="0.9" data-icon="hourglass"><h4>行政流程</h4><p>哪些日常工作最耗时间，但又必须重复做？</p></article>
               <article class="area m m-rise" data-r="1.05" data-icon="target"><h4>优先顺序</h4><p>先做最影响时间、成本、客户体验和收入机会的流程。</p></article>
             </div>
+          </div>
+          <div class="bridge" data-stop>
+            <p class="bridge-line m m-fade" data-r data-icon="none">准备好了，就告诉我们哪里最卡。</p>
           </div>
         </div>
       </section>
@@ -4448,12 +4546,12 @@ html.read #read {
             <p class="lead m m-fade" data-r="0.5" data-rr>告诉我们你的业务现在最耗时间、最容易漏客户、或最影响销售的流程。</p>
           </header>
           <div class="contact-grid" data-stop data-dwell="12">
-            <div class="starts" data-icon="target">
+            <div class="starts" data-icon="flag">
               <h3 class="t-sub m m-blur" data-r>适合咨询的问题</h3>
               <ul>
                 <li class="m m-rise" data-r="0.3" data-icon="clock"><strong>客户回复太慢</strong><span class="t">咨询来了，但老板或团队经常忙不过来。</span></li>
                 <li class="m m-rise" data-r="0.5" data-icon="funnel"><strong>销售跟进不稳定</strong><span class="t">潜在客户没有持续跟进，机会容易流失。</span></li>
-                <li class="m m-rise" data-r="0.7" data-icon="checklist"><strong>重复工作太多</strong><span class="t">整理资料、写回复、做清单占用太多时间。</span></li>
+                <li class="m m-rise" data-r="0.7" data-icon="papers"><strong>重复工作太多</strong><span class="t">整理资料、写回复、做清单占用太多时间。</span></li>
               </ul>
             </div>
             <div class="contact-panel m m-pop" data-r="0.4">
@@ -5837,6 +5935,129 @@ html.read #read {
     ...poly([[-0.2, -0.22], [0.34, 0.06], [-0.2, 0.34], [-0.2, -0.22]], 0),
   ]);
 
+  defIcon('question', [
+    ['a', 0, -0.4, 0.4, 0.4, Math.PI, TAU + 0.6],
+    ['l', 0.33, -0.17, 0, 0.14],
+    ['l', 0, 0.14, 0, 0.4],
+    ['p', 0, 0.72, 0],
+  ]);
+  // three people: the one in the middle is the AI layer, the others are roles not hired yet
+  const person = (cx, s, ph) => [
+    ['a', cx, -0.38 * s, 0.22 * s, 0.22 * s, 0, TAU, ph],
+    ['a', cx, 0.5 * s, 0.44 * s, 0.36 * s, Math.PI, TAU, ph],
+  ];
+  defIcon('team', [...person(-0.62, 0.72, 0.5), ...person(0.62, 0.72, 1.6), ...person(0, 1, undefined)]);
+  defIcon('pen', [
+    ...poly([[-0.62, 0.42], [0.42, -0.62], [0.62, -0.42], [-0.42, 0.62], [-0.62, 0.42]]),
+    ['l', -0.62, 0.42, -0.74, 0.74],
+    ['l', -0.74, 0.74, -0.42, 0.62],
+    ['l', 0.28, -0.48, 0.48, -0.28],
+    ['f', -0.9, 0.9, 0.5, 0.9, 0.55],
+  ]);
+  defIcon('wheel', [
+    ['a', 0, 0, 0.86, 0.86, 0, TAU],
+    ['a', 0, 0, 0.22, 0.22, 0, TAU, 0],
+    ...[Math.PI / 2, (Math.PI * 7) / 6, (Math.PI * 11) / 6].map((a) => ['l', Math.cos(a) * 0.22, Math.sin(a) * 0.22, Math.cos(a) * 0.86, Math.sin(a) * 0.86]),
+  ]);
+  defIcon('phone', [
+    ...poly([[-0.4, -0.82], [0.4, -0.82], [0.4, 0.82], [-0.4, 0.82], [-0.4, -0.82]]),
+    ['l', -0.14, -0.66, 0.14, -0.66],
+    ['a', 0, 0.62, 0.07, 0.07, 0, TAU],
+    ['a', 0.4, -0.5, 0.3, 0.3, -1.1, 0.4, 0],
+    ['a', 0.4, -0.5, 0.52, 0.52, -1.1, 0.4, 0.8],
+    ['a', 0.4, -0.5, 0.74, 0.74, -1.1, 0.4, 1.6],
+  ]);
+  defIcon('hourglass', [
+    ...poly([[-0.56, -0.86], [0.56, -0.86], [0.08, 0], [0.56, 0.86], [-0.56, 0.86], [-0.08, 0], [-0.56, -0.86]]),
+    ['f', 0, -0.05, 0, 0.72, 0.9],
+    ['l', -0.36, 0.72, 0.36, 0.72, 0],
+    ['l', -0.24, -0.62, 0.24, -0.62],
+  ]);
+  defIcon('stairs', [
+    ...poly([[-0.92, 0.82], [-0.46, 0.82], [-0.46, 0.4], [0, 0.4], [0, -0.02], [0.46, -0.02], [0.46, -0.44], [0.92, -0.44]]),
+    ['f', -0.7, 0.6, 0.7, -0.66, 0.32],
+    ...poly([[0.92, -0.44], [0.92, -0.98], [1.2, -0.86], [0.92, -0.74]], 1.2),
+  ]);
+  defIcon('flow3', [
+    ['a', -0.66, 0, 0.22, 0.22, 0, TAU, 0],
+    ['a', 0, 0, 0.22, 0.22, 0, TAU, 1],
+    ['a', 0.66, 0, 0.22, 0.22, 0, TAU, 2],
+    ['f', -0.42, 0, -0.24, 0, 0.9],
+    ['f', 0.24, 0, 0.42, 0, 0.9],
+    ['l', -0.32, -0.08, -0.24, 0],
+    ['l', -0.32, 0.08, -0.24, 0],
+    ['l', 0.34, -0.08, 0.42, 0],
+    ['l', 0.34, 0.08, 0.42, 0],
+  ]);
+  defIcon('shop', [
+    ...poly([[-0.92, -0.42], [-0.8, -0.82], [0.8, -0.82], [0.92, -0.42]]),
+    ...[-0.92, -0.46, 0, 0.46].map((x) => ['a', x + 0.23, -0.42, 0.23, 0.16, 0, Math.PI]),
+    ...poly([[-0.8, -0.26], [-0.8, 0.86], [0.8, 0.86], [0.8, -0.26]]),
+    ...poly([[-0.22, 0.86], [-0.22, 0.24], [0.22, 0.24], [0.22, 0.86]], 0),
+  ]);
+  defIcon('bank', [
+    ...poly([[-0.92, -0.42], [0, -0.9], [0.92, -0.42], [-0.92, -0.42]]),
+    ...[-0.6, -0.2, 0.2, 0.6].map((x, k) => ['l', x, -0.3, x, 0.66, k * 0.5]),
+    ['l', -0.86, 0.74, 0.86, 0.74],
+    ['l', -0.94, 0.88, 0.94, 0.88],
+  ]);
+  defIcon('rocket', [
+    ...poly([[0, -0.96], [0.3, -0.46], [0.3, 0.34], [-0.3, 0.34], [-0.3, -0.46], [0, -0.96]]),
+    ['a', 0, -0.28, 0.13, 0.13, 0, TAU, 0],
+    ...poly([[0.3, 0.02], [0.56, 0.5], [0.3, 0.34]]),
+    ...poly([[-0.3, 0.02], [-0.56, 0.5], [-0.3, 0.34]]),
+    ['f', -0.12, 0.4, -0.18, 0.98, 1.2],
+    ['f', 0, 0.4, 0, 1.08, 1.4],
+    ['f', 0.12, 0.4, 0.18, 0.98, 1.1],
+  ]);
+  defIcon('book', [
+    ...poly([[0, -0.52], [-0.88, -0.7], [-0.88, 0.62], [0, 0.78]]),
+    ...poly([[0, -0.52], [0.88, -0.7], [0.88, 0.62], [0, 0.78]]),
+    ['l', 0, -0.52, 0, 0.78],
+    ...[-0.3, -0.04, 0.22].flatMap((y, k) => [
+      ['l', -0.72, y - 0.08, -0.16, y + 0.02, k * 0.6],
+      ['l', 0.16, y + 0.02, 0.72, y - 0.08, k * 0.6 + 0.3],
+    ]),
+  ]);
+  defIcon('map', [
+    ...poly([[-0.92, -0.56], [-0.3, -0.76], [0.3, -0.56], [0.92, -0.76], [0.92, 0.6], [0.3, 0.8], [-0.3, 0.6], [-0.92, 0.8], [-0.92, -0.56]]),
+    ['l', -0.3, -0.76, -0.3, 0.6],
+    ['l', 0.3, -0.56, 0.3, 0.8],
+    ['f', -0.7, 0.5, -0.1, 0.1, 0.4],
+    ['f', -0.1, 0.1, 0.42, -0.2, 0.4],
+    ['a', 0.5, -0.36, 0.16, 0.16, 0, TAU, 0],
+    ['l', 0.5, -0.2, 0.5, 0.02],
+  ]);
+  defIcon('agent', [
+    ...poly([[-0.62, -0.42], [0.62, -0.42], [0.62, 0.58], [-0.62, 0.58], [-0.62, -0.42]]),
+    ['p', -0.26, 0.02, 0],
+    ['p', 0.26, 0.02, 0],
+    ['l', -0.22, 0.32, 0.22, 0.32],
+    ['l', 0, -0.42, 0, -0.74],
+    ['a', 0, -0.82, 0.08, 0.08, 0, TAU, 0.6],
+    ['l', -0.62, 0.04, -0.82, 0.04],
+    ['l', 0.62, 0.04, 0.82, 0.04],
+  ]);
+  defIcon('flag', [
+    ['l', -0.6, 0.92, -0.6, -0.88],
+    ...poly([[-0.6, -0.88], [0.04, -0.98], [0.72, -0.8], [0.72, -0.18], [0.04, -0.36], [-0.6, -0.26]], 0),
+    ['l', -0.92, 0.92, 0.4, 0.92],
+  ]);
+  defIcon('calendar', [
+    ...poly([[-0.82, -0.62], [0.82, -0.62], [0.82, 0.82], [-0.82, 0.82], [-0.82, -0.62]]),
+    ['l', -0.82, -0.3, 0.82, -0.3],
+    ['l', -0.42, -0.82, -0.42, -0.5],
+    ['l', 0.42, -0.82, 0.42, -0.5],
+    ...[0, 1, 2, 3, 4, 5].map((k) => ['p', -0.5 + (k % 3) * 0.5, 0.06 + Math.floor(k / 3) * 0.4, k * 0.5]),
+  ]);
+  defIcon('papers', [
+    ...[0, 1, 2].flatMap((k) => {
+      const o = (2 - k) * 0.16;
+      return poly([[-0.62 + o, -0.84 + o], [0.42 + o, -0.84 + o], [0.42 + o, 0.62 + o], [-0.62 + o, 0.62 + o], [-0.62 + o, -0.84 + o]], k * 0.6);
+    }),
+    ...[-0.44, -0.18, 0.08].map((y) => ['l', -0.3, y + 0.32, 0.4, y + 0.32]),
+  ]);
+
   // where particle i sits on an icon at time t (unit coordinates); also how bright, and whether amber
   function iconPoint(name, i, t, out) {
     out.a = 1;
@@ -5913,6 +6134,31 @@ html.read #read {
   const SWARM_FRAC = 0.42;
   const IP = { x: 0, y: 0, a: 1, h: 0 };
   const SP = { x: 0, y: 0, a: 0, s: 1, h: 0 };
+  // the pen: half the swarm is a small bright point at the letter being written, half a fading trail
+  // along what was just written
+  const PEN = { x: 0, y: 0, h: 16, hist: [], head: 0 };
+  const PEN_N = 28;
+  for (let k = 0; k < PEN_N; k++) PEN.hist.push({ x: 0, y: 0 });
+  const PP = { x: 0, y: 0, a: 0 };
+  function penPoint(i, t) {
+    if (R2[i] < 0.5) {
+      const r = 1.5 + R3[i] * R3[i] * 11;
+      const a = ANG[i] + t * (4 + R4[i] * 5);
+      PP.x = PEN.x + Math.cos(a) * r;
+      PP.y = PEN.y + Math.sin(a) * r * 0.75;
+      PP.a = 0.5;
+    } else {
+      const k = Math.floor(R1[i] * PEN_N);
+      const p = PEN.hist[(PEN.head - k + PEN_N * 2) % PEN_N];
+      PP.x = p.x + (R3[i] - 0.5) * 4;
+      PP.y = p.y + PEN.h * 0.62 + (R4[i] - 0.5) * 3; // just under the line, not over the letters
+      PP.a = 0.34 * (1 - k / PEN_N);
+    }
+    return PP;
+  }
+
+  // The swarm, for each piece of text: fly to it, draw an icon of what it says, fold into the pen at its
+  // first letter, write it out alongside the typing, then settle as a glowing underline beneath it.
   function swarmPos(i, t, fx, fy, fa) {
     const c = SWARM.c, pv = SWARM.p;
     const d = SWARM.d - DEL[i] * 0.25;
@@ -5927,10 +6173,20 @@ html.read #read {
       oy = fy;
       oa = fa;
     }
-    iconPoint(SWARM.icon, i, t, IP);
-    const ix = c.x + IP.x * c.s, iy = c.y + IP.y * c.s, ia = 0.95 * IP.a;
-    const bx = c.l + R1[i] * c.w, by = c.t + R3[i] * c.h;
-    const uy = c.t + c.h + 7 + (R3[i] - 0.5) * 4;
+    const icon = SWARM.icon !== 'none';
+    let ix, iy, ia;
+    if (icon) {
+      iconPoint(SWARM.icon, i, t, IP);
+      ix = c.x + IP.x * c.s;
+      iy = c.y + IP.y * c.s;
+      ia = 0.95 * IP.a;
+    } else {
+      ix = SWARM.p0x + Math.cos(ANG[i]) * (3 + R3[i] * 10);
+      iy = SWARM.p0y + Math.sin(ANG[i]) * (3 + R3[i] * 7);
+      ia = 0.5;
+    }
+    const tS = SWARM.tS, tE = SWARM.tE;
+    const ux = c.l + R1[i] * c.w, uy = c.t + c.h + 7 + (R3[i] - 0.5) * 4;
     SP.s = 0.85;
     SP.h = 0;
     if (d < -0.8) {
@@ -5943,26 +6199,35 @@ html.read #read {
       SP.x = lerp(ox, ix, e) + Math.cos(ANG[i]) * sw;
       SP.y = lerp(oy, iy, e) + Math.sin(ANG[i]) * sw;
       SP.a = lerp(oa, ia, e);
-      SP.h = e > 0.5 ? IP.h : 0;
-    } else if (d < 0.25) {
+      SP.h = icon && e > 0.5 ? IP.h : 0;
+    } else if (d < Math.min(0.25, tS) || (!icon && d < tS)) {
       SP.x = ix;
       SP.y = iy;
       SP.a = ia;
       SP.s = 0.95;
-      SP.h = IP.h;
-    } else if (d < 0.75) {
-      const e = easeOut((d - 0.25) / 0.5);
-      SP.x = lerp(ix, bx, e);
-      SP.y = lerp(iy, by, e);
-      SP.a = lerp(ia, 0.5, e);
-      SP.h = e < 0.4 ? IP.h : 0;
-    } else if (d < 1.4) {
-      const e = easeInOut((d - 0.75) / 0.65);
-      SP.x = bx;
-      SP.y = lerp(by, uy, e);
-      SP.a = lerp(0.5, 0.3, e);
+      SP.h = icon ? IP.h : 0;
+    } else if (d < tS) {
+      // the icon folds into the pen at the first letter
+      const e = easeInOut((d - 0.25) / Math.max(0.1, tS - 0.25));
+      penPoint(i, t);
+      SP.x = lerp(ix, SWARM.p0x + (PP.x - PEN.x), e);
+      SP.y = lerp(iy, SWARM.p0y + (PP.y - PEN.y), e);
+      SP.a = lerp(ia, PP.a, e);
+      SP.h = e < 0.3 ? IP.h : 0;
+    } else if (d < tE) {
+      penPoint(i, t);
+      SP.x = PP.x;
+      SP.y = PP.y;
+      SP.a = PP.a;
+      SP.s = 0.8;
+    } else if (d < tE + 0.6) {
+      const e = easeInOut((d - tE) / 0.6);
+      penPoint(i, t);
+      SP.x = lerp(PP.x, ux, e);
+      SP.y = lerp(PP.y, uy, e);
+      SP.a = lerp(PP.a, 0.3, e);
     } else {
-      SP.x = bx + Math.sin(t * 0.8 + R2[i] * 9) * 1.5;
+      SP.x = ux + Math.sin(t * 0.8 + R2[i] * 9) * 1.5;
       SP.y = uy;
       SP.a = 0.2 + 0.14 * Math.sin(t * 2 + R4[i] * 20);
     }
@@ -6331,13 +6596,6 @@ html.read #read {
       });
       $$('.m-word', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), rel: parseFloat(w.dataset.at), dur: 0.9 }));
     });
-    $$('[data-rr]', tourEl).forEach((el) => {
-      const base = num(el.dataset.r, 0) + 0.35;
-      const rate = ZH ? 0.055 : 0.1;
-      splitWords(el, (w, i) => word('rw', w, base + i * rate, '0.7'));
-      const r0 = num(el.dataset.r, 0);
-      $$('.rw', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), rel: parseFloat(w.dataset.at) - r0, dur: 0.7, lin: true }));
-    });
     // the reading bar: sits beside the block being read and fills up while the page waits on it
     readbar = document.createElement('div');
     readbar.className = 'readbar';
@@ -6350,6 +6608,41 @@ html.read #read {
       c.go = null;
       c.p = -1;
     });
+  }
+
+  // Long text is typed out in reading order: letter by letter, or character by character in Chinese,
+  // each one fading in with a little light, at an unhurried reading pace.
+  const NO_TYPE =
+    '.eyebrow, .btn, .btns, button, label, input, select, textarea, .tag, .tag-row, .spec-n, .layer-n, .pr-n, .ls-n, .sheet-n, .demo-bar, .demo-lock, .demo-preview, .t-bignum, [data-rs], dt, svg, form';
+  const CPS = ZH ? 10 : 28; // characters per second
+  const FADE = ZH ? 2.5 : 6; // characters fading in at once
+  const typed = [];
+  function typeRun(el) {
+    const chars = [];
+    const walk = (node) => {
+      for (const n of Array.from(node.childNodes)) {
+        if (n.nodeType === 1) {
+          if (!n.matches(NO_TYPE)) walk(n);
+          continue;
+        }
+        if (n.nodeType !== 3 || !n.textContent.trim()) continue;
+        const frag = document.createDocumentFragment();
+        for (const c of Array.from(n.textContent)) {
+          if (/\s/.test(c)) {
+            frag.appendChild(document.createTextNode(c));
+            continue;
+          }
+          const sp = document.createElement('span');
+          sp.className = 'rc';
+          sp.textContent = c;
+          frag.appendChild(sp);
+          chars.push(sp);
+        }
+        node.replaceChild(frag, n);
+      }
+    };
+    walk(el);
+    return chars;
   }
 
   // Items: the pieces of text the autopilot reveals one after another (a heading, a paragraph, a card…).
@@ -6389,6 +6682,14 @@ html.read #read {
                 : e.matches('.cf-o')
                   ? 2
                   : -1;
+    });
+    items.forEach((it) => {
+      if (it.kind === 'text') {
+        it.ch = typeRun(it.el);
+        it.lo = 0;
+        it.hi = 0;
+        typed.push(it);
+      }
     });
   }
 
@@ -6468,8 +6769,18 @@ html.read #read {
       const txt = (it.el.innerText || '').trim();
       const n = ZH ? txt.replace(/\s/g, '').length : txt.split(/\s+/).filter(Boolean).length;
       const rate = ZH ? 10 : 5;
+      // typed text starts once the particles have drawn their icon, then lingers a moment to be finished
+      it.typeOff = it.card ? 0.3 : it.icon === 'none' ? 0.45 : 0.75;
       it.time =
-        it.kind === 'small' ? 0.6 : it.kind === 'form' ? 3.2 : it.kind === 'head' ? 0.8 + n * (ZH ? 0.04 : 0.06) + n / (rate * 1.6) : 1 + n / rate;
+        it.kind === 'small'
+          ? 0.6
+          : it.kind === 'form'
+            ? 3.2
+            : it.kind === 'head'
+              ? 0.8 + n * (ZH ? 0.04 : 0.06) + n / (rate * 1.6)
+              : it.ch
+                ? Math.max(1.2, it.typeOff + it.ch.length / CPS + 0.9)
+                : 1 + n / rate;
       it.beatT = null;
     });
     steps.forEach((st) => (st.items = []));
@@ -6562,6 +6873,31 @@ html.read #read {
         c.p = p;
         c.el.style.setProperty('--p', p.toFixed(4));
       }
+    }
+    if (beats) typeTour(t - FILM);
+  }
+
+  // letters [0, lo) are shown; [lo, hi) are fading in; the rest are hidden (only while on autopilot)
+  function typeTour(tau) {
+    for (const it of typed) {
+      const ch = it.ch;
+      const len = ch.length;
+      const n = it.beatT == null ? len + FADE : (tau - it.beatT - it.typeOff) * CPS;
+      if ((n <= 0 && it.hi === 0 && it.lo === 0) || (n >= len + FADE && it.lo === len && it.hi === len)) continue;
+      const lo = clamp(Math.floor(n - FADE), 0, len), hi = clamp(Math.ceil(n), 0, len);
+      for (let j = it.lo; j < lo; j++) ch[j].classList.add('on');
+      for (let j = lo; j < it.lo; j++) ch[j].classList.remove('on');
+      for (let j = it.lo; j < it.hi; j++) {
+        ch[j].style.opacity = '';
+        ch[j].style.textShadow = '';
+      }
+      for (let j = lo; j < hi; j++) {
+        const o = clamp((n - j) / FADE);
+        ch[j].style.opacity = o.toFixed(3);
+        ch[j].style.textShadow = `0 0 ${(4 + (1 - o) * 14).toFixed(1)}px rgba(150, 200, 255, ${(0.9 * (1 - o * 0.7)).toFixed(2)})`;
+      }
+      it.lo = lo;
+      it.hi = hi;
     }
   }
 
@@ -7123,6 +7459,36 @@ html.read #read {
     SWARM.icon = cur.icon;
     SWARM.c = onScreen(cur, sy, SWc);
     SWARM.p = prev ? onScreen(prev, sy, SWp) : null;
+    // the pen follows the letter being typed
+    const ch = cur.ch || [];
+    SWARM.tS = ch.length ? cur.typeOff : 0.4;
+    SWARM.tE = SWARM.tS + ch.length / CPS;
+    if (ch.length) {
+      const first = ch[0].getBoundingClientRect();
+      SWARM.p0x = first.left;
+      SWARM.p0y = first.top + first.height / 2;
+      const n = (SWARM.d - SWARM.tS) * CPS;
+      if (n > 0 && n < ch.length + 1) {
+        const r = ch[clamp(Math.floor(n), 0, ch.length - 1)].getBoundingClientRect();
+        const fresh = PEN.item !== cur;
+        PEN.item = cur;
+        const tx = r.right, ty = r.top + r.height / 2;
+        PEN.h = r.height;
+        PEN.x = fresh ? tx : lerp(PEN.x, tx, 0.45);
+        PEN.y = fresh ? ty : lerp(PEN.y, ty, 0.45);
+      } else if (n <= 0) {
+        PEN.x = SWARM.p0x;
+        PEN.y = SWARM.p0y;
+        PEN.item = cur;
+        PEN.hist.forEach((h) => ((h.x = PEN.x), (h.y = PEN.y)));
+      }
+      PEN.head = (PEN.head + 1) % PEN_N;
+      PEN.hist[PEN.head].x = PEN.x;
+      PEN.hist[PEN.head].y = PEN.y;
+    } else {
+      SWARM.p0x = SWc.x;
+      SWARM.p0y = SWc.y;
+    }
   }
 
   // the chapter numbers drift slower than the page (parallax)

@@ -1282,6 +1282,129 @@
     ...poly([[-0.2, -0.22], [0.34, 0.06], [-0.2, 0.34], [-0.2, -0.22]], 0),
   ]);
 
+  defIcon('question', [
+    ['a', 0, -0.4, 0.4, 0.4, Math.PI, TAU + 0.6],
+    ['l', 0.33, -0.17, 0, 0.14],
+    ['l', 0, 0.14, 0, 0.4],
+    ['p', 0, 0.72, 0],
+  ]);
+  // three people: the one in the middle is the AI layer, the others are roles not hired yet
+  const person = (cx, s, ph) => [
+    ['a', cx, -0.38 * s, 0.22 * s, 0.22 * s, 0, TAU, ph],
+    ['a', cx, 0.5 * s, 0.44 * s, 0.36 * s, Math.PI, TAU, ph],
+  ];
+  defIcon('team', [...person(-0.62, 0.72, 0.5), ...person(0.62, 0.72, 1.6), ...person(0, 1, undefined)]);
+  defIcon('pen', [
+    ...poly([[-0.62, 0.42], [0.42, -0.62], [0.62, -0.42], [-0.42, 0.62], [-0.62, 0.42]]),
+    ['l', -0.62, 0.42, -0.74, 0.74],
+    ['l', -0.74, 0.74, -0.42, 0.62],
+    ['l', 0.28, -0.48, 0.48, -0.28],
+    ['f', -0.9, 0.9, 0.5, 0.9, 0.55],
+  ]);
+  defIcon('wheel', [
+    ['a', 0, 0, 0.86, 0.86, 0, TAU],
+    ['a', 0, 0, 0.22, 0.22, 0, TAU, 0],
+    ...[Math.PI / 2, (Math.PI * 7) / 6, (Math.PI * 11) / 6].map((a) => ['l', Math.cos(a) * 0.22, Math.sin(a) * 0.22, Math.cos(a) * 0.86, Math.sin(a) * 0.86]),
+  ]);
+  defIcon('phone', [
+    ...poly([[-0.4, -0.82], [0.4, -0.82], [0.4, 0.82], [-0.4, 0.82], [-0.4, -0.82]]),
+    ['l', -0.14, -0.66, 0.14, -0.66],
+    ['a', 0, 0.62, 0.07, 0.07, 0, TAU],
+    ['a', 0.4, -0.5, 0.3, 0.3, -1.1, 0.4, 0],
+    ['a', 0.4, -0.5, 0.52, 0.52, -1.1, 0.4, 0.8],
+    ['a', 0.4, -0.5, 0.74, 0.74, -1.1, 0.4, 1.6],
+  ]);
+  defIcon('hourglass', [
+    ...poly([[-0.56, -0.86], [0.56, -0.86], [0.08, 0], [0.56, 0.86], [-0.56, 0.86], [-0.08, 0], [-0.56, -0.86]]),
+    ['f', 0, -0.05, 0, 0.72, 0.9],
+    ['l', -0.36, 0.72, 0.36, 0.72, 0],
+    ['l', -0.24, -0.62, 0.24, -0.62],
+  ]);
+  defIcon('stairs', [
+    ...poly([[-0.92, 0.82], [-0.46, 0.82], [-0.46, 0.4], [0, 0.4], [0, -0.02], [0.46, -0.02], [0.46, -0.44], [0.92, -0.44]]),
+    ['f', -0.7, 0.6, 0.7, -0.66, 0.32],
+    ...poly([[0.92, -0.44], [0.92, -0.98], [1.2, -0.86], [0.92, -0.74]], 1.2),
+  ]);
+  defIcon('flow3', [
+    ['a', -0.66, 0, 0.22, 0.22, 0, TAU, 0],
+    ['a', 0, 0, 0.22, 0.22, 0, TAU, 1],
+    ['a', 0.66, 0, 0.22, 0.22, 0, TAU, 2],
+    ['f', -0.42, 0, -0.24, 0, 0.9],
+    ['f', 0.24, 0, 0.42, 0, 0.9],
+    ['l', -0.32, -0.08, -0.24, 0],
+    ['l', -0.32, 0.08, -0.24, 0],
+    ['l', 0.34, -0.08, 0.42, 0],
+    ['l', 0.34, 0.08, 0.42, 0],
+  ]);
+  defIcon('shop', [
+    ...poly([[-0.92, -0.42], [-0.8, -0.82], [0.8, -0.82], [0.92, -0.42]]),
+    ...[-0.92, -0.46, 0, 0.46].map((x) => ['a', x + 0.23, -0.42, 0.23, 0.16, 0, Math.PI]),
+    ...poly([[-0.8, -0.26], [-0.8, 0.86], [0.8, 0.86], [0.8, -0.26]]),
+    ...poly([[-0.22, 0.86], [-0.22, 0.24], [0.22, 0.24], [0.22, 0.86]], 0),
+  ]);
+  defIcon('bank', [
+    ...poly([[-0.92, -0.42], [0, -0.9], [0.92, -0.42], [-0.92, -0.42]]),
+    ...[-0.6, -0.2, 0.2, 0.6].map((x, k) => ['l', x, -0.3, x, 0.66, k * 0.5]),
+    ['l', -0.86, 0.74, 0.86, 0.74],
+    ['l', -0.94, 0.88, 0.94, 0.88],
+  ]);
+  defIcon('rocket', [
+    ...poly([[0, -0.96], [0.3, -0.46], [0.3, 0.34], [-0.3, 0.34], [-0.3, -0.46], [0, -0.96]]),
+    ['a', 0, -0.28, 0.13, 0.13, 0, TAU, 0],
+    ...poly([[0.3, 0.02], [0.56, 0.5], [0.3, 0.34]]),
+    ...poly([[-0.3, 0.02], [-0.56, 0.5], [-0.3, 0.34]]),
+    ['f', -0.12, 0.4, -0.18, 0.98, 1.2],
+    ['f', 0, 0.4, 0, 1.08, 1.4],
+    ['f', 0.12, 0.4, 0.18, 0.98, 1.1],
+  ]);
+  defIcon('book', [
+    ...poly([[0, -0.52], [-0.88, -0.7], [-0.88, 0.62], [0, 0.78]]),
+    ...poly([[0, -0.52], [0.88, -0.7], [0.88, 0.62], [0, 0.78]]),
+    ['l', 0, -0.52, 0, 0.78],
+    ...[-0.3, -0.04, 0.22].flatMap((y, k) => [
+      ['l', -0.72, y - 0.08, -0.16, y + 0.02, k * 0.6],
+      ['l', 0.16, y + 0.02, 0.72, y - 0.08, k * 0.6 + 0.3],
+    ]),
+  ]);
+  defIcon('map', [
+    ...poly([[-0.92, -0.56], [-0.3, -0.76], [0.3, -0.56], [0.92, -0.76], [0.92, 0.6], [0.3, 0.8], [-0.3, 0.6], [-0.92, 0.8], [-0.92, -0.56]]),
+    ['l', -0.3, -0.76, -0.3, 0.6],
+    ['l', 0.3, -0.56, 0.3, 0.8],
+    ['f', -0.7, 0.5, -0.1, 0.1, 0.4],
+    ['f', -0.1, 0.1, 0.42, -0.2, 0.4],
+    ['a', 0.5, -0.36, 0.16, 0.16, 0, TAU, 0],
+    ['l', 0.5, -0.2, 0.5, 0.02],
+  ]);
+  defIcon('agent', [
+    ...poly([[-0.62, -0.42], [0.62, -0.42], [0.62, 0.58], [-0.62, 0.58], [-0.62, -0.42]]),
+    ['p', -0.26, 0.02, 0],
+    ['p', 0.26, 0.02, 0],
+    ['l', -0.22, 0.32, 0.22, 0.32],
+    ['l', 0, -0.42, 0, -0.74],
+    ['a', 0, -0.82, 0.08, 0.08, 0, TAU, 0.6],
+    ['l', -0.62, 0.04, -0.82, 0.04],
+    ['l', 0.62, 0.04, 0.82, 0.04],
+  ]);
+  defIcon('flag', [
+    ['l', -0.6, 0.92, -0.6, -0.88],
+    ...poly([[-0.6, -0.88], [0.04, -0.98], [0.72, -0.8], [0.72, -0.18], [0.04, -0.36], [-0.6, -0.26]], 0),
+    ['l', -0.92, 0.92, 0.4, 0.92],
+  ]);
+  defIcon('calendar', [
+    ...poly([[-0.82, -0.62], [0.82, -0.62], [0.82, 0.82], [-0.82, 0.82], [-0.82, -0.62]]),
+    ['l', -0.82, -0.3, 0.82, -0.3],
+    ['l', -0.42, -0.82, -0.42, -0.5],
+    ['l', 0.42, -0.82, 0.42, -0.5],
+    ...[0, 1, 2, 3, 4, 5].map((k) => ['p', -0.5 + (k % 3) * 0.5, 0.06 + Math.floor(k / 3) * 0.4, k * 0.5]),
+  ]);
+  defIcon('papers', [
+    ...[0, 1, 2].flatMap((k) => {
+      const o = (2 - k) * 0.16;
+      return poly([[-0.62 + o, -0.84 + o], [0.42 + o, -0.84 + o], [0.42 + o, 0.62 + o], [-0.62 + o, 0.62 + o], [-0.62 + o, -0.84 + o]], k * 0.6);
+    }),
+    ...[-0.44, -0.18, 0.08].map((y) => ['l', -0.3, y + 0.32, 0.4, y + 0.32]),
+  ]);
+
   // where particle i sits on an icon at time t (unit coordinates); also how bright, and whether amber
   function iconPoint(name, i, t, out) {
     out.a = 1;
@@ -1358,6 +1481,31 @@
   const SWARM_FRAC = 0.42;
   const IP = { x: 0, y: 0, a: 1, h: 0 };
   const SP = { x: 0, y: 0, a: 0, s: 1, h: 0 };
+  // the pen: half the swarm is a small bright point at the letter being written, half a fading trail
+  // along what was just written
+  const PEN = { x: 0, y: 0, h: 16, hist: [], head: 0 };
+  const PEN_N = 28;
+  for (let k = 0; k < PEN_N; k++) PEN.hist.push({ x: 0, y: 0 });
+  const PP = { x: 0, y: 0, a: 0 };
+  function penPoint(i, t) {
+    if (R2[i] < 0.5) {
+      const r = 1.5 + R3[i] * R3[i] * 11;
+      const a = ANG[i] + t * (4 + R4[i] * 5);
+      PP.x = PEN.x + Math.cos(a) * r;
+      PP.y = PEN.y + Math.sin(a) * r * 0.75;
+      PP.a = 0.5;
+    } else {
+      const k = Math.floor(R1[i] * PEN_N);
+      const p = PEN.hist[(PEN.head - k + PEN_N * 2) % PEN_N];
+      PP.x = p.x + (R3[i] - 0.5) * 4;
+      PP.y = p.y + PEN.h * 0.62 + (R4[i] - 0.5) * 3; // just under the line, not over the letters
+      PP.a = 0.34 * (1 - k / PEN_N);
+    }
+    return PP;
+  }
+
+  // The swarm, for each piece of text: fly to it, draw an icon of what it says, fold into the pen at its
+  // first letter, write it out alongside the typing, then settle as a glowing underline beneath it.
   function swarmPos(i, t, fx, fy, fa) {
     const c = SWARM.c, pv = SWARM.p;
     const d = SWARM.d - DEL[i] * 0.25;
@@ -1372,10 +1520,20 @@
       oy = fy;
       oa = fa;
     }
-    iconPoint(SWARM.icon, i, t, IP);
-    const ix = c.x + IP.x * c.s, iy = c.y + IP.y * c.s, ia = 0.95 * IP.a;
-    const bx = c.l + R1[i] * c.w, by = c.t + R3[i] * c.h;
-    const uy = c.t + c.h + 7 + (R3[i] - 0.5) * 4;
+    const icon = SWARM.icon !== 'none';
+    let ix, iy, ia;
+    if (icon) {
+      iconPoint(SWARM.icon, i, t, IP);
+      ix = c.x + IP.x * c.s;
+      iy = c.y + IP.y * c.s;
+      ia = 0.95 * IP.a;
+    } else {
+      ix = SWARM.p0x + Math.cos(ANG[i]) * (3 + R3[i] * 10);
+      iy = SWARM.p0y + Math.sin(ANG[i]) * (3 + R3[i] * 7);
+      ia = 0.5;
+    }
+    const tS = SWARM.tS, tE = SWARM.tE;
+    const ux = c.l + R1[i] * c.w, uy = c.t + c.h + 7 + (R3[i] - 0.5) * 4;
     SP.s = 0.85;
     SP.h = 0;
     if (d < -0.8) {
@@ -1388,26 +1546,35 @@
       SP.x = lerp(ox, ix, e) + Math.cos(ANG[i]) * sw;
       SP.y = lerp(oy, iy, e) + Math.sin(ANG[i]) * sw;
       SP.a = lerp(oa, ia, e);
-      SP.h = e > 0.5 ? IP.h : 0;
-    } else if (d < 0.25) {
+      SP.h = icon && e > 0.5 ? IP.h : 0;
+    } else if (d < Math.min(0.25, tS) || (!icon && d < tS)) {
       SP.x = ix;
       SP.y = iy;
       SP.a = ia;
       SP.s = 0.95;
-      SP.h = IP.h;
-    } else if (d < 0.75) {
-      const e = easeOut((d - 0.25) / 0.5);
-      SP.x = lerp(ix, bx, e);
-      SP.y = lerp(iy, by, e);
-      SP.a = lerp(ia, 0.5, e);
-      SP.h = e < 0.4 ? IP.h : 0;
-    } else if (d < 1.4) {
-      const e = easeInOut((d - 0.75) / 0.65);
-      SP.x = bx;
-      SP.y = lerp(by, uy, e);
-      SP.a = lerp(0.5, 0.3, e);
+      SP.h = icon ? IP.h : 0;
+    } else if (d < tS) {
+      // the icon folds into the pen at the first letter
+      const e = easeInOut((d - 0.25) / Math.max(0.1, tS - 0.25));
+      penPoint(i, t);
+      SP.x = lerp(ix, SWARM.p0x + (PP.x - PEN.x), e);
+      SP.y = lerp(iy, SWARM.p0y + (PP.y - PEN.y), e);
+      SP.a = lerp(ia, PP.a, e);
+      SP.h = e < 0.3 ? IP.h : 0;
+    } else if (d < tE) {
+      penPoint(i, t);
+      SP.x = PP.x;
+      SP.y = PP.y;
+      SP.a = PP.a;
+      SP.s = 0.8;
+    } else if (d < tE + 0.6) {
+      const e = easeInOut((d - tE) / 0.6);
+      penPoint(i, t);
+      SP.x = lerp(PP.x, ux, e);
+      SP.y = lerp(PP.y, uy, e);
+      SP.a = lerp(PP.a, 0.3, e);
     } else {
-      SP.x = bx + Math.sin(t * 0.8 + R2[i] * 9) * 1.5;
+      SP.x = ux + Math.sin(t * 0.8 + R2[i] * 9) * 1.5;
       SP.y = uy;
       SP.a = 0.2 + 0.14 * Math.sin(t * 2 + R4[i] * 20);
     }
@@ -1776,13 +1943,6 @@
       });
       $$('.m-word', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), rel: parseFloat(w.dataset.at), dur: 0.9 }));
     });
-    $$('[data-rr]', tourEl).forEach((el) => {
-      const base = num(el.dataset.r, 0) + 0.35;
-      const rate = ZH ? 0.055 : 0.1;
-      splitWords(el, (w, i) => word('rw', w, base + i * rate, '0.7'));
-      const r0 = num(el.dataset.r, 0);
-      $$('.rw', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), rel: parseFloat(w.dataset.at) - r0, dur: 0.7, lin: true }));
-    });
     // the reading bar: sits beside the block being read and fills up while the page waits on it
     readbar = document.createElement('div');
     readbar.className = 'readbar';
@@ -1795,6 +1955,41 @@
       c.go = null;
       c.p = -1;
     });
+  }
+
+  // Long text is typed out in reading order: letter by letter, or character by character in Chinese,
+  // each one fading in with a little light, at an unhurried reading pace.
+  const NO_TYPE =
+    '.eyebrow, .btn, .btns, button, label, input, select, textarea, .tag, .tag-row, .spec-n, .layer-n, .pr-n, .ls-n, .sheet-n, .demo-bar, .demo-lock, .demo-preview, .t-bignum, [data-rs], dt, svg, form';
+  const CPS = ZH ? 10 : 28; // characters per second
+  const FADE = ZH ? 2.5 : 6; // characters fading in at once
+  const typed = [];
+  function typeRun(el) {
+    const chars = [];
+    const walk = (node) => {
+      for (const n of Array.from(node.childNodes)) {
+        if (n.nodeType === 1) {
+          if (!n.matches(NO_TYPE)) walk(n);
+          continue;
+        }
+        if (n.nodeType !== 3 || !n.textContent.trim()) continue;
+        const frag = document.createDocumentFragment();
+        for (const c of Array.from(n.textContent)) {
+          if (/\s/.test(c)) {
+            frag.appendChild(document.createTextNode(c));
+            continue;
+          }
+          const sp = document.createElement('span');
+          sp.className = 'rc';
+          sp.textContent = c;
+          frag.appendChild(sp);
+          chars.push(sp);
+        }
+        node.replaceChild(frag, n);
+      }
+    };
+    walk(el);
+    return chars;
   }
 
   // Items: the pieces of text the autopilot reveals one after another (a heading, a paragraph, a card…).
@@ -1834,6 +2029,14 @@
                 : e.matches('.cf-o')
                   ? 2
                   : -1;
+    });
+    items.forEach((it) => {
+      if (it.kind === 'text') {
+        it.ch = typeRun(it.el);
+        it.lo = 0;
+        it.hi = 0;
+        typed.push(it);
+      }
     });
   }
 
@@ -1913,8 +2116,18 @@
       const txt = (it.el.innerText || '').trim();
       const n = ZH ? txt.replace(/\s/g, '').length : txt.split(/\s+/).filter(Boolean).length;
       const rate = ZH ? 10 : 5;
+      // typed text starts once the particles have drawn their icon, then lingers a moment to be finished
+      it.typeOff = it.card ? 0.3 : it.icon === 'none' ? 0.45 : 0.75;
       it.time =
-        it.kind === 'small' ? 0.6 : it.kind === 'form' ? 3.2 : it.kind === 'head' ? 0.8 + n * (ZH ? 0.04 : 0.06) + n / (rate * 1.6) : 1 + n / rate;
+        it.kind === 'small'
+          ? 0.6
+          : it.kind === 'form'
+            ? 3.2
+            : it.kind === 'head'
+              ? 0.8 + n * (ZH ? 0.04 : 0.06) + n / (rate * 1.6)
+              : it.ch
+                ? Math.max(1.2, it.typeOff + it.ch.length / CPS + 0.9)
+                : 1 + n / rate;
       it.beatT = null;
     });
     steps.forEach((st) => (st.items = []));
@@ -2007,6 +2220,31 @@
         c.p = p;
         c.el.style.setProperty('--p', p.toFixed(4));
       }
+    }
+    if (beats) typeTour(t - FILM);
+  }
+
+  // letters [0, lo) are shown; [lo, hi) are fading in; the rest are hidden (only while on autopilot)
+  function typeTour(tau) {
+    for (const it of typed) {
+      const ch = it.ch;
+      const len = ch.length;
+      const n = it.beatT == null ? len + FADE : (tau - it.beatT - it.typeOff) * CPS;
+      if ((n <= 0 && it.hi === 0 && it.lo === 0) || (n >= len + FADE && it.lo === len && it.hi === len)) continue;
+      const lo = clamp(Math.floor(n - FADE), 0, len), hi = clamp(Math.ceil(n), 0, len);
+      for (let j = it.lo; j < lo; j++) ch[j].classList.add('on');
+      for (let j = lo; j < it.lo; j++) ch[j].classList.remove('on');
+      for (let j = it.lo; j < it.hi; j++) {
+        ch[j].style.opacity = '';
+        ch[j].style.textShadow = '';
+      }
+      for (let j = lo; j < hi; j++) {
+        const o = clamp((n - j) / FADE);
+        ch[j].style.opacity = o.toFixed(3);
+        ch[j].style.textShadow = `0 0 ${(4 + (1 - o) * 14).toFixed(1)}px rgba(150, 200, 255, ${(0.9 * (1 - o * 0.7)).toFixed(2)})`;
+      }
+      it.lo = lo;
+      it.hi = hi;
     }
   }
 
@@ -2568,6 +2806,36 @@
     SWARM.icon = cur.icon;
     SWARM.c = onScreen(cur, sy, SWc);
     SWARM.p = prev ? onScreen(prev, sy, SWp) : null;
+    // the pen follows the letter being typed
+    const ch = cur.ch || [];
+    SWARM.tS = ch.length ? cur.typeOff : 0.4;
+    SWARM.tE = SWARM.tS + ch.length / CPS;
+    if (ch.length) {
+      const first = ch[0].getBoundingClientRect();
+      SWARM.p0x = first.left;
+      SWARM.p0y = first.top + first.height / 2;
+      const n = (SWARM.d - SWARM.tS) * CPS;
+      if (n > 0 && n < ch.length + 1) {
+        const r = ch[clamp(Math.floor(n), 0, ch.length - 1)].getBoundingClientRect();
+        const fresh = PEN.item !== cur;
+        PEN.item = cur;
+        const tx = r.right, ty = r.top + r.height / 2;
+        PEN.h = r.height;
+        PEN.x = fresh ? tx : lerp(PEN.x, tx, 0.45);
+        PEN.y = fresh ? ty : lerp(PEN.y, ty, 0.45);
+      } else if (n <= 0) {
+        PEN.x = SWARM.p0x;
+        PEN.y = SWARM.p0y;
+        PEN.item = cur;
+        PEN.hist.forEach((h) => ((h.x = PEN.x), (h.y = PEN.y)));
+      }
+      PEN.head = (PEN.head + 1) % PEN_N;
+      PEN.hist[PEN.head].x = PEN.x;
+      PEN.hist[PEN.head].y = PEN.y;
+    } else {
+      SWARM.p0x = SWc.x;
+      SWARM.p0y = SWc.y;
+    }
   }
 
   // the chapter numbers drift slower than the page (parallax)

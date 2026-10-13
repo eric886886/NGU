@@ -3400,6 +3400,83 @@ html.no-js .readbar {
   display: none;
 }
 
+/* typed text: while the autopilot runs, letters appear one by one (motion.js fades in the newest) */
+html.tour-auto .tour .rc {
+  opacity: 0;
+}
+
+html.tour-auto .tour .rc.on {
+  opacity: 1;
+}
+
+html:not(.tour-auto) .tour .rc {
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+/* narrator lines between the sections (added text, not from the original pages) */
+.bridge {
+  padding: clamp(40px, 8vh, 90px) 0;
+}
+
+.bridge-line {
+  max-width: 900px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(30px, 3.6vw, 54px);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: #eef2fb;
+}
+
+.bridge-line::before {
+  content: "";
+  display: block;
+  width: 56px;
+  height: 1px;
+  margin-bottom: 26px;
+  background: linear-gradient(90deg, var(--azure), transparent);
+}
+
+html:not(.read):not(.no-js) .bridge {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(100vh - var(--hdr) - var(--ctl) - 16vh);
+  min-height: calc(100svh - var(--hdr) - var(--ctl) - 16vh);
+}
+
+@media (min-width: 760px) {
+  html:not(.read):not(.no-js) .bridge-line {
+    max-width: min(820px, 58%);
+  }
+}
+
+@media (max-width: 759px) {
+  html:not(.read):not(.no-js) .bridge {
+    justify-content: flex-end;
+    min-height: calc(100svh - var(--hdr) - var(--ctl) - 60px);
+  }
+
+  .bridge-line {
+    font-size: clamp(26px, 7.4vw, 32px);
+  }
+}
+
+html:lang(zh) .bridge-line {
+  font-style: normal;
+  font-weight: 600;
+  font-size: clamp(26px, 3vw, 44px);
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 759px) {
+  html:lang(zh) .bridge-line {
+    font-size: clamp(22px, 6.2vw, 27px);
+  }
+}
+
 /* ---------- Chinese page (zh.html): CJK fonts, upright serif accents, looser line-height ---------- */
 
 html:lang(zh) {
