@@ -775,6 +775,8 @@
   // movement. TC is set every frame: the hero's centre, its radius, the time since the section's form
   // started, and the page's scroll position (for the parallax dust).
   const TC = { x: 0, y: 0, s: 1, since: 0, sy: 0 };
+  // which part of the hero the text being revealed is about (an agent, a layer, an area…), or -1
+  const HERO = { k: -1 };
   const P3 = { x: 0, y: 0, z: 0, k: 1 };
   // rotate a point of the hero (unit coordinates) by yaw and pitch, then project it with perspective
   function proj(o, x, y, z, yaw, pitch) {
@@ -829,6 +831,8 @@
     [-0.36, 0.34, -0.2, 0.04],
     [-0.2, 0.04, -0.3, 0.16],
   ];
+  const blipA = (k) => k * 1.047 + 0.5 + (k % 2) * 0.3;
+  const blipR = (k) => 0.36 + ((k * 3) % 5) * 0.13;
   const flight = (t) => ({ x: 0.72 * Math.sin(t * 0.42), y: 0.34 * Math.sin(t * 0.84) - 0.05 });
 
   Object.assign(F, {
@@ -860,9 +864,12 @@
         return;
       }
       const k = i % 5;
-      const R = 0.62 + k * 0.15;
+      // the agents launch from the core one after another
+      const dep = smooth(0.5 + k * 0.4, 1.4 + k * 0.4, TC.since);
+      const R = (0.62 + k * 0.15) * lerp(0.18, 1, dep);
       const inc = (k - 2) * 0.34, node = k * 1.26;
       const sat = t * (0.62 - k * 0.07) + k * 1.9;
+      const lit = HERO.k < 0 ? 1 : HERO.k === k ? 1.6 : 0.55;
       let ang, rad = R, a, s = 0.8, lift = 0;
       if (g < 0.6) {
         // the orbit, brightest in the satellite's wake
@@ -884,8 +891,8 @@
       const y2 = -z * Math.sin(inc) + lift, z2 = z * Math.cos(inc);
       const cn = Math.cos(node), sn = Math.sin(node);
       proj(o, x * cn + z2 * sn, y2, -x * sn + z2 * cn, yaw, pitch);
-      o.a = a * near(P3.z);
-      o.s = s * P3.k;
+      o.a = a * near(P3.z) * lerp(0.4, 1, dep) * lit;
+      o.s = s * P3.k * (HERO.k === k ? 1.25 : 1);
     },
 
     // Startup: four layers drop into a stack, one after another; a light scans up through them
@@ -910,7 +917,8 @@
       const half = 0.66;
       const scan = Math.exp(-Math.pow(((t * 0.45) % 1.5) - 0.15 - j * 0.32, 2) * 40);
       proj(o, x * half, y, z * half, t * 0.22 + 0.7, -0.6);
-      o.a = ((line < 4 ? 0.42 : 0.2) + 0.6 * scan) * build * near(P3.z);
+      const lit = HERO.k < 0 ? 1 : HERO.k === j ? 1.7 : 0.6;
+      o.a = ((line < 4 ? 0.42 : 0.2) + 0.6 * scan) * build * near(P3.z) * lit;
       o.s = (0.8 + scan * 0.4) * P3.k;
     },
 
@@ -1029,9 +1037,10 @@
           a = 0.85 * (1 - smooth(0.97, 1, u)) + 0.1;
         }
       }
+      const part = g < 0.1 ? 1 : g < 0.18 ? 2 : x < -0.38 ? 0 : x < 0.02 ? 1 : 2;
       o.x = TC.x + x * TC.s;
       o.y = TC.y + y * TC.s;
-      o.a = a;
+      o.a = a * (HERO.k < 0 ? 1 : HERO.k === part ? 1.5 : 0.5);
       o.s = s;
       o.h = h;
     },
@@ -1063,19 +1072,22 @@
         a = 0.8 * Math.exp(-d * 2.6);
       } else if (g < 0.8) {
         const k = i % 6;
-        const ba = k * 1.047 + 0.5 + (k % 2) * 0.3;
-        const br = 0.36 + ((k * 3) % 5) * 0.13;
+        const ba = blipA(k), br = blipR(k);
         ang = ba + (R3[i] - 0.5) * 0.09;
         r = br + (R4[i] - 0.5) * 0.06;
-        const hit = Math.exp(-behind(sweep, ba) * 0.8);
+        const hit = Math.max(Math.exp(-behind(sweep, ba) * 0.8), HERO.k === k ? 1 : smooth(3, 4, TC.since) * 0.45);
         a = 0.18 + 0.82 * hit;
-        s = 0.9 + hit * 0.6;
+        s = 0.9 + hit * 0.6 + (HERO.k === k ? 0.6 : 0);
       } else {
-        const u = R1[i] * 2 - 1;
-        const k = i % 2;
-        proj(o, k ? u : 0, 0, k ? 0 : u, t * 0.05, -1.0);
-        o.a = 0.12 * near(P3.z);
-        o.s = 0.7 * P3.k;
+        // the map: once found, the opportunities are joined up in order
+        const m = i % 5;
+        const drawn = smooth(3 + m * 0.45, 3.5 + m * 0.45, TC.since);
+        const u = R1[i] * drawn;
+        const a0 = blipA(m), r0 = blipR(m), a1 = blipA(m + 1), r1 = blipR(m + 1);
+        const px = lerp(Math.cos(a0) * r0, Math.cos(a1) * r1, u), pz = lerp(Math.sin(a0) * r0, Math.sin(a1) * r1, u);
+        proj(o, px, 0, pz, t * 0.05, -1.0);
+        o.a = (drawn > 0.01 ? 0.55 : 0) * near(P3.z);
+        o.s = 0.75 * P3.k;
         return;
       }
       proj(o, Math.cos(ang) * r, 0, Math.sin(ang) * r, t * 0.05, -1.0);
@@ -1342,7 +1354,7 @@
   // The swarm: while the autopilot reads a section, about 40% of the particles leave the hero, fly to the
   // spot where the next piece of text is about to appear, draw an icon of what it is about, burst into
   // the text as it appears, and settle as a glowing underline beneath it, until the next piece is due.
-  const SWARM = { on: false, d: 0, icon: 'target', c: null, p: null };
+  const SWARM = { on: false, d: 0, icon: 'target', c: null, p: null, last: null, rel: null, relC: null };
   const SWARM_FRAC = 0.42;
   const IP = { x: 0, y: 0, a: 1, h: 0 };
   const SP = { x: 0, y: 0, a: 0, s: 1, h: 0 };
@@ -1458,7 +1470,16 @@
   // How the field moves with the page (the tour only): stars at different depths scroll with it and stretch
   // into streaks when it moves fast, particles are dragged along a little and spring back, and trails
   // grow longer while things are moving.
-  const MOT = { on: false, sy: 0, vel: 0, fade: 0.4 };
+  const MOT = { on: false, sy: 0, vel: 0, fade: 0.4, spark: null };
+  const SPARK_END = 2.5 + 0.75 * 0.35;
+  // a point along the spark's arc (quadratic Bézier)
+  const BZ = { x: 0, y: 0 };
+  function bez(sp, u) {
+    const v = 1 - u;
+    BZ.x = v * v * sp.x0 + 2 * v * u * sp.cx + u * u * sp.x1;
+    BZ.y = v * v * sp.y0 + 2 * v * u * sp.cy + u * u * sp.y1;
+    return BZ;
+  }
 
   function renderField(fc, fp, since, t, starIn, oy) {
     ctx.globalCompositeOperation = 'destination-out';
@@ -1473,6 +1494,11 @@
 
     const vel = MOT.on ? MOT.vel : 0;
     const swarm = MOT.on && SWARM.on;
+    // a bridge between two sections: everything gathers into one spark of light, which travels to the
+    // next title card and blooms into its hero
+    const spark = MOT.on && MOT.spark && fp && since < SPARK_END ? MOT.spark : null;
+    // the swarm going home when the autopilot stops mid-section
+    const rel = MOT.on && !swarm && !spark && SWARM.relC && tclock - SWARM.rel.t0 < 0.9 ? SWARM.relC : null;
     for (let i = 0; i < N; i++) {
       let x, y, a, s, h;
       let dim = fieldDim;
@@ -1492,6 +1518,53 @@
             ctx.drawImage(SPR[1], x - r, y - r - (vel > 0 ? 0 : len), r * 2, r * 2 + len);
             continue;
           }
+        }
+      } else if (spark) {
+        fc(i, t, A);
+        const tt = since - DEL[i] * 0.35;
+        const sp = spark;
+        if (tt >= 2.5) {
+          x = A.x; y = A.y; a = A.a; s = A.s; h = A.h;
+        } else if (tt >= 1.5) {
+          const e = easeOut((tt - 1.5) / 1);
+          bez(sp, 1);
+          const sw = Math.sin(Math.PI * e) * SW[i] * 0.55;
+          x = lerp(BZ.x + Math.cos(ANG[i]) * R3[i] * 9, A.x, e) + Math.cos(ANG[i]) * sw;
+          y = lerp(BZ.y + Math.sin(ANG[i]) * R3[i] * 9, A.y, e) + Math.sin(ANG[i]) * sw;
+          a = lerp(0.9, A.a, e);
+          s = lerp(0.8, A.s, e);
+          h = 0;
+          dim = lerp(1, fieldDim, e);
+        } else if (tt >= 0.7) {
+          // travelling, with a comet's tail
+          const u = clamp(easeInOut((tt - 0.7) / 0.8) - R3[i] * 0.22);
+          bez(sp, u);
+          x = BZ.x + Math.cos(ANG[i]) * (2 + R4[i] * 5);
+          y = BZ.y + Math.sin(ANG[i]) * (2 + R4[i] * 5);
+          a = 0.95 * (1 - R3[i] * 0.6);
+          s = 0.8;
+          h = 0;
+          dim = 1;
+        } else {
+          // gathering where the last piece of the section was read
+          let bx, by, ba;
+          if (sp.c && R5[i] < SWARM_FRAC) {
+            bx = sp.c.l + R1[i] * sp.c.w;
+            by = sp.c.t + sp.c.h + 7;
+            ba = 0.3;
+          } else {
+            fp(i, t, B);
+            (bx = B.x), (by = B.y), (ba = B.a * fieldDim);
+          }
+          const e = clamp(tt / 0.7);
+          const k = e * e;
+          const rr = 4 + 16 * (1 - e) + R3[i] * 6;
+          x = lerp(bx, sp.x0 + Math.cos(ANG[i]) * rr, k);
+          y = lerp(by, sp.y0 + Math.sin(ANG[i]) * rr, k);
+          a = lerp(ba, 0.9, k);
+          s = 0.8;
+          h = 0;
+          dim = 1;
         }
       } else {
         fc(i, t, A);
@@ -1521,6 +1594,11 @@
           s = SP.s;
           h = SP.h;
           dim = 1;
+        } else if (rel && R5[i] < SWARM_FRAC) {
+          const e = easeInOut((tclock - SWARM.rel.t0) / 0.9);
+          x = lerp(rel.l + R1[i] * rel.w, x, e);
+          y = lerp(rel.t + rel.h + 7, y, e);
+          a = lerp(0.3 / Math.max(0.05, fieldDim), a, e);
         } else if (vel) {
           // dragged along by the page, then springing back
           y -= Math.max(-120, Math.min(120, vel * (0.025 + R4[i] * 0.06)));
@@ -1742,6 +1820,20 @@
       it.card = !!it.el.closest('.thead');
       const e = it.el;
       it.kind = e.matches('[data-rs]') ? 'head' : e.matches('.eyebrow, .btns, .layers-title, .practice-title') ? 'small' : e.querySelector('form') ? 'form' : 'text';
+      const nth = (sel) => (it.sec ? $$(sel, it.sec.el).indexOf(e) : -1);
+      it.heroK = e.matches('.spec-row')
+        ? nth('.spec-row')
+        : e.matches('.layer')
+          ? nth('.layer')
+          : e.matches('.area')
+            ? nth('.area')
+            : e.matches('.cf-p, .case-h')
+              ? 0
+              : e.matches('.cf-s')
+                ? 1
+                : e.matches('.cf-o')
+                  ? 2
+                  : -1;
     });
   }
 
@@ -2368,7 +2460,27 @@
     TC.sy = sy;
     MOT.on = true;
     MOT.sy = sy;
-    MOT.fade = TC.since < TDUR + MAXDEL ? 0.2 : lerp(0.36, 0.13, clamp(Math.abs(MOT.vel) / 1600));
+    MOT.fade = TC.since < (tf.spark ? SPARK_END : TDUR + MAXDEL) ? 0.2 : lerp(0.36, 0.13, clamp(Math.abs(MOT.vel) / 1600));
+    MOT.spark = null;
+    const sp = tf.spark;
+    if (sp && TC.since < SPARK_END) {
+      // from where the section ended to the new hero, along an arc
+      // (kept on screen: the light gathers at the top edge if the text has already scrolled away)
+      const y0 = clamp(sp.doc ? sp.y0 - sy : sp.y0, L.hdr + 40, H - L.ctl - 30);
+      const x1 = TC.x, y1 = TC.y;
+      sp.x0s = sp.x0;
+      MOT.spark = sp.scr || (sp.scr = {});
+      Object.assign(MOT.spark, {
+        x0: sp.x0,
+        y0,
+        x1,
+        y1,
+        cx: (sp.x0 + x1) / 2 + (y1 - y0) * 0.22,
+        cy: (y0 + y1) / 2 - (x1 - sp.x0) * 0.22,
+        c: sp.item ? onScreen(sp.item, sy, SWs) : null,
+      });
+    }
+    SWARM.relC = SWARM.rel && SWARM.rel.item && tclock - SWARM.rel.t0 < 0.9 ? onScreen(SWARM.rel.item, sy, SWr) : null;
     fieldDim = lerp(fieldDim, lerp(1, isMobile ? 0.3 : 0.4, k), 0.06);
     renderField(F[tf.cur], tf.prev ? F[tf.prev] : null, TC.since, tclock, 1, 0);
     MOT.on = false;
@@ -2418,7 +2530,12 @@
   }
 
   // the particle swarm's current delivery (see swarmPos)
-  const SWc = {}, SWp = {};
+  const SWc = {}, SWp = {}, SWs = {}, SWr = {};
+  // where the spark between two sections sets off: under the last piece read, or from the hero
+  function makeSpark(item) {
+    if (item) return { item, doc: true, x0: item.l + item.w / 2, y0: item.t + item.h + 7 };
+    return { item: null, doc: false, x0: TC.x, y0: TC.y };
+  }
   function onScreen(it, sy, o) {
     o.l = it.l;
     o.t = it.t - sy;
@@ -2431,6 +2548,7 @@
   }
   function swarmUpdate(sy) {
     SWARM.on = false;
+    HERO.k = -1;
     if (!((playing || capturing) && !readMode) || t < FILM) return;
     const tau = t - FILM;
     let k = -1;
@@ -2440,10 +2558,12 @@
     }
     if (k < 0) return;
     const cur = deliveries[k];
-    const st = stepAt(tau);
-    if (!st || st.sec !== cur.sec || st.card) return; // title cards belong to the hero
+    // it stays (as an underline) until the page moves on to the next section; a spark takes it there
+    if (cur.sec !== sectionAt(sy)) return;
     const prev = k > 0 && deliveries[k - 1].sec === cur.sec ? deliveries[k - 1] : null;
     SWARM.on = true;
+    SWARM.last = cur;
+    HERO.k = cur.heroK;
     SWARM.d = tau - cur.beatT;
     SWARM.icon = cur.icon;
     SWARM.c = onScreen(cur, sy, SWc);
@@ -2483,10 +2603,14 @@
         fieldMode = 'tour';
         filmBlend = null;
         tf = { cur: want, prev: forms[formIndex(ft)].name, t0: tclock };
-      } else if (want !== tf.cur) {
-        tf = { cur: want, prev: tf.cur, t0: tclock };
       }
+      const wasOn = SWARM.on;
       swarmUpdate(sy);
+      if (want !== tf.cur) {
+        tf = { cur: want, prev: tf.cur, t0: tclock, spark: makeSpark(wasOn && !SWARM.on ? SWARM.last : null) };
+      } else if (wasOn && !SWARM.on) {
+        SWARM.rel = { t0: tclock, item: SWARM.last };
+      }
       heroField(sec, sy);
     }
     if (tourEl) {
@@ -2519,7 +2643,7 @@
       if (fieldMode !== 'read') {
         fieldMode = 'read';
         tf = { cur: want, prev: null, t0: tclock };
-      } else if (want !== tf.cur) tf = { cur: want, prev: tf.cur, t0: tclock };
+      } else if (want !== tf.cur) tf = { cur: want, prev: tf.cur, t0: tclock, spark: sec && tsecs.some((x) => x.form === tf.cur) ? makeSpark(null) : null };
       SWARM.on = false;
       heroField(sec ? { cardY: -Infinity } : null, sy);
     } else {
