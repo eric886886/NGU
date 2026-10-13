@@ -1114,6 +1114,294 @@
     },
   });
 
+  // ---- icons drawn by particles. Each is a list of strokes in unit coordinates (about -1..1, y down):
+  //   ['l', x0, y0, x1, y1, pulse?]  a line (pulse: a phase; the stroke then glows in turn)
+  //   ['a', cx, cy, rx, ry, a0, a1, pulse?]  an arc or ellipse
+  //   ['f', x0, y0, x1, y1, speed]  a line its particles keep running along (things flowing in)
+  //   ['r', cx, cy, len, speed, phase]  a hand turning around a centre
+  //   ['p', x, y, pulse?]  a dot
+  // Particles flow slowly along the strokes, so an icon is never quite still.
+  const ICONS = {};
+  function defIcon(name, strokes, spin = 0) {
+    const segs = [];
+    let total = 0;
+    for (const s of strokes) {
+      let len;
+      if (s[0] === 'l' || s[0] === 'f') len = Math.hypot(s[3] - s[1], s[4] - s[2]);
+      else if (s[0] === 'a') len = (Math.abs(s[6] - s[5]) * (s[3] + s[4])) / 2;
+      else if (s[0] === 'r') len = s[3];
+      else len = 0.3;
+      segs.push({ s, a: total, len });
+      total += len;
+    }
+    ICONS[name] = { segs, total, spin };
+  }
+  const pulseAt = (t, ph) => 0.35 + 0.65 * Math.pow(Math.max(0, Math.sin(t * 2.2 - ph)), 2);
+  const poly = (pts, ph) => pts.slice(1).map((p, k) => ['l', pts[k][0], pts[k][1], p[0], p[1], ph]);
+
+  defIcon('chat', [
+    ['a', 0, -0.12, 0.92, 0.64, 2.2, 1.78 + TAU],
+    ['l', -0.54, 0.4, -0.62, 0.86],
+    ['l', -0.62, 0.86, -0.19, 0.51],
+    ['p', -0.4, -0.12, 0],
+    ['p', 0, -0.12, 0.7],
+    ['p', 0.4, -0.12, 1.4],
+  ]);
+  defIcon('funnel', [
+    ['a', 0, -0.62, 0.9, 0.2, 0, TAU],
+    ['l', -0.9, -0.62, -0.16, 0.18],
+    ['l', 0.9, -0.62, 0.16, 0.18],
+    ['l', -0.16, 0.18, -0.16, 0.8],
+    ['l', 0.16, 0.18, 0.16, 0.8],
+    ['f', -0.5, -1.05, 0, 0.95, 0.5],
+    ['f', 0.45, -1.1, 0, 0.95, 0.42],
+    ['f', 0, -1.15, 0, 0.95, 0.6],
+  ]);
+  defIcon('megaphone', [
+    ...poly([[-0.75, -0.26], [0.2, -0.68], [0.2, 0.68], [-0.75, 0.26], [-0.75, -0.26]]),
+    ['l', -0.55, 0.32, -0.42, 0.78],
+    ['a', 0.2, 0, 0.42, 0.42, -0.75, 0.75, 0],
+    ['a', 0.2, 0, 0.66, 0.66, -0.7, 0.7, 0.9],
+    ['a', 0.2, 0, 0.9, 0.9, -0.65, 0.65, 1.8],
+  ]);
+  defIcon('magnifier', [
+    ['a', -0.2, -0.2, 0.58, 0.58, 0, TAU],
+    ['a', -0.2, -0.2, 0.36, 0.36, 3.5, 4.5, 0],
+    ['l', 0.22, 0.22, 0.84, 0.84],
+    ['l', 0.3, 0.14, 0.92, 0.76],
+  ]);
+  defIcon('checklist', [
+    ...[-0.6, 0, 0.6].flatMap((y, k) => [
+      ...poly([[-0.88, y - 0.17], [-0.54, y - 0.17], [-0.54, y + 0.17], [-0.88, y + 0.17], [-0.88, y - 0.17]]),
+      ...poly([[-0.82, y], [-0.73, y + 0.1], [-0.5, y - 0.26]], k * 0.9),
+      ['l', -0.3, y, 0.88, y],
+    ]),
+  ]);
+  defIcon('document', [
+    ...poly([[-0.62, -0.88], [0.3, -0.88], [0.62, -0.56], [0.62, 0.88], [-0.62, 0.88], [-0.62, -0.88]]),
+    ...poly([[0.3, -0.88], [0.3, -0.56], [0.62, -0.56]]),
+    ...[-0.32, -0.06, 0.2, 0.46].map((y, k) => ['l', -0.4, y, k === 3 ? 0.1 : 0.4, y, k * 0.6]),
+  ]);
+  defIcon('growth', [
+    ['l', -0.86, -0.86, -0.86, 0.76],
+    ['l', -0.86, 0.76, 0.92, 0.76],
+    ...poly([[-0.72, 0.5], [-0.34, 0.16], [0, 0.32], [0.34, -0.18], [0.78, -0.72]], 0),
+    ['l', 0.78, -0.72, 0.48, -0.68],
+    ['l', 0.78, -0.72, 0.76, -0.42],
+  ]);
+  defIcon('target', [
+    ['a', 0, 0, 0.9, 0.9, 0, TAU],
+    ['a', 0, 0, 0.6, 0.6, 0, TAU, 0.6],
+    ['a', 0, 0, 0.3, 0.3, 0, TAU, 1.2],
+    ['p', 0, 0, 1.8],
+  ]);
+  defIcon('shield', [
+    ...poly([[-0.72, -0.6], [0, -0.9], [0.72, -0.6], [0.72, 0.06], [0, 0.9], [-0.72, 0.06], [-0.72, -0.6]]),
+    ...poly([[-0.32, 0], [-0.08, 0.26], [0.36, -0.26]], 0),
+  ]);
+  defIcon('envelope', [
+    ...poly([[-0.9, -0.58], [0.9, -0.58], [0.9, 0.58], [-0.9, 0.58], [-0.9, -0.58]]),
+    ...poly([[-0.9, -0.58], [0, 0.1], [0.9, -0.58]], 0),
+  ]);
+  defIcon('clock', [
+    ['a', 0, 0, 0.88, 0.88, 0, TAU],
+    ...[0, 1, 2, 3].map((k) => {
+      const a = (k * Math.PI) / 2;
+      return ['l', Math.cos(a) * 0.68, Math.sin(a) * 0.68, Math.cos(a) * 0.82, Math.sin(a) * 0.82];
+    }),
+    ['r', 0, 0, 0.58, 1.6, -1.5],
+    ['r', 0, 0, 0.36, 0.13, 0.3],
+  ]);
+  defIcon('coins', [
+    ['a', 0, 0.5, 0.62, 0.2, 0, TAU],
+    ['a', 0, 0.18, 0.62, 0.2, 0, TAU, 0.6],
+    ['a', 0.12, -0.16, 0.62, 0.2, 0, TAU, 1.2],
+    ['l', -0.62, 0.18, -0.62, 0.5],
+    ['l', 0.62, 0.18, 0.62, 0.5],
+    ['f', 0.12, -1, 0.12, -0.24, 0.45],
+  ]);
+  defIcon('bulb', [
+    ['a', 0, -0.24, 0.58, 0.58, 2.35, 0.79 + TAU],
+    ['l', -0.41, 0.17, -0.25, 0.5],
+    ['l', 0.41, 0.17, 0.25, 0.5],
+    ['l', -0.25, 0.5, 0.25, 0.5],
+    ['l', -0.21, 0.65, 0.21, 0.65],
+    ['l', -0.13, 0.8, 0.13, 0.8],
+    ...poly([[-0.2, 0.16], [-0.1, -0.12], [0, 0.16], [0.1, -0.12], [0.2, 0.16]], 0),
+    ...[-2.4, -1.57, -0.74].map((a) => ['l', Math.cos(a) * 0.74, -0.24 + Math.sin(a) * 0.74, Math.cos(a) * 0.95, -0.24 + Math.sin(a) * 0.95, 1]),
+  ]);
+  defIcon('route', [
+    ['f', -0.86, 0.62, -0.4, 0.16, 0.5],
+    ['f', -0.4, 0.16, 0.04, 0.46, 0.5],
+    ['f', 0.04, 0.46, 0.4, -0.1, 0.5],
+    ['f', 0.4, -0.1, 0.82, -0.56, 0.5],
+    ['a', -0.86, 0.62, 0.09, 0.09, 0, TAU, 0],
+    ['a', -0.4, 0.16, 0.09, 0.09, 0, TAU, 0.7],
+    ['a', 0.04, 0.46, 0.09, 0.09, 0, TAU, 1.4],
+    ['a', 0.4, -0.1, 0.09, 0.09, 0, TAU, 2.1],
+    ...poly([[0.82, -0.56], [0.82, -1], [1.12, -0.88], [0.82, -0.76]], 2.8),
+  ]);
+  defIcon(
+    'gear',
+    [
+      ['a', 0, 0, 0.66, 0.66, 0, TAU],
+      ['a', 0, 0, 0.24, 0.24, 0, TAU],
+      ...[0, 1, 2, 3, 4, 5, 6, 7].flatMap((k) => {
+        const a = (k * Math.PI) / 4;
+        const c = Math.cos(a), s = Math.sin(a), px = -s * 0.13, py = c * 0.13;
+        return [
+          ['l', c * 0.66 + px, s * 0.66 + py, c * 0.92 + px, s * 0.92 + py],
+          ['l', c * 0.66 - px, s * 0.66 - py, c * 0.92 - px, s * 0.92 - py],
+          ['l', c * 0.92 + px, s * 0.92 + py, c * 0.92 - px, s * 0.92 - py],
+        ];
+      }),
+    ],
+    0.5
+  );
+  defIcon('layers', [
+    ...[-0.46, 0, 0.46].flatMap((y, k) => poly([[-0.82, y], [0, y - 0.32], [0.82, y], [0, y + 0.32], [-0.82, y]], k * 0.8)),
+  ]);
+  defIcon('window', [
+    ...poly([[-0.92, -0.66], [0.92, -0.66], [0.92, 0.66], [-0.92, 0.66], [-0.92, -0.66]]),
+    ['l', -0.92, -0.42, 0.92, -0.42],
+    ['p', -0.8, -0.54],
+    ['p', -0.66, -0.54],
+    ['p', -0.52, -0.54],
+    ...poly([[-0.2, -0.22], [0.34, 0.06], [-0.2, 0.34], [-0.2, -0.22]], 0),
+  ]);
+
+  // where particle i sits on an icon at time t (unit coordinates); also how bright, and whether amber
+  function iconPoint(name, i, t, out) {
+    out.a = 1;
+    out.h = 0;
+    if (name === 'storm') {
+      // a problem: a restless knot, a third of it amber
+      const ang = R1[i] * TAU + t * (1.4 + R5[i] * 1.6);
+      const r = 0.95 * Math.sqrt(R3[i]);
+      out.x = Math.cos(ang) * r + Math.sin(t * 7 + R2[i] * 40) * 0.05;
+      out.y = Math.sin(ang * 1.2) * r * 0.8 + Math.cos(t * 6 + R4[i] * 40) * 0.05;
+      out.a = 0.75;
+      out.h = R4[i] < 0.35 ? 1 : 0;
+      return out;
+    }
+    if (name === 'logo') {
+      const p = LOGO[i] || LOGO[i % LOGO.length];
+      out.x = (p[0] / 1000) * 2.2;
+      out.y = (p[1] / 1000) * 2.2;
+      return out;
+    }
+    const ic = ICONS[name] || ICONS.target;
+    const u = (R1[i] + t * 0.018) % 1;
+    const d = u * ic.total;
+    let g = ic.segs[ic.segs.length - 1];
+    for (const x of ic.segs) {
+      if (d < x.a + x.len) {
+        g = x;
+        break;
+      }
+    }
+    let k = clamp((d - g.a) / (g.len || 1));
+    const s = g.s;
+    let x, y, ph;
+    if (s[0] === 'l') {
+      x = s[1] + (s[3] - s[1]) * k;
+      y = s[2] + (s[4] - s[2]) * k;
+      ph = s[5];
+    } else if (s[0] === 'f') {
+      k = (k + t * s[5]) % 1;
+      x = s[1] + (s[3] - s[1]) * k;
+      y = s[2] + (s[4] - s[2]) * k;
+      out.a = Math.sin(Math.PI * k);
+    } else if (s[0] === 'a') {
+      const a = s[5] + (s[6] - s[5]) * k;
+      x = s[1] + Math.cos(a) * s[3];
+      y = s[2] + Math.sin(a) * s[4];
+      ph = s[7];
+    } else if (s[0] === 'r') {
+      const a = s[5] + t * s[4];
+      x = s[1] + Math.cos(a) * s[3] * k;
+      y = s[2] + Math.sin(a) * s[3] * k;
+    } else {
+      const a = k * TAU * 3;
+      x = s[1] + Math.cos(a) * 0.07 * k;
+      y = s[2] + Math.sin(a) * 0.07 * k;
+      ph = s[3];
+    }
+    if (ph != null) out.a = pulseAt(t, ph);
+    if (ic.spin) {
+      const a = t * ic.spin, c = Math.cos(a), sn = Math.sin(a);
+      const x1 = x * c - y * sn;
+      y = x * sn + y * c;
+      x = x1;
+    }
+    out.x = x + (R3[i] - 0.5) * 0.04;
+    out.y = y + (R4[i] - 0.5) * 0.04;
+    return out;
+  }
+
+  // The swarm: while the autopilot reads a section, about 40% of the particles leave the hero, fly to the
+  // spot where the next piece of text is about to appear, draw an icon of what it is about, burst into
+  // the text as it appears, and settle as a glowing underline beneath it, until the next piece is due.
+  const SWARM = { on: false, d: 0, icon: 'target', c: null, p: null };
+  const SWARM_FRAC = 0.42;
+  const IP = { x: 0, y: 0, a: 1, h: 0 };
+  const SP = { x: 0, y: 0, a: 0, s: 1, h: 0 };
+  function swarmPos(i, t, fx, fy, fa) {
+    const c = SWARM.c, pv = SWARM.p;
+    const d = SWARM.d - DEL[i] * 0.25;
+    // it sets off from the underline of the previous piece, or from its place in the hero
+    let ox, oy, oa;
+    if (pv) {
+      ox = pv.l + R1[i] * pv.w;
+      oy = pv.t + pv.h + 7 + (R3[i] - 0.5) * 4;
+      oa = 0.28;
+    } else {
+      ox = fx;
+      oy = fy;
+      oa = fa;
+    }
+    iconPoint(SWARM.icon, i, t, IP);
+    const ix = c.x + IP.x * c.s, iy = c.y + IP.y * c.s, ia = 0.95 * IP.a;
+    const bx = c.l + R1[i] * c.w, by = c.t + R3[i] * c.h;
+    const uy = c.t + c.h + 7 + (R3[i] - 0.5) * 4;
+    SP.s = 0.85;
+    SP.h = 0;
+    if (d < -0.8) {
+      SP.x = ox;
+      SP.y = oy;
+      SP.a = oa;
+    } else if (d < -0.2) {
+      const e = easeInOut((d + 0.8) / 0.6);
+      const sw = Math.sin(Math.PI * e) * SW[i] * 0.9;
+      SP.x = lerp(ox, ix, e) + Math.cos(ANG[i]) * sw;
+      SP.y = lerp(oy, iy, e) + Math.sin(ANG[i]) * sw;
+      SP.a = lerp(oa, ia, e);
+      SP.h = e > 0.5 ? IP.h : 0;
+    } else if (d < 0.25) {
+      SP.x = ix;
+      SP.y = iy;
+      SP.a = ia;
+      SP.s = 0.95;
+      SP.h = IP.h;
+    } else if (d < 0.75) {
+      const e = easeOut((d - 0.25) / 0.5);
+      SP.x = lerp(ix, bx, e);
+      SP.y = lerp(iy, by, e);
+      SP.a = lerp(ia, 0.5, e);
+      SP.h = e < 0.4 ? IP.h : 0;
+    } else if (d < 1.4) {
+      const e = easeInOut((d - 0.75) / 0.65);
+      SP.x = bx;
+      SP.y = lerp(by, uy, e);
+      SP.a = lerp(0.5, 0.3, e);
+    } else {
+      SP.x = bx + Math.sin(t * 0.8 + R2[i] * 9) * 1.5;
+      SP.y = uy;
+      SP.a = 0.2 + 0.14 * Math.sin(t * 2 + R4[i] * 20);
+    }
+    return SP;
+  }
+
   // values shared by every particle in a frame
   const PRE = { riseS: 0, hx: 0, hy: 0, ex: 0, ey: 0, ux: 1, uy: 0, px: 0, py: 0 };
   function prepare() {
@@ -1184,8 +1472,10 @@
     const base = isMobile ? 2.6 : 3.1;
 
     const vel = MOT.on ? MOT.vel : 0;
+    const swarm = MOT.on && SWARM.on;
     for (let i = 0; i < N; i++) {
       let x, y, a, s, h;
+      let dim = fieldDim;
       if (STAR[i]) {
         x = R1[i] * W;
         y = R2[i] * H;
@@ -1223,12 +1513,22 @@
           x = A.x; y = A.y; a = A.a; s = A.s; h = A.h;
         }
         y += oy;
-        // dragged along by the page, then springing back
-        if (vel) y -= Math.max(-120, Math.min(120, vel * (0.025 + R4[i] * 0.06)));
+        if (swarm && R5[i] < SWARM_FRAC) {
+          swarmPos(i, t, x, y, a * fieldDim);
+          x = SP.x;
+          y = SP.y;
+          a = SP.a;
+          s = SP.s;
+          h = SP.h;
+          dim = 1;
+        } else if (vel) {
+          // dragged along by the page, then springing back
+          y -= Math.max(-120, Math.min(120, vel * (0.025 + R4[i] * 0.06)));
+        }
       }
       if (a < 0.01 || x < -30 || y < -30 || x > W + 30 || y > H + 30) continue;
       const r = base * s * SZ[i];
-      ctx.globalAlpha = a * fieldDim > 1 ? 1 : a * fieldDim;
+      ctx.globalAlpha = a * dim > 1 ? 1 : a * dim;
       ctx.drawImage(SPR[h ? 5 : STAR[i] ? 1 : COL[i]], x - r, y - r, r * 2, r * 2);
     }
   }
@@ -1396,13 +1696,14 @@
         s.style.setProperty('--wd', (i * 0.11).toFixed(2)); // the sheen travels along the line
         return s;
       });
-      $$('.m-word', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), dur: 0.9 }));
+      $$('.m-word', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), rel: parseFloat(w.dataset.at), dur: 0.9 }));
     });
     $$('[data-rr]', tourEl).forEach((el) => {
       const base = num(el.dataset.r, 0) + 0.35;
       const rate = ZH ? 0.055 : 0.1;
       splitWords(el, (w, i) => word('rw', w, base + i * rate, '0.7'));
-      $$('.rw', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), dur: 0.7, lin: true }));
+      const r0 = num(el.dataset.r, 0);
+      $$('.rw', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), rel: parseFloat(w.dataset.at) - r0, dur: 0.7, lin: true }));
     });
     // the reading bar: sits beside the block being read and fills up while the page waits on it
     readbar = document.createElement('div');
@@ -1410,7 +1711,7 @@
     readbar.setAttribute('aria-hidden', 'true');
     readbar.innerHTML = '<i></i>';
     document.body.appendChild(readbar);
-    $$('[data-r]', tourEl).forEach((el) => tcues.push({ el, trig: el, delay: num(el.dataset.r, 0), dur: num(el.dataset.dur, 0.9) }));
+    $$('[data-r]', tourEl).forEach((el) => tcues.push({ el, trig: el, delay: num(el.dataset.r, 0), rel: 0, dur: num(el.dataset.dur, 0.9) }));
     tcues.forEach((c) => {
       c.top = 0;
       c.go = null;
@@ -1418,10 +1719,46 @@
     });
   }
 
+  // Items: the pieces of text the autopilot reveals one after another (a heading, a paragraph, a card…).
+  // Each gets a moment on the timeline (beatT) and an icon for the particles to draw (data-icon).
+  const items = [];
+  if (tourEl) {
+    const byEl = new Map();
+    tcues.forEach((c) => {
+      if (c.el.classList.contains('t-bignum')) return;
+      let it = byEl.get(c.trig);
+      if (!it) {
+        it = { el: c.trig, beatT: null };
+        byEl.set(c.trig, it);
+        items.push(it);
+      }
+      c.item = it;
+    });
+    items.sort((a, b) => (a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+    items.forEach((it) => {
+      const host = it.el.closest('[data-icon]');
+      it.icon = host ? host.dataset.icon : 'target';
+      it.sec = tsecs.find((x) => x.el.contains(it.el));
+      it.card = !!it.el.closest('.thead');
+      const e = it.el;
+      it.kind = e.matches('[data-rs]') ? 'head' : e.matches('.eyebrow, .btns, .layers-title, .practice-title') ? 'small' : e.querySelector('form') ? 'form' : 'text';
+    });
+  }
+
   // Autopilot: after the film the page glides from stop to stop ([data-stop] blocks) and lingers on each
   // as long as its text takes to read. Its whole path is a function of time, so it sits on the same
   // timeline (and progress bar) as the film.
   let tour = { steps: [], total: 0 };
+  let deliveries = []; // the items the particle swarm delivers, in order
+
+  function stepAt(tau) {
+    let st = null;
+    for (const x of tour.steps) {
+      if (tau >= x.start) st = x;
+      else break;
+    }
+    return st;
+  }
 
   const docTop = (el) => el.getBoundingClientRect().top + window.scrollY;
 
@@ -1473,6 +1810,34 @@
       st.bb = Math.min(bot, st.y + H - L.ctl - 10);
       st.bl = left;
     });
+    // each item belongs to the first stop of its section that shows all of it; a stop lasts as long as
+    // its items take to appear and be read, one after another
+    items.forEach((it) => {
+      const r = it.el.getBoundingClientRect();
+      it.l = r.left;
+      it.t = r.top + sy;
+      it.w = r.width;
+      it.h = r.height;
+      const txt = (it.el.innerText || '').trim();
+      const n = ZH ? txt.replace(/\s/g, '').length : txt.split(/\s+/).filter(Boolean).length;
+      const rate = ZH ? 10 : 5;
+      it.time =
+        it.kind === 'small' ? 0.6 : it.kind === 'form' ? 3.2 : it.kind === 'head' ? 0.8 + n * (ZH ? 0.04 : 0.06) + n / (rate * 1.6) : 1 + n / rate;
+      it.beatT = null;
+    });
+    steps.forEach((st) => (st.items = []));
+    items.forEach((it) => {
+      const own = steps.filter((x) => x.sec === it.sec);
+      const st =
+        own.find((x) => it.t + it.h <= x.y + H - L.ctl - 6) || own.find((x) => it.t >= x.y + L.hdr) || own[own.length - 1];
+      if (st) st.items.push(it);
+    });
+    steps.forEach((st) => {
+      if (!st.items.length) return;
+      const sum = st.items.reduce((a, it) => a + it.time, 0) + 0.6;
+      st.card = st.items.some((it) => it.card);
+      st.dwell = Math.max(sum, st.card ? 4.6 : 2);
+    });
     let tt = 0;
     let prevY = 0;
     steps.forEach((st, i) => {
@@ -1484,6 +1849,15 @@
       prevY = st.y;
     });
     tour = { steps, total: tt };
+    steps.forEach((st) => {
+      // a title card fills in as it arrives; elsewhere the page settles first, so the particles can draw
+      let b = st.start + st.move * (st.card ? 0.7 : 1) + (st.card ? 0 : 0.25);
+      st.items.forEach((it) => {
+        it.beatT = b;
+        b += it.time;
+      });
+    });
+    deliveries = items.filter((it) => it.beatT != null && !it.card && it.kind !== 'small').sort((a, b) => a.beatT - b.beatT);
     tsecs.forEach((sec) => {
       sec.top = sec.el.getBoundingClientRect().top + sy;
       sec.thTop = sec.th ? sec.th.getBoundingClientRect().top + sy : sec.top;
@@ -1517,15 +1891,25 @@
     return st.start + st.move;
   }
 
+  // While the autopilot runs, each item appears at its moment on the timeline (one after another);
+  // a reader scrolling on their own sees things appear as they come into view.
   function renderTour(now, sy) {
+    const beats = (playing || capturing) && !readMode;
+    const tau = t - FILM;
     for (const c of tcues) {
       const top = c.top - sy;
-      if (c.go == null) {
-        if (top < H * 0.9) c.go = now + c.delay;
-      } else if (top > H * 1.05) {
-        c.go = null; // left through the bottom: play again next time
+      let k;
+      if (beats && c.item && c.item.beatT != null) {
+        k = clamp((tau - c.item.beatT - c.rel) / c.dur);
+        c.go = k > 0 ? now - k * c.dur : null;
+      } else {
+        if (c.go == null) {
+          if (top < H * 0.9) c.go = now + c.delay;
+        } else if (top > H * 1.05) {
+          c.go = null; // left through the bottom: play again next time
+        }
+        k = c.go == null ? 0 : clamp((now - c.go) / c.dur);
       }
-      const k = c.go == null ? 0 : clamp((now - c.go) / c.dur);
       const p = c.lin ? k : easeOut(k);
       if (p !== c.p) {
         c.p = p;
@@ -2003,28 +2387,67 @@
   // While the autopilot runs, the block being read is lit and the rest of the page steps back;
   // the reading bar beside it fills up for as long as the page waits there.
   let focusStep = null;
+  let focusKey = null;
   function updateFocus() {
     const auto = (playing || capturing) && !readMode && t >= FILM; // a recording shows the page as playing
     doc.classList.toggle('tour-auto', auto);
-    let st = null;
-    if (auto) {
-      const tau = t - FILM;
-      for (const x of tour.steps) {
-        if (tau >= x.start) st = x;
-        else break;
-      }
-    }
+    const tau = t - FILM;
+    const st = auto ? stepAt(tau) : null;
     if (st !== focusStep) {
       if (focusStep) focusStep.els.forEach((el) => el.classList.remove('is-focus'));
-      if (st) {
-        st.els.forEach((el) => el.classList.add('is-focus'));
+      if (st) st.els.forEach((el) => el.classList.add('is-focus'));
+      focusStep = st;
+    }
+    // the bar stands beside the piece being read and fills while it is read
+    let it = null;
+    if (st) for (const x of st.items) if (x.beatT <= tau) it = x;
+    const key = it || st;
+    if (key !== focusKey) {
+      focusKey = key;
+      if (it) {
+        readbar.style.transform = `translate3d(${Math.round(it.l - (isMobile ? 9 : 30))}px, ${Math.round(it.t)}px, 0)`;
+        readbar.style.height = Math.max(24, Math.round(it.h)) + 'px';
+      } else if (st) {
         readbar.style.transform = `translate3d(${Math.round(st.bl - (isMobile ? 9 : 30))}px, ${Math.round(st.bt)}px, 0)`;
         readbar.style.height = Math.max(24, Math.round(st.bb - st.bt)) + 'px';
       }
-      focusStep = st;
     }
     readbar.classList.toggle('on', !!st);
-    if (st) readbar.style.setProperty('--rp', clamp((t - FILM - st.start - st.move) / st.dwell).toFixed(4));
+    if (it) readbar.style.setProperty('--rp', clamp((tau - it.beatT) / it.time).toFixed(4));
+    else if (st) readbar.style.setProperty('--rp', clamp((tau - st.start - st.move) / st.dwell).toFixed(4));
+  }
+
+  // the particle swarm's current delivery (see swarmPos)
+  const SWc = {}, SWp = {};
+  function onScreen(it, sy, o) {
+    o.l = it.l;
+    o.t = it.t - sy;
+    o.w = it.w;
+    o.h = it.h;
+    o.x = it.l + it.w / 2;
+    o.y = it.t - sy + it.h / 2;
+    o.s = clamp(Math.min(it.h, it.w) * 0.6, 44, isMobile ? 70 : 110) * (it.icon === 'storm' ? 1.5 : 1);
+    return o;
+  }
+  function swarmUpdate(sy) {
+    SWARM.on = false;
+    if (!((playing || capturing) && !readMode) || t < FILM) return;
+    const tau = t - FILM;
+    let k = -1;
+    for (let j = 0; j < deliveries.length; j++) {
+      if (deliveries[j].beatT - 0.8 <= tau) k = j;
+      else break;
+    }
+    if (k < 0) return;
+    const cur = deliveries[k];
+    const st = stepAt(tau);
+    if (!st || st.sec !== cur.sec || st.card) return; // title cards belong to the hero
+    const prev = k > 0 && deliveries[k - 1].sec === cur.sec ? deliveries[k - 1] : null;
+    SWARM.on = true;
+    SWARM.d = tau - cur.beatT;
+    SWARM.icon = cur.icon;
+    SWARM.c = onScreen(cur, sy, SWc);
+    SWARM.p = prev ? onScreen(prev, sy, SWp) : null;
   }
 
   // the chapter numbers drift slower than the page (parallax)
@@ -2063,6 +2486,7 @@
       } else if (want !== tf.cur) {
         tf = { cur: want, prev: tf.cur, t0: tclock };
       }
+      swarmUpdate(sy);
       heroField(sec, sy);
     }
     if (tourEl) {
@@ -2096,6 +2520,7 @@
         fieldMode = 'read';
         tf = { cur: want, prev: null, t0: tclock };
       } else if (want !== tf.cur) tf = { cur: want, prev: tf.cur, t0: tclock };
+      SWARM.on = false;
       heroField(sec ? { cardY: -Infinity } : null, sy);
     } else {
       advance(dt);
