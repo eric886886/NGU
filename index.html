@@ -6660,7 +6660,7 @@ html.read #read {
   // the reading bar beside it fills up for as long as the page waits there.
   let focusStep = null;
   function updateFocus() {
-    const auto = playing && !readMode && t >= FILM;
+    const auto = (playing || capturing) && !readMode && t >= FILM; // a recording shows the page as playing
     doc.classList.toggle('tour-auto', auto);
     let st = null;
     if (auto) {
