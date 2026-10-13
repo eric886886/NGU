@@ -2258,7 +2258,7 @@ ul {
 }
 
 .m-deal {
-  transform: translate3d(calc((1 - var(--p)) * 80px), 0, 0) rotate(calc((1 - var(--p)) * 6deg + var(--i, 0) * -0.7deg));
+  transform: translate3d(calc((1 - var(--p)) * 60px), 0, 0);
 }
 
 /* 10 · AI solutions: a spec sheet */
@@ -2352,21 +2352,20 @@ ul {
 
 .t-callout {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 32px;
-  margin-top: 48px;
-  padding: 32px 36px;
-  border-radius: 24px;
-  border: 1px solid rgba(159, 208, 255, 0.22);
-  background: linear-gradient(120deg, rgba(47, 123, 255, 0.16), rgba(140, 124, 255, 0.08) 60%, rgba(13, 18, 33, 0.5));
+  margin-top: clamp(56px, 10vh, 110px);
 }
 
 .t-callout h3 {
-  font-family: var(--display);
-  font-size: clamp(22px, 2.2vw, 32px);
-  font-weight: 620;
-  letter-spacing: -0.025em;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(30px, 3.4vw, 52px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--accent);
 }
 
 .t-callout p {
@@ -2414,14 +2413,24 @@ ul {
 }
 
 .layer {
+  position: relative;
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
   column-gap: 14px;
-  padding: 18px 22px;
-  border-radius: 16px;
-  border: 1px solid rgba(159, 208, 255, 0.2);
-  background: linear-gradient(100deg, rgba(47, 123, 255, 0.18), rgba(13, 18, 33, 0.6) 62%);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  padding: 16px 0 18px;
+}
+
+/* each layer is a stratum: a line of light under it, the stack rising step by step */
+.layer::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(159, 208, 255, 0.6), rgba(159, 208, 255, 0.05));
+  transform-origin: left;
+  transform: scaleX(var(--p));
 }
 
 .layer-n,
@@ -2465,115 +2474,239 @@ ul {
   margin-top: 30px;
 }
 
-/* 12 · demos: app windows, locked until the form is filled */
+/* 13 · demos: a reel of six previews. No boxes: each name waits as an outline and is inked in letter by
+   letter when its turn comes; while it plays, the particles trace a live frame around it. */
 .demos {
+  counter-reset: demo;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: clamp(30px, 6vh, 64px);
 }
 
 .demo {
+  --p: 1;
+  counter-increment: demo;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 0 20px 20px;
-  overflow: hidden;
-  border-radius: 18px;
-  border: 1px solid var(--card-b);
-  background: rgba(10, 14, 27, 0.78);
-  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  display: grid;
+  grid-template-columns: 64px minmax(0, 0.95fr) minmax(0, 1.05fr);
+  grid-template-rows: auto auto auto;
+  column-gap: clamp(20px, 3.2vw, 52px);
+  row-gap: 14px;
+  align-items: start;
+  padding: 10px 0;
 }
 
 .demo-bar {
-  display: flex;
-  gap: 6px;
-  margin: 0 -20px;
-  padding: 12px 20px 10px;
-  border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.025);
+  display: none;
 }
 
-.demo-bar i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
+/* the reel: a number for each preview and a thin signal line running down to the next */
+.demo::before {
+  content: counter(demo, decimal-leading-zero);
+  grid-column: 1;
+  grid-row: 1;
+  padding-top: 0.9em;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--azure);
+  transition: color 0.5s, text-shadow 0.5s;
 }
 
-.demo-bar i:first-child {
-  background: rgba(255, 120, 110, 0.7);
+.demo::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 52px;
+  bottom: calc(clamp(30px, 6vh, 64px) * -1 + 6px);
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(159, 208, 255, 0.45), rgba(159, 208, 255, 0.04));
+  transform-origin: top;
+  transform: scaleY(var(--p));
 }
 
-.demo-bar i:nth-child(2) {
-  background: rgba(255, 196, 90, 0.7);
+.demo:last-child::after {
+  display: none;
 }
 
-.demo-bar i:nth-child(3) {
-  background: rgba(90, 210, 140, 0.7);
+.demo.is-cur::before {
+  color: #fff;
+  text-shadow: 0 0 14px rgba(120, 185, 255, 0.95);
 }
 
 .demo-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 4px;
+  display: contents;
 }
 
 .demo-head h3 {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
   font-family: var(--display);
-  font-size: 19px;
-  font-weight: 620;
-  letter-spacing: -0.015em;
+  font-size: clamp(30px, 3.3vw, 52px);
+  font-weight: 650;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  color: #f4f7ff;
 }
 
-.demo-button {
-  flex: none;
-  height: 34px;
-  padding: 0 15px;
-  border-radius: 999px;
-  border: 1px solid rgba(159, 208, 255, 0.45);
-  background: rgba(47, 123, 255, 0.18);
-  color: #fff;
-  font: 600 13px var(--text);
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.demo-button:hover {
-  background: rgba(47, 123, 255, 0.36);
+/* the name, outlined, waiting to be written */
+.demo-head h3[data-ghost]::before {
+  content: attr(data-ghost);
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(159, 208, 255, 0.32);
+  pointer-events: none;
 }
 
 .demo > p {
-  font-size: 14.5px;
-  line-height: 1.55;
-  color: var(--muted);
+  grid-column: 3;
+  grid-row: 1;
+  padding-top: 0.5em;
+  font-size: clamp(15px, 1.15vw, 17px);
+  line-height: 1.6;
+  color: #c9d3e8;
 }
 
 .tag-row {
+  grid-column: 2;
+  grid-row: 2;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 0;
+  opacity: var(--p);
 }
 
 .tag {
-  padding: 4px 9px;
-  border-radius: 999px;
-  border: 1px solid var(--card-b);
   font-family: var(--mono);
   font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--azure);
+}
+
+.tag + .tag::before {
+  content: "·";
+  margin: 0 10px;
+  color: rgba(159, 208, 255, 0.5);
+}
+
+/* locked: an encrypted line that shimmers, and a round play button */
+.demo-lock {
+  position: relative;
+  grid-column: 3;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 150px 0 30px;
+  opacity: var(--p);
+}
+
+.demo-lock i {
+  flex: 1;
+  height: 7px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, rgba(159, 208, 255, 0.08) 0%, rgba(159, 208, 255, 0.34) 45%, rgba(159, 208, 255, 0.08) 90%);
+  background-size: 260% 100%;
+  animation: cipher 2.8s linear infinite;
+}
+
+.demo-lock i:nth-of-type(1) {
+  flex: 1.6;
+}
+
+.demo-lock i:nth-of-type(2) {
+  flex: 0.7;
+  animation-delay: -0.6s;
+}
+
+.demo-lock i:nth-of-type(3) {
+  flex: 1.2;
+  animation-delay: -1.3s;
+}
+
+@keyframes cipher {
+  from {
+    background-position: 130% 0;
+  }
+  to {
+    background-position: -130% 0;
+  }
+}
+
+.lock-ico {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 18px;
+  height: 21px;
+  translate: 0 -50%;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 26' fill='none' stroke='%239fd0ff' stroke-width='1.6'><rect x='2' y='11' width='18' height='13' rx='3'/><path d='M6 11V7a5 5 0 0 1 10 0v4'/><circle cx='11' cy='17.5' r='1.6' fill='%239fd0ff'/></svg>")
+    center / contain no-repeat;
+}
+
+.demo:not(.locked-demo) .demo-lock {
+  display: none;
+}
+
+.demo-button {
+  grid-column: 3;
+  grid-row: 2;
+  justify-self: end;
+  align-self: center;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 44px;
+  padding: 0 4px 0 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: 600 14px var(--text);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  opacity: var(--p);
+}
+
+.demo-button::before {
+  content: "";
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'><path d='M18 14.5v15l12-7.5z' fill='white'/></svg>") center / 100% no-repeat,
+    radial-gradient(circle at 35% 30%, #6fb0ff, #2f7bff 55%, #1d4fd8);
+  box-shadow: 0 0 0 0 rgba(79, 155, 255, 0.55), 0 8px 24px rgba(47, 123, 255, 0.45);
+  animation: playpulse 2.4s ease-out infinite;
+}
+
+.demo-button:hover::before {
+  filter: brightness(1.15);
+}
+
+@keyframes playpulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 155, 255, 0.55), 0 8px 24px rgba(47, 123, 255, 0.45);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 14px rgba(79, 155, 255, 0), 0 8px 24px rgba(47, 123, 255, 0.45);
+  }
 }
 
 .demo-preview {
   display: none;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(54, 200, 224, 0.3);
-  background: rgba(54, 200, 224, 0.08);
-  font-size: 14px;
-  line-height: 1.55;
+  grid-column: 3;
+  grid-row: 3;
+  padding-left: 16px;
+  border-left: 2px solid rgba(54, 200, 224, 0.6);
+  font-size: 14.5px;
+  line-height: 1.6;
 }
 
 .demo-preview.is-unlocked {
@@ -2593,46 +2726,6 @@ ul {
 
 .demo-preview p {
   color: #dfe6f5;
-}
-
-.demo-lock {
-  position: relative;
-  display: grid;
-  gap: 8px;
-  margin-top: auto;
-  padding: 16px 16px 16px 58px;
-  border-radius: 12px;
-  border: 1px dashed rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.025);
-}
-
-.demo-lock i {
-  height: 8px;
-  border-radius: 4px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03));
-}
-
-.demo-lock i:nth-of-type(2) {
-  width: 72%;
-}
-
-.demo-lock i:nth-of-type(3) {
-  width: 86%;
-}
-
-.lock-ico {
-  position: absolute;
-  left: 18px;
-  top: 50%;
-  width: 22px;
-  height: 26px;
-  translate: 0 -50%;
-  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 26' fill='none' stroke='%239fd0ff' stroke-width='1.6'><rect x='2' y='11' width='18' height='13' rx='3'/><path d='M6 11V7a5 5 0 0 1 10 0v4'/><circle cx='11' cy='17.5' r='1.6' fill='%239fd0ff'/></svg>")
-    center / contain no-repeat;
-}
-
-.demo:not(.locked-demo) .demo-lock {
-  display: none;
 }
 
 /* demo access dialog (same form as demo-center.html) */
@@ -3056,27 +3149,28 @@ ul {
 
 .sheet {
   position: relative;
-  padding: 22px 24px 22px 72px;
-  border-radius: 4px 18px 18px 4px;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  background: linear-gradient(180deg, rgba(235, 242, 255, 0.09), rgba(235, 242, 255, 0.03));
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38);
+  padding: 14px 0 16px 64px;
 }
 
 .sheet::before {
   content: "";
   position: absolute;
-  left: 46px;
-  top: 0;
-  bottom: 0;
+  left: 22px;
+  top: 46px;
+  bottom: -10px;
   width: 1px;
-  background: rgba(255, 140, 140, 0.25);
+  background: linear-gradient(to bottom, rgba(159, 208, 255, 0.4), transparent);
+}
+
+.sheet:last-child::before {
+  display: none;
 }
 
 .sheet-n {
   position: absolute;
-  left: 18px;
-  top: 25px;
+  left: 0;
+  top: 14px;
+  font-size: 13px !important;
 }
 
 /* 16 · contact */
@@ -3101,11 +3195,29 @@ ul {
 }
 
 .contact-panel {
-  padding: 30px;
-  border-radius: 24px;
-  border: 1px solid var(--card-b);
-  background: rgba(10, 14, 27, 0.8);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+  padding: 0;
+}
+
+/* the contact form: no boxes, each field a line that lights up when you write on it */
+.contact-form input:not([type="checkbox"]),
+.contact-form select,
+.contact-form textarea {
+  padding: 10px 2px;
+  border: 0;
+  border-bottom: 1px solid rgba(159, 208, 255, 0.28);
+  border-radius: 0;
+  background: transparent;
+}
+
+.contact-form input:focus,
+.contact-form select:focus,
+.contact-form textarea:focus {
+  border-bottom-color: #8fc4ff;
+  box-shadow: 0 1px 0 0 #8fc4ff, 0 8px 18px -12px rgba(79, 155, 255, 0.8);
+}
+
+.contact-form textarea {
+  min-height: 84px;
 }
 
 .contact-form .consent {
@@ -3148,14 +3260,6 @@ ul {
   color: var(--ink);
 }
 
-@media (min-width: 760px) {
-  .demo,
-  .contact-panel {
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
-    backdrop-filter: blur(14px) saturate(140%);
-  }
-}
-
 @media (max-width: 1180px) and (min-width: 760px) {
   .spec-row {
     grid-template-columns: 76px minmax(0, 1fr) minmax(0, 1.2fr);
@@ -3163,10 +3267,6 @@ ul {
 
   .spec-tags {
     grid-column: 2 / -1;
-  }
-
-  .demos {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .areas {
@@ -3299,7 +3399,6 @@ ul {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .contact-panel,
   .demo-modal-panel {
     padding: 20px;
   }
@@ -3459,6 +3558,62 @@ html.tour-auto .tour [data-stop]:not(.is-focus) {
 html.read .readbar,
 html.no-js .readbar {
   display: none;
+}
+
+@media (max-width: 759px) {
+  .demo {
+    grid-template-columns: 30px minmax(0, 1fr);
+    row-gap: 10px;
+    column-gap: 14px;
+  }
+
+  .demo::before {
+    padding-top: 0.7em;
+    font-size: 11px;
+  }
+
+  .demo::after {
+    left: 6px;
+    top: 40px;
+  }
+
+  .demo-head h3 {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: clamp(26px, 7.6vw, 34px);
+  }
+
+  .demo > p {
+    grid-column: 2;
+    grid-row: 2;
+    padding-top: 0;
+    font-size: 15px;
+  }
+
+  .tag-row {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .demo-lock {
+    grid-column: 2;
+    grid-row: 4;
+    padding-right: 118px;
+  }
+
+  .demo-button {
+    grid-column: 2;
+    grid-row: 4;
+  }
+
+  .demo-preview {
+    grid-column: 2;
+    grid-row: 5;
+  }
+}
+
+html:lang(zh) .demo-head h3 {
+  letter-spacing: 0.01em;
 }
 
 /* typed text: while the autopilot runs, letters appear one by one (motion.js fades in the newest) */
@@ -4452,8 +4607,7 @@ html.read #read {
             <p class="lead m m-fade" data-r="0.5" data-rr>Each category starts with one focused static demo preview. Future versions can add deeper interactive demos, backend lead capture, and industry-specific workflows.</p>
           </header>
           <div class="demos" data-stop>
-            <article class="demo locked-demo m m-pop" data-icon="chat" data-r="0" data-demo-card="AI Receptionist Agent">
-              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+            <article class="demo locked-demo" data-icon="chat" data-r="0" data-demo-card="AI Receptionist Agent">
               <div class="demo-head"><h3>AI Receptionist Agent</h3><button class="demo-button" type="button" data-demo-agent="AI Receptionist Agent" data-demo-url="ai-receptionist-demo/">Demo</button></div>
               <p>Captures a new inquiry, asks for missing details, and prepares a clean intake summary.</p>
               <div class="tag-row"><span class="tag">Intake</span><span class="tag">First response</span></div>
@@ -4463,8 +4617,7 @@ html.read #read {
               </div>
               <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
             </article>
-            <article class="demo locked-demo m m-pop" data-icon="funnel" data-r="0.15" data-demo-card="AI Sales Agent">
-              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+            <article class="demo locked-demo" data-icon="funnel" data-r="0.15" data-demo-card="AI Sales Agent">
               <div class="demo-head"><h3>AI Sales Agent</h3><button class="demo-button" type="button" data-demo-agent="AI Sales Agent" data-demo-url="ai-sales-demo/">Demo</button></div>
               <p>Qualifies a lead, identifies buying intent, and drafts the next follow-up message.</p>
               <div class="tag-row"><span class="tag">Lead follow-up</span><span class="tag">Qualification</span></div>
@@ -4474,8 +4627,7 @@ html.read #read {
               </div>
               <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
             </article>
-            <article class="demo locked-demo m m-pop" data-icon="megaphone" data-r="0.3" data-demo-card="AI Marketing Agent">
-              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+            <article class="demo locked-demo" data-icon="megaphone" data-r="0.3" data-demo-card="AI Marketing Agent">
               <div class="demo-head"><h3>AI Marketing Agent</h3><button class="demo-button" type="button" data-demo-agent="AI Marketing Agent" data-demo-url="ai-marketing-demo/">Demo</button></div>
               <p>Turns business ideas into campaign outlines, post drafts, and reusable messaging.</p>
               <div class="tag-row"><span class="tag">Content draft</span><span class="tag">Campaign support</span></div>
@@ -4485,8 +4637,7 @@ html.read #read {
               </div>
               <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
             </article>
-            <article class="demo locked-demo m m-pop" data-icon="magnifier" data-r="0.45" data-demo-card="AI Research Agent">
-              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+            <article class="demo locked-demo" data-icon="magnifier" data-r="0.45" data-demo-card="AI Research Agent">
               <div class="demo-head"><h3>AI Research Agent</h3><button class="demo-button" type="button" data-demo-agent="AI Research Agent">Demo</button></div>
               <p>Organizes repeated research into comparison notes and decision-ready briefs.</p>
               <div class="tag-row"><span class="tag">Research brief</span><span class="tag">Comparison</span></div>
@@ -4496,8 +4647,7 @@ html.read #read {
               </div>
               <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
             </article>
-            <article class="demo locked-demo m m-pop" data-icon="checklist" data-r="0.6" data-demo-card="AI Workflow Agent">
-              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+            <article class="demo locked-demo" data-icon="checklist" data-r="0.6" data-demo-card="AI Workflow Agent">
               <div class="demo-head"><h3>AI Workflow Agent</h3><button class="demo-button" type="button" data-demo-agent="AI Workflow Agent">Demo</button></div>
               <p>Creates checklists, handoff notes, and next-step reminders for recurring operations.</p>
               <div class="tag-row"><span class="tag">Admin workflow</span><span class="tag">Checklist</span></div>
@@ -4507,8 +4657,7 @@ html.read #read {
               </div>
               <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
             </article>
-            <article class="demo locked-demo m m-pop" data-icon="layers" data-r="0.75" data-demo-card="Startup AI Solution">
-              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+            <article class="demo locked-demo" data-icon="layers" data-r="0.75" data-demo-card="Startup AI Solution">
               <div class="demo-head"><h3>Startup AI Solution</h3><button class="demo-button" type="button" data-demo-agent="Startup AI Solution">Demo</button></div>
               <p>Combines intake, summary, draft response, and next-step support for a small business owner.</p>
               <div class="tag-row"><span class="tag">Base layer</span><span class="tag">Owner support</span></div>
@@ -6258,6 +6407,24 @@ html.read #read {
     return PP;
   }
 
+  // where the swarm rests once a piece is written: an underline, or for a demo a live frame around it
+  const RP = { x: 0, y: 0, a: 0 };
+  function restPos(i, t, c) {
+    if (c.frame) {
+      const u = (R1[i] + t * 0.03) % 1;
+      onRect(u, c.l - 16, c.t - 14, c.l + c.w + 16, c.t + c.h + 14);
+      RP.x = PT.x + (R3[i] - 0.5) * 2;
+      RP.y = PT.y + (R4[i] - 0.5) * 2;
+      // a light runs around the frame
+      RP.a = 0.24 + 0.5 * Math.pow(Math.max(0, Math.cos((u - t * 0.18) * TAU)), 6);
+    } else {
+      RP.x = c.l + R1[i] * c.w;
+      RP.y = c.t + c.h + 7 + (R3[i] - 0.5) * 4;
+      RP.a = 0.3;
+    }
+    return RP;
+  }
+
   // The swarm, for each piece of text: fly to it, draw an icon of what it says, fold into the pen at its
   // first letter, write it out alongside the typing, then settle as a glowing underline beneath it.
   function swarmPos(i, t, fx, fy, fa) {
@@ -6266,9 +6433,8 @@ html.read #read {
     // it sets off from the underline of the previous piece, or from its place in the hero
     let ox, oy, oa;
     if (pv) {
-      ox = pv.l + R1[i] * pv.w;
-      oy = pv.t + pv.h + 7 + (R3[i] - 0.5) * 4;
-      oa = 0.28;
+      restPos(i, t, pv);
+      (ox = RP.x), (oy = RP.y), (oa = RP.a);
     } else {
       ox = fx;
       oy = fy;
@@ -6287,7 +6453,8 @@ html.read #read {
       ia = 0.5;
     }
     const tS = SWARM.tS, tE = SWARM.tE;
-    const ux = c.l + R1[i] * c.w, uy = c.t + c.h + 7 + (R3[i] - 0.5) * 4;
+    restPos(i, t, c);
+    const ux = RP.x, uy = RP.y, ua = RP.a;
     SP.s = 0.85;
     SP.h = 0;
     if (d < -0.8) {
@@ -6315,6 +6482,13 @@ html.read #read {
       SP.y = lerp(iy, SWARM.p0y + (PP.y - PEN.y), e);
       SP.a = lerp(ia, PP.a, e);
       SP.h = e < 0.3 ? IP.h : 0;
+    } else if (d < tE && c.frame && R2[i] >= 0.5) {
+      // a demo: while half the swarm writes, the other half switches on a frame around it
+      const e = easeInOut(clamp((d - tS) / 0.8));
+      penPoint(i, t);
+      SP.x = lerp(PP.x, ux, e);
+      SP.y = lerp(PP.y, uy, e);
+      SP.a = lerp(PP.a, ua, e);
     } else if (d < tE) {
       penPoint(i, t);
       SP.x = PP.x;
@@ -6326,11 +6500,11 @@ html.read #read {
       penPoint(i, t);
       SP.x = lerp(PP.x, ux, e);
       SP.y = lerp(PP.y, uy, e);
-      SP.a = lerp(PP.a, 0.3, e);
+      SP.a = lerp(PP.a, ua, e);
     } else {
-      SP.x = ux + Math.sin(t * 0.8 + R2[i] * 9) * 1.5;
+      SP.x = ux + (c.frame ? 0 : Math.sin(t * 0.8 + R2[i] * 9) * 1.5);
       SP.y = uy;
-      SP.a = 0.2 + 0.14 * Math.sin(t * 2 + R4[i] * 20);
+      SP.a = c.frame ? ua : 0.2 + 0.14 * Math.sin(t * 2 + R4[i] * 20);
     }
     return SP;
   }
@@ -6470,9 +6644,8 @@ html.read #read {
           // gathering where the last piece of the section was read
           let bx, by, ba;
           if (sp.c && R5[i] < SWARM_FRAC) {
-            bx = sp.c.l + R1[i] * sp.c.w;
-            by = sp.c.t + sp.c.h + 7;
-            ba = 0.3;
+            restPos(i, t, sp.c);
+            (bx = RP.x), (by = RP.y), (ba = RP.a);
           } else {
             fp(i, t, B);
             (bx = B.x), (by = B.y), (ba = B.a * fieldDim);
@@ -6517,9 +6690,10 @@ html.read #read {
           dim = 1;
         } else if (rel && R5[i] < SWARM_FRAC) {
           const e = easeInOut((tclock - SWARM.rel.t0) / 0.9);
-          x = lerp(rel.l + R1[i] * rel.w, x, e);
-          y = lerp(rel.t + rel.h + 7, y, e);
-          a = lerp(0.3 / Math.max(0.05, fieldDim), a, e);
+          restPos(i, t, rel);
+          x = lerp(RP.x, x, e);
+          y = lerp(RP.y, y, e);
+          a = lerp(RP.a / Math.max(0.05, fieldDim), a, e);
         } else if (vel) {
           // dragged along by the page, then springing back
           y -= Math.max(-120, Math.min(120, vel * (0.025 + R4[i] * 0.06)));
@@ -6648,9 +6822,10 @@ html.read #read {
     L.heroAt = isMobile
       ? { x: W * 0.5, y: L.hdr + (H - L.hdr - L.ctl) * 0.27, s: Math.min(W * 0.36, H * 0.17) }
       : { x: W * 0.74, y: mid, s: Math.min(W * 0.17, H * 0.3) };
+    // while text is read the hero steps aside, mostly past the right edge, out of the text's way
     L.asideAt = isMobile
-      ? { x: W * 0.8, y: L.hdr + H * 0.16, s: L.heroAt.s * 0.62 }
-      : { x: W * 0.95, y: mid, s: L.heroAt.s * 0.56 };
+      ? { x: W * 0.94, y: L.hdr + H * 0.1, s: L.heroAt.s * 0.5 }
+      : { x: W * 0.99, y: mid, s: L.heroAt.s * 0.52 };
     if (!TC.ready) {
       Object.assign(TC, L.heroAt);
       TC.ready = true;
@@ -6784,6 +6959,8 @@ html.read #read {
                   ? 2
                   : -1;
     });
+    // each demo name waits as an outline (its own text, drawn by CSS) until it is written in
+    $$('.demo-head h3', tourEl).forEach((h) => (h.dataset.ghost = h.textContent.trim()));
     items.forEach((it) => {
       if (it.kind === 'text') {
         it.ch = typeRun(it.el);
@@ -7507,6 +7684,8 @@ html.read #read {
     if (st) for (const x of st.items) if (x.beatT <= tau) it = x;
     const key = it || st;
     if (key !== focusKey) {
+      if (focusKey && focusKey.el) focusKey.el.classList.remove('is-cur');
+      if (it) it.el.classList.add('is-cur');
       focusKey = key;
       if (it) {
         readbar.style.transform = `translate3d(${Math.round(it.l - (isMobile ? 9 : 30))}px, ${Math.round(it.t)}px, 0)`;
@@ -7536,6 +7715,7 @@ html.read #read {
     o.x = it.l + it.w / 2;
     o.y = it.t - sy + it.h / 2;
     o.s = clamp(Math.min(it.h, it.w) * 0.6, 44, isMobile ? 70 : 110) * (it.icon === 'storm' ? 1.5 : 1);
+    o.frame = it.el.classList.contains('demo');
     return o;
   }
   function swarmUpdate(sy) {

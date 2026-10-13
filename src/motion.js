@@ -1504,6 +1504,24 @@
     return PP;
   }
 
+  // where the swarm rests once a piece is written: an underline, or for a demo a live frame around it
+  const RP = { x: 0, y: 0, a: 0 };
+  function restPos(i, t, c) {
+    if (c.frame) {
+      const u = (R1[i] + t * 0.03) % 1;
+      onRect(u, c.l - 16, c.t - 14, c.l + c.w + 16, c.t + c.h + 14);
+      RP.x = PT.x + (R3[i] - 0.5) * 2;
+      RP.y = PT.y + (R4[i] - 0.5) * 2;
+      // a light runs around the frame
+      RP.a = 0.24 + 0.5 * Math.pow(Math.max(0, Math.cos((u - t * 0.18) * TAU)), 6);
+    } else {
+      RP.x = c.l + R1[i] * c.w;
+      RP.y = c.t + c.h + 7 + (R3[i] - 0.5) * 4;
+      RP.a = 0.3;
+    }
+    return RP;
+  }
+
   // The swarm, for each piece of text: fly to it, draw an icon of what it says, fold into the pen at its
   // first letter, write it out alongside the typing, then settle as a glowing underline beneath it.
   function swarmPos(i, t, fx, fy, fa) {
@@ -1512,9 +1530,8 @@
     // it sets off from the underline of the previous piece, or from its place in the hero
     let ox, oy, oa;
     if (pv) {
-      ox = pv.l + R1[i] * pv.w;
-      oy = pv.t + pv.h + 7 + (R3[i] - 0.5) * 4;
-      oa = 0.28;
+      restPos(i, t, pv);
+      (ox = RP.x), (oy = RP.y), (oa = RP.a);
     } else {
       ox = fx;
       oy = fy;
@@ -1533,7 +1550,8 @@
       ia = 0.5;
     }
     const tS = SWARM.tS, tE = SWARM.tE;
-    const ux = c.l + R1[i] * c.w, uy = c.t + c.h + 7 + (R3[i] - 0.5) * 4;
+    restPos(i, t, c);
+    const ux = RP.x, uy = RP.y, ua = RP.a;
     SP.s = 0.85;
     SP.h = 0;
     if (d < -0.8) {
@@ -1561,6 +1579,13 @@
       SP.y = lerp(iy, SWARM.p0y + (PP.y - PEN.y), e);
       SP.a = lerp(ia, PP.a, e);
       SP.h = e < 0.3 ? IP.h : 0;
+    } else if (d < tE && c.frame && R2[i] >= 0.5) {
+      // a demo: while half the swarm writes, the other half switches on a frame around it
+      const e = easeInOut(clamp((d - tS) / 0.8));
+      penPoint(i, t);
+      SP.x = lerp(PP.x, ux, e);
+      SP.y = lerp(PP.y, uy, e);
+      SP.a = lerp(PP.a, ua, e);
     } else if (d < tE) {
       penPoint(i, t);
       SP.x = PP.x;
@@ -1572,11 +1597,11 @@
       penPoint(i, t);
       SP.x = lerp(PP.x, ux, e);
       SP.y = lerp(PP.y, uy, e);
-      SP.a = lerp(PP.a, 0.3, e);
+      SP.a = lerp(PP.a, ua, e);
     } else {
-      SP.x = ux + Math.sin(t * 0.8 + R2[i] * 9) * 1.5;
+      SP.x = ux + (c.frame ? 0 : Math.sin(t * 0.8 + R2[i] * 9) * 1.5);
       SP.y = uy;
-      SP.a = 0.2 + 0.14 * Math.sin(t * 2 + R4[i] * 20);
+      SP.a = c.frame ? ua : 0.2 + 0.14 * Math.sin(t * 2 + R4[i] * 20);
     }
     return SP;
   }
@@ -1716,9 +1741,8 @@
           // gathering where the last piece of the section was read
           let bx, by, ba;
           if (sp.c && R5[i] < SWARM_FRAC) {
-            bx = sp.c.l + R1[i] * sp.c.w;
-            by = sp.c.t + sp.c.h + 7;
-            ba = 0.3;
+            restPos(i, t, sp.c);
+            (bx = RP.x), (by = RP.y), (ba = RP.a);
           } else {
             fp(i, t, B);
             (bx = B.x), (by = B.y), (ba = B.a * fieldDim);
@@ -1763,9 +1787,10 @@
           dim = 1;
         } else if (rel && R5[i] < SWARM_FRAC) {
           const e = easeInOut((tclock - SWARM.rel.t0) / 0.9);
-          x = lerp(rel.l + R1[i] * rel.w, x, e);
-          y = lerp(rel.t + rel.h + 7, y, e);
-          a = lerp(0.3 / Math.max(0.05, fieldDim), a, e);
+          restPos(i, t, rel);
+          x = lerp(RP.x, x, e);
+          y = lerp(RP.y, y, e);
+          a = lerp(RP.a / Math.max(0.05, fieldDim), a, e);
         } else if (vel) {
           // dragged along by the page, then springing back
           y -= Math.max(-120, Math.min(120, vel * (0.025 + R4[i] * 0.06)));
@@ -1894,9 +1919,10 @@
     L.heroAt = isMobile
       ? { x: W * 0.5, y: L.hdr + (H - L.hdr - L.ctl) * 0.27, s: Math.min(W * 0.36, H * 0.17) }
       : { x: W * 0.74, y: mid, s: Math.min(W * 0.17, H * 0.3) };
+    // while text is read the hero steps aside, mostly past the right edge, out of the text's way
     L.asideAt = isMobile
-      ? { x: W * 0.8, y: L.hdr + H * 0.16, s: L.heroAt.s * 0.62 }
-      : { x: W * 0.95, y: mid, s: L.heroAt.s * 0.56 };
+      ? { x: W * 0.94, y: L.hdr + H * 0.1, s: L.heroAt.s * 0.5 }
+      : { x: W * 0.99, y: mid, s: L.heroAt.s * 0.52 };
     if (!TC.ready) {
       Object.assign(TC, L.heroAt);
       TC.ready = true;
@@ -2030,6 +2056,8 @@
                   ? 2
                   : -1;
     });
+    // each demo name waits as an outline (its own text, drawn by CSS) until it is written in
+    $$('.demo-head h3', tourEl).forEach((h) => (h.dataset.ghost = h.textContent.trim()));
     items.forEach((it) => {
       if (it.kind === 'text') {
         it.ch = typeRun(it.el);
@@ -2753,6 +2781,8 @@
     if (st) for (const x of st.items) if (x.beatT <= tau) it = x;
     const key = it || st;
     if (key !== focusKey) {
+      if (focusKey && focusKey.el) focusKey.el.classList.remove('is-cur');
+      if (it) it.el.classList.add('is-cur');
       focusKey = key;
       if (it) {
         readbar.style.transform = `translate3d(${Math.round(it.l - (isMobile ? 9 : 30))}px, ${Math.round(it.t)}px, 0)`;
@@ -2782,6 +2812,7 @@
     o.x = it.l + it.w / 2;
     o.y = it.t - sy + it.h / 2;
     o.s = clamp(Math.min(it.h, it.w) * 0.6, 44, isMobile ? 70 : 110) * (it.icon === 'storm' ? 1.5 : 1);
+    o.frame = it.el.classList.contains('demo');
     return o;
   }
   function swarmUpdate(sy) {
