@@ -3248,6 +3248,158 @@ ul {
   }
 }
 
+/* ---------- the tour, in motion: title cards, kinetic headings, the block being read lit up ---------- */
+
+/* each section opens on a full-screen title card; its particle hero fills the space beside the text */
+html:not(.read):not(.no-js) .thead {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(100vh - var(--hdr) - var(--ctl) - 9vh);
+  min-height: calc(100svh - var(--hdr) - var(--ctl) - 9vh);
+  max-width: none;
+}
+
+@media (min-width: 760px) {
+  html:not(.read):not(.no-js) .thead > :not(.t-bignum) {
+    max-width: min(800px, 56%);
+  }
+}
+
+@media (max-width: 759px) {
+  html:not(.read):not(.no-js) .thead {
+    justify-content: flex-end;
+    min-height: calc(100svh - var(--hdr) - var(--ctl) - 40px);
+    padding-bottom: 8px;
+  }
+}
+
+/* the chapter number, huge and outlined, drifting behind the title at its own speed */
+.t-bignum {
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: -0.05em;
+  font-family: var(--display);
+  font-size: clamp(190px, 40vh, 440px);
+  font-weight: 700;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  color: transparent;
+  background: linear-gradient(180deg, rgba(130, 180, 255, 0.13), rgba(130, 180, 255, 0) 75%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 1.4px rgba(150, 195, 255, 0.3);
+  transform: translate3d(calc((1 - var(--p)) * -80px), calc(-50% + var(--par, 0px)), 0);
+  pointer-events: none;
+  user-select: none;
+}
+
+html.read .t-bignum,
+html.no-js .t-bignum {
+  display: none;
+}
+
+@media (max-width: 759px) {
+  .t-bignum {
+    top: 22%;
+    font-size: clamp(150px, 46vw, 220px);
+    -webkit-text-stroke-color: rgba(150, 195, 255, 0.2);
+  }
+}
+
+/* headings: each word flips up into place with a flash of light */
+.tour .m-word {
+  transform-origin: 50% 100%;
+  transform: perspective(700px) translate3d(0, calc((1 - var(--p)) * 0.55em), 0) rotateX(calc((1 - var(--p)) * -82deg));
+  text-shadow: 0 0 calc(var(--p) * (1 - var(--p)) * 90px) rgba(150, 200, 255, 0.95);
+}
+
+/* the accented phrase keeps a slow sheen running along it */
+.tour .t-title em .m-word,
+.tour .t-sub em .m-word,
+.tour .quote-big em .m-word {
+  background: linear-gradient(100deg, var(--accent) 0%, var(--accent) 40%, #ffffff 50%, var(--accent) 60%, var(--accent) 100%);
+  background-size: 320% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: sheen 5.5s ease-in-out infinite;
+  animation-delay: calc(1.2s + var(--wd, 0) * 1s);
+}
+
+@keyframes sheen {
+  0% {
+    background-position: 100% 0;
+  }
+  45%,
+  100% {
+    background-position: 0% 0;
+  }
+}
+
+/* read-along: the words being lit carry a glow, like a cursor running through the paragraph */
+.tour .rw {
+  text-shadow: 0 0 calc(var(--p) * (1 - var(--p)) * 56px) rgba(140, 195, 255, 0.95);
+}
+
+/* while the autopilot runs: the block being read is lit, the rest of the page steps back */
+html.tour-auto .tour [data-stop] {
+  transition: opacity 0.7s ease, filter 0.7s ease;
+}
+
+html.tour-auto .tour [data-stop]:not(.is-focus) {
+  filter: brightness(0.5) saturate(0.6);
+}
+
+/* the reading bar: beside the block being read, filling while the page waits on it */
+.readbar {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 100px;
+  border-radius: 2px;
+  background: rgba(159, 208, 255, 0.14);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s, transform 0.75s cubic-bezier(0.65, 0, 0.35, 1), height 0.75s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.readbar.on {
+  opacity: 1;
+}
+
+.readbar::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(var(--rp, 0) * 100%);
+  border-radius: 2px;
+  background: linear-gradient(to bottom, rgba(79, 155, 255, 0.2), #8fc4ff);
+  box-shadow: 0 0 12px rgba(79, 155, 255, 0.8);
+}
+
+.readbar i {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--rp, 0) * 100%);
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: #eaf4ff;
+  box-shadow: 0 0 10px 3px rgba(120, 185, 255, 0.95), 0 0 30px 8px rgba(79, 155, 255, 0.45);
+}
+
+html.read .readbar,
+html.no-js .readbar {
+  display: none;
+}
+
 /* ---------- Chinese page (zh.html): CJK fonts, upright serif accents, looser line-height ---------- */
 
 html:lang(zh) {

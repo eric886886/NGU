@@ -770,51 +770,347 @@
     },
   };
 
-  // ---- formations for the tour below the film: placed relative to the screen, no anchors
+  // ---- the tour below the film. Each section opens on a title card with its own particle "hero"; while
+  // its text is read the hero steps aside (TC moves and shrinks) and the whole field reacts to the page's
+  // movement. TC is set every frame: the hero's centre, its radius, the time since the section's form
+  // started, and the page's scroll position (for the parallax dust).
+  const TC = { x: 0, y: 0, s: 1, since: 0, sy: 0 };
+  const P3 = { x: 0, y: 0, z: 0, k: 1 };
+  // rotate a point of the hero (unit coordinates) by yaw and pitch, then project it with perspective
+  function proj(o, x, y, z, yaw, pitch) {
+    const cy = Math.cos(yaw), sy = Math.sin(yaw), cx = Math.cos(pitch), sx = Math.sin(pitch);
+    const x1 = x * cy + z * sy, z1 = -x * sy + z * cy;
+    const y1 = y * cx - z1 * sx, z2 = y * sx + z1 * cx;
+    const k = 3.4 / (3.4 + z2);
+    P3.x = TC.x + x1 * TC.s * k;
+    P3.y = TC.y + y1 * TC.s * k;
+    P3.z = z2;
+    P3.k = k;
+    o.x = P3.x;
+    o.y = P3.y;
+    return P3;
+  }
+  // nearer particles are brighter
+  const near = (z) => 0.5 + 0.5 * clamp((1.1 - z) / 2.2);
+  // the angle travelled since a sweep passed angle a
+  const behind = (sweep, a) => (((sweep - a) % TAU) + TAU) % TAU;
+  // a point walking the outline of a rectangle (u in 0..1)
+  const PT = { x: 0, y: 0 };
+  function onRect(u, x0, y0, x1, y1) {
+    const w = x1 - x0, h = y1 - y0;
+    let d = u * 2 * (w + h);
+    if (d < w) return (PT.x = x0 + d), (PT.y = y0), PT;
+    d -= w;
+    if (d < h) return (PT.x = x1), (PT.y = y0 + d), PT;
+    d -= h;
+    if (d < w) return (PT.x = x1 - d), (PT.y = y1), PT;
+    return (PT.x = x0), (PT.y = y1 - (d - w)), PT;
+  }
+  function onSeg(u, ax, ay, bx, by) {
+    PT.x = ax + (bx - ax) * u;
+    PT.y = ay + (by - ay) * u;
+    return PT;
+  }
+  // the outcome line of the cases hero, in unit coordinates
+  const CASE = spline([
+    { x: -0.02, y: 0.12 },
+    { x: 0.3, y: 0.06 },
+    { x: 0.62, y: -0.18 },
+    { x: 0.98, y: -0.62 },
+  ]);
+  const LH = { x: 0, y: 0, s: 1 };
+  const logoAt = logoForm('fin');
+  // the paper plane, pointing right: nose, upper wing tip, fold, lower wing tip, keel
+  const PLANE = [
+    [0.55, 0, -0.5, -0.36],
+    [-0.5, -0.36, -0.2, 0.04],
+    [-0.2, 0.04, 0.55, 0],
+    [0.55, 0, -0.36, 0.34],
+    [-0.36, 0.34, -0.2, 0.04],
+    [-0.2, 0.04, -0.3, 0.16],
+  ];
+  const flight = (t) => ({ x: 0.72 * Math.sin(t * 0.42), y: 0.34 * Math.sin(t * 0.84) - 0.05 });
+
   Object.assign(F, {
-    ring: (i, t, o) => F.calm(i, t, o, L.tc.ring),
-    ring2: (i, t, o) => F.calm(i, t, o, L.tc.ring2),
-    cubeT: (i, t, o) => F.cube(i, t, o, L.tc.cube, 1, 0),
-    logoT: logoForm('logoT'),
-    logoC(i, t, o) {
-      F.logoT(i, t, o, L.logoC);
-      o.a *= 0.42;
-    },
-    stream(i, t, o) {
-      // inquiries come in scattered on the left and leave as one calm beam on the right
-      const u = (R1[i] + t * 0.04 * (0.7 + R2[i] * 0.6)) % 1;
-      const x = -60 + u * (W + 120);
-      const k = smooth(0.18, 0.6, u);
-      const spread = H * 0.15 * (1 - k) + 8 * k;
-      o.x = x;
-      o.y = L.tc.streamY + Math.sin(x * 0.006 + t * 0.6) * 16 + (R3[i] - 0.5) * 2 * spread + Math.sin(t * 2 + R4[i] * 30) * (1 - k) * 8;
-      o.a = (0.3 + 0.55 * k) * smooth(0, 0.06, u) * (1 - smooth(0.94, 1, u));
-      o.s = 0.85;
+    // motes drifting upward at different depths; they move with the page, slower the deeper they are
+    dust(i, t, o) {
+      const depth = 0.12 + R4[i] * 0.6;
+      const span = H * 1.3;
+      let y = (R3[i] * span - t * 7 * (0.4 + R5[i]) - TC.sy * depth) % span;
+      if (y < 0) y += span;
+      o.x = R1[i] * W + Math.sin(t * 0.3 + R2[i] * 9) * 14;
+      o.y = y - H * 0.15;
+      o.a = 0.1 + 0.4 * depth * R5[i] + 0.06;
+      o.s = 0.45 + depth * 0.7;
       o.h = 0;
     },
-    riseT(i, t, o) {
+
+    // AI solutions: five agents on tilted orbits around one core, data running out to each of them
+    orbitH(i, t, o) {
+      if (R2[i] > 0.9) return F.dust(i, t, o);
+      const yaw = t * 0.16, pitch = -0.5;
+      const g = R2[i];
       o.h = 0;
-      if (R2[i] < 0.82) {
-        const s = (R1[i] + t * 0.03) % 1;
-        const p = along(L.tc.rise, s);
-        const n = (R3[i] - 0.5) * 10;
-        o.x = p.x + p.nx * n;
-        o.y = p.y + p.ny * n;
-        o.a = 0.2 + 0.6 * s;
-        o.s = 0.85;
-      } else {
-        o.x = R1[i] * W + Math.sin(t * 0.5 + R4[i] * 9) * 12;
-        o.y = H - ((R3[i] + t * 0.03 * (0.5 + R4[i])) % 1) * H;
-        o.a = 0.2;
-        o.s = 0.7;
+      if (g < 0.24) {
+        const a = R1[i] * TAU + t * 0.5, b = Math.acos(R3[i] * 2 - 1);
+        const r = 0.23 * (0.8 + 0.2 * Math.sin(t * 2.2 + R4[i] * 9));
+        proj(o, r * Math.sin(b) * Math.cos(a), r * Math.cos(b), r * Math.sin(b) * Math.sin(a), yaw, pitch);
+        o.a = 0.5 * near(P3.z);
+        o.s = 0.95 * P3.k;
+        return;
       }
+      const k = i % 5;
+      const R = 0.62 + k * 0.15;
+      const inc = (k - 2) * 0.34, node = k * 1.26;
+      const sat = t * (0.62 - k * 0.07) + k * 1.9;
+      let ang, rad = R, a, s = 0.8, lift = 0;
+      if (g < 0.6) {
+        // the orbit, brightest in the satellite's wake
+        ang = R1[i] * TAU;
+        a = 0.14 + 0.7 * Math.exp(-behind(sat, ang) * 1.5);
+      } else if (g < 0.78) {
+        ang = sat + (R3[i] - 0.5) * 0.14;
+        rad = R + (R4[i] - 0.5) * 0.09;
+        lift = (R5[i] - 0.5) * 0.09;
+        a = 0.95;
+        s = 1.15;
+      } else {
+        const u = (R1[i] + t * 0.5) % 1;
+        ang = sat;
+        rad = R * u;
+        a = 0.2 + 0.75 * Math.sin(Math.PI * u);
+      }
+      const x = Math.cos(ang) * rad, z = Math.sin(ang) * rad;
+      const y2 = -z * Math.sin(inc) + lift, z2 = z * Math.cos(inc);
+      const cn = Math.cos(node), sn = Math.sin(node);
+      proj(o, x * cn + z2 * sn, y2, -x * sn + z2 * cn, yaw, pitch);
+      o.a = a * near(P3.z);
+      o.s = s * P3.k;
     },
-    drift(i, t, o) {
-      o.x = R1[i] * W + Math.sin(t * 0.2 + R4[i] * 9) * 30;
-      o.y = H + 20 - ((R3[i] + t * 0.012 * (0.4 + R5[i])) % 1) * (H + 40);
-      o.a = 0.16 + 0.3 * R5[i];
-      o.s = 0.75;
+
+    // Startup: four layers drop into a stack, one after another; a light scans up through them
+    layersH(i, t, o) {
+      if (R2[i] > 0.9) return F.dust(i, t, o);
       o.h = 0;
+      const j = i % 4;
+      const build = smooth(0.2 + j * 0.42, 1.1 + j * 0.42, TC.since);
+      const gap = 0.3 * (0.92 + 0.08 * Math.sin(t * 0.9));
+      const y = (1.5 - j) * gap - (1 - build) * 1.1;
+      const u = R1[i] * 2 - 1, line = Math.floor(R3[i] * 10);
+      let x, z;
+      if (line < 4) {
+        const e = line & 1 ? 1 : -1;
+        if (line < 2) (x = u), (z = e);
+        else (x = e), (z = u);
+      } else {
+        const q = (((line - 4) % 3) - 1) * 0.5;
+        if (line < 7) (x = u), (z = q);
+        else (x = q), (z = u);
+      }
+      const half = 0.66;
+      const scan = Math.exp(-Math.pow(((t * 0.45) % 1.5) - 0.15 - j * 0.32, 2) * 40);
+      proj(o, x * half, y, z * half, t * 0.22 + 0.7, -0.6);
+      o.a = ((line < 4 ? 0.42 : 0.2) + 0.6 * scan) * build * near(P3.z);
+      o.s = (0.8 + scan * 0.4) * P3.k;
+    },
+
+    // Demo: a lock that opens, then turns into a window with a play button
+    lockH(i, t, o) {
+      if (R2[i] > 0.9) return F.dust(i, t, o);
+      o.h = 0;
+      const since = TC.since;
+      const g = R1[i];
+      // the lock
+      let ax, ay;
+      if (g < 0.55) {
+        onRect(g / 0.55, -0.4, -0.02, 0.4, 0.62);
+        (ax = PT.x), (ay = PT.y);
+      } else if (g < 0.82) {
+        // the shackle: an arch over the body that lifts and swings open
+        const v = (g - 0.55) / 0.27;
+        const th = Math.PI + v * Math.PI;
+        let sx = Math.cos(th) * 0.26, sy = Math.sin(th) * 0.3 - 0.02;
+        if (v < 0.06) sy += (0.06 - v) * 2.4;
+        const open = easeOut(smooth(2.2, 3.0, since));
+        const rot = -open * 0.7;
+        const px = 0.26, py = -0.02;
+        const dx = sx - px, dy = sy - py;
+        sx = px + dx * Math.cos(rot) - dy * Math.sin(rot);
+        sy = py + dx * Math.sin(rot) + dy * Math.cos(rot) - open * 0.16;
+        (ax = sx), (ay = sy);
+      } else {
+        const a = R3[i] * TAU;
+        ax = Math.cos(a) * 0.07;
+        ay = 0.24 + Math.sin(a) * 0.07 + (R4[i] < 0.35 ? R4[i] * 0.4 : 0);
+      }
+      // the window with its play button
+      let bx, by;
+      if (g < 0.46) {
+        onRect(g / 0.46, -0.78, -0.5, 0.78, 0.5);
+        (bx = PT.x), (by = PT.y);
+      } else if (g < 0.54) {
+        onSeg((g - 0.46) / 0.08, -0.78, -0.32, 0.78, -0.32);
+        (bx = PT.x), (by = PT.y);
+      } else if (g < 0.6) {
+        const k = Math.floor((g - 0.54) / 0.02);
+        const a = R3[i] * TAU;
+        bx = -0.68 + k * 0.08 + Math.cos(a) * 0.022;
+        by = -0.41 + Math.sin(a) * 0.022;
+      } else {
+        // the play triangle: outline, then a soft fill
+        const v = (g - 0.6) / 0.4;
+        const A = [-0.14, -0.2], B = [0.24, 0.06], C = [-0.14, 0.32];
+        if (v < 0.6) {
+          const e = (v / 0.6) * 3, k = Math.floor(e), f = e - k;
+          const P = [A, B, C, A];
+          onSeg(f, P[k][0], P[k][1], P[k + 1][0], P[k + 1][1]);
+          (bx = PT.x), (by = PT.y);
+        } else {
+          const r1 = Math.sqrt(R3[i]), r2 = R4[i];
+          bx = A[0] * (1 - r1) + B[0] * r1 * (1 - r2) + C[0] * r1 * r2;
+          by = A[1] * (1 - r1) + B[1] * r1 * (1 - r2) + C[1] * r1 * r2;
+        }
+      }
+      const q = easeInOut(clamp((since - 3.4 - DEL[i] * 0.8) / 1.3));
+      const sw = Math.sin(Math.PI * q) * 0.25;
+      const x = lerp(ax, bx, q) + Math.cos(ANG[i]) * sw;
+      const y = lerp(ay, by, q) + Math.sin(ANG[i]) * sw;
+      const pulse = 0.5 + 0.5 * Math.sin(t * 2.4);
+      const tri = g >= 0.6 ? q : 0;
+      proj(o, x, y, 0, Math.sin(t * 0.5) * 0.28, Math.sin(t * 0.37) * 0.12);
+      o.a = (0.5 + 0.3 * pulse * (1 - q) + 0.35 * tri * pulse) * (g >= 0.6 && R2[i] > 0.6 ? 0.7 : 1);
+      o.s = 0.9 + tri * 0.25;
+      // the lock glows amber while it is shut
+      o.h = q < 0.3 && since < 3 && R4[i] < 0.18 ? 1 : 0;
+    },
+
+    // Cases: a restless knot of problems funnels through one gate and leaves as a single rising line
+    casesH(i, t, o) {
+      if (R2[i] > 0.9) return F.dust(i, t, o);
+      const g = R2[i];
+      let x, y, a, h = 0, s = 0.85;
+      if (g < 0.1) {
+        // the gate: the AI layer
+        const ang = R1[i] * TAU + t * 0.8;
+        x = -0.02 + Math.cos(ang) * 0.07;
+        y = 0.12 + Math.sin(ang) * 0.36;
+        a = 0.35 + 0.45 * (0.5 + 0.5 * Math.sin(ang * 2 - t * 3));
+      } else if (g < 0.18) {
+        // the arrowhead at the end of the line
+        const end = along(CASE, 1), pre = along(CASE, 0.94);
+        let ux = end.x - pre.x, uy = end.y - pre.y;
+        const ul = Math.hypot(ux, uy) || 1;
+        (ux /= ul), (uy /= ul);
+        const side = R3[i] < 0.5 ? 0.62 : -0.62, v = R4[i] * 0.2;
+        x = end.x - (ux * Math.cos(side) - uy * Math.sin(side)) * v;
+        y = end.y - (ux * Math.sin(side) + uy * Math.cos(side)) * v;
+        a = 0.95;
+        s = 1;
+      } else {
+        const u = (R1[i] + t * 0.075 * (0.8 + R3[i] * 0.4)) % 1;
+        if (u < 0.45) {
+          const c = u / 0.45;
+          const ang = R4[i] * TAU + t * (1.6 + R5[i] * 1.2);
+          const r = 0.3 * (0.35 + R3[i]) * (1 - c * 0.45);
+          x = -0.74 + Math.cos(ang) * r + c * 0.28;
+          y = 0.12 + Math.sin(ang * 1.3) * r * 0.95 + Math.sin(t * 7 + g * 40) * 0.02;
+          a = 0.42 * smooth(0, 0.08, u);
+          h = R5[i] < 0.32 ? 1 : 0;
+        } else if (u < 0.56) {
+          const c = (u - 0.45) / 0.11;
+          x = lerp(-0.36, -0.02, c);
+          y = 0.12 + (R3[i] - 0.5) * 2 * (0.24 * (1 - smooth(0, 1, c)) + 0.012);
+          a = 0.5 + 0.4 * c;
+        } else {
+          const p = along(CASE, (u - 0.56) / 0.44);
+          const n = (R3[i] - 0.5) * 0.028;
+          x = p.x + p.nx * n;
+          y = p.y + p.ny * n;
+          a = 0.85 * (1 - smooth(0.97, 1, u)) + 0.1;
+        }
+      }
+      o.x = TC.x + x * TC.s;
+      o.y = TC.y + y * TC.s;
+      o.a = a;
+      o.s = s;
+      o.h = h;
+    },
+
+    // About: the logo itself, ideas streaming into the mark
+    logoH(i, t, o) {
+      LH.x = TC.x;
+      LH.y = TC.y;
+      LH.s = TC.s * 2.1;
+      logoAt(i, t, o, LH);
+    },
+
+    // Business review: a radar sweeping the business; six opportunities light up as the beam passes them
+    radarH(i, t, o) {
+      if (R2[i] > 0.9) return F.dust(i, t, o);
+      o.h = 0;
+      const sweep = t * 1.5;
+      const g = R2[i];
+      let ang, r, a, s = 0.8;
+      if (g < 0.4) {
+        const k = i % 3;
+        r = 0.38 + k * 0.31;
+        ang = R1[i] * TAU;
+        a = 0.14 + 0.5 * Math.exp(-behind(sweep, ang) * 2);
+      } else if (g < 0.66) {
+        const d = Math.pow(R3[i], 2) * 1.4;
+        ang = sweep - d;
+        r = 0.04 + Math.sqrt(R1[i]) * 0.96;
+        a = 0.8 * Math.exp(-d * 2.6);
+      } else if (g < 0.8) {
+        const k = i % 6;
+        const ba = k * 1.047 + 0.5 + (k % 2) * 0.3;
+        const br = 0.36 + ((k * 3) % 5) * 0.13;
+        ang = ba + (R3[i] - 0.5) * 0.09;
+        r = br + (R4[i] - 0.5) * 0.06;
+        const hit = Math.exp(-behind(sweep, ba) * 0.8);
+        a = 0.18 + 0.82 * hit;
+        s = 0.9 + hit * 0.6;
+      } else {
+        const u = R1[i] * 2 - 1;
+        const k = i % 2;
+        proj(o, k ? u : 0, 0, k ? 0 : u, t * 0.05, -1.0);
+        o.a = 0.12 * near(P3.z);
+        o.s = 0.7 * P3.k;
+        return;
+      }
+      proj(o, Math.cos(ang) * r, 0, Math.sin(ang) * r, t * 0.05, -1.0);
+      o.a = a * near(P3.z);
+      o.s = s * P3.k;
+    },
+
+    // Contact: a paper plane looping through the space, leaving a long trail behind it
+    planeH(i, t, o) {
+      if (R2[i] > 0.9) return F.dust(i, t, o);
+      o.h = 0;
+      const g = R2[i];
+      if (g < 0.56) {
+        const lag = 0.06 + Math.pow(R1[i], 1.3) * 4;
+        const p = flight(t - lag);
+        const spread = 0.01 + lag * 0.035;
+        o.x = TC.x + (p.x + (R3[i] - 0.5) * spread) * TC.s;
+        o.y = TC.y + (p.y + (R4[i] - 0.5) * spread) * TC.s;
+        o.a = 0.85 * Math.exp(-lag * 0.65);
+        o.s = 0.75;
+        return;
+      }
+      const p = flight(t), q = flight(t + 0.05);
+      const head = Math.atan2(q.y - p.y, q.x - p.x);
+      const bank = Math.cos(t * 0.42);
+      const e = PLANE[i % PLANE.length];
+      const u = R1[i];
+      let lx = e[0] + (e[2] - e[0]) * u, ly = (e[1] + (e[3] - e[1]) * u) * (0.55 + 0.45 * Math.abs(bank));
+      const sc = 0.62;
+      (lx *= sc), (ly *= sc);
+      const ch = Math.cos(head), sh = Math.sin(head);
+      o.x = TC.x + (p.x + lx * ch - ly * sh) * TC.s;
+      o.y = TC.y + (p.y + lx * sh + ly * ch) * TC.s;
+      o.a = 0.85;
+      o.s = 0.95;
     },
   });
 
@@ -871,10 +1167,15 @@
     renderField(fc, fp, since, t, override ? 1 : smooth(0.3, 2.5, t), oy);
   }
 
+  // How the field moves with the page (the tour only): stars at different depths scroll with it and stretch
+  // into streaks when it moves fast, particles are dragged along a little and spring back, and trails
+  // grow longer while things are moving.
+  const MOT = { on: false, sy: 0, vel: 0, fade: 0.4 };
+
   function renderField(fc, fp, since, t, starIn, oy) {
     ctx.globalCompositeOperation = 'destination-out';
     ctx.globalAlpha = 1;
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillStyle = `rgba(0,0,0,${MOT.on ? MOT.fade : 0.4})`;
     ctx.fillRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
 
@@ -882,6 +1183,7 @@
     prepare();
     const base = isMobile ? 2.6 : 3.1;
 
+    const vel = MOT.on ? MOT.vel : 0;
     for (let i = 0; i < N; i++) {
       let x, y, a, s, h;
       if (STAR[i]) {
@@ -890,6 +1192,17 @@
         a = (0.12 + 0.28 * (0.5 + 0.5 * Math.sin(t * (0.4 + R3[i] * 1.4) + R4[i] * TAU))) * starIn;
         s = 0.55;
         h = 0;
+        if (MOT.on) {
+          const depth = 0.08 + R3[i] * 0.42;
+          y = (((R2[i] * H * 1.2 - MOT.sy * depth) % (H * 1.2)) + H * 1.2) % (H * 1.2) - H * 0.1;
+          const len = Math.min(140, Math.abs(vel) * depth * 0.07);
+          if (len > 2) {
+            const r = 1.6 * s * SZ[i];
+            ctx.globalAlpha = Math.min(1, a * fieldDim * 1.6);
+            ctx.drawImage(SPR[1], x - r, y - r - (vel > 0 ? 0 : len), r * 2, r * 2 + len);
+            continue;
+          }
+        }
       } else {
         fc(i, t, A);
         if (trans) {
@@ -910,6 +1223,8 @@
           x = A.x; y = A.y; a = A.a; s = A.s; h = A.h;
         }
         y += oy;
+        // dragged along by the page, then springing back
+        if (vel) y -= Math.max(-120, Math.min(120, vel * (0.025 + R4[i] * 0.06)));
       }
       if (a < 0.01 || x < -30 || y < -30 || x > W + 30 || y > H + 30) continue;
       const r = base * s * SZ[i];
@@ -1028,25 +1343,19 @@
     if (isMobile) L.cube = { x: W * 0.8, y: H - L.ctl - 62, s: Math.min(W * 0.1, 40) };
     else if (cube) L.cube = { x: cube.x, y: cube.y, s: Math.min(cube.w, cube.h) * 0.36 };
 
-    // formations used while touring the other pages (relative to the screen)
+    // the tour's hero spots: on the title card (right of the text, or above it on phones) and aside while reading
     L.scroll0 = window.scrollY;
-    L.tc = {
-      // kept near the right edge, half off-screen, so they sit behind the margins rather than the text
-      ring: { x: W * 0.98, y: H * 0.52, r: Math.min(W, H) * (isMobile ? 0.3 : 0.36) },
-      ring2: { x: W * 1.0, y: H * 0.3, r: Math.min(W, H) * 0.3 },
-      cube: { x: W * (isMobile ? 0.86 : 0.92), y: H * 0.28, s: Math.min(W, H) * (isMobile ? 0.1 : 0.11) },
-      streamY: H * 0.86,
-      // a hockey-stick growth curve that keeps to the bottom and the right edge, clear of the text
-      rise: spline([
-        { x: W * 0.02, y: H * 0.97 },
-        { x: W * 0.5, y: H * 0.93 },
-        { x: W * 0.8, y: H * 0.8 },
-        { x: W * 0.95, y: H * 0.5 },
-        { x: W * 1.0, y: H * 0.14 },
-      ]),
-    };
-    L.logoT = { x: W * (isMobile ? 0.7 : 0.9), y: H * 0.56, s: Math.min(W * (isMobile ? 0.7 : 0.3), H * 0.5 * LOGO_ASPECT) };
-    L.logoC = { x: W * 0.5, y: H * 0.5, s: Math.min(W * 0.86, H * 0.8 * LOGO_ASPECT) };
+    const mid = L.hdr + (H - L.hdr - L.ctl) / 2;
+    L.heroAt = isMobile
+      ? { x: W * 0.5, y: L.hdr + (H - L.hdr - L.ctl) * 0.27, s: Math.min(W * 0.36, H * 0.17) }
+      : { x: W * 0.74, y: mid, s: Math.min(W * 0.17, H * 0.3) };
+    L.asideAt = isMobile
+      ? { x: W * 0.8, y: L.hdr + H * 0.16, s: L.heroAt.s * 0.62 }
+      : { x: W * 0.95, y: mid, s: L.heroAt.s * 0.56 };
+    if (!TC.ready) {
+      Object.assign(TC, L.heroAt);
+      TC.ready = true;
+    }
     measureTour();
 
     doc.classList.remove('measuring');
@@ -1061,20 +1370,46 @@
   // its entrances); headings rise word by word and paragraphs light up at reading pace.
   const tourEl = $('#tour');
   const tsecs = tourEl
-    ? $$('[data-tour]', tourEl).map((el) => ({ el, id: el.id, label: el.dataset.label, form: el.dataset.form || 'drift', start: 0, end: 0 }))
+    ? $$('[data-tour]', tourEl).map((el) => ({ el, id: el.id, label: el.dataset.label, form: el.dataset.form || 'dust', start: 0, end: 0 }))
     : [];
   const tcues = [];
+  let readbar = null;
   if (tourEl) {
+    // every title card gets its chapter number, huge and outlined, drifting behind the title
+    tsecs.forEach((sec) => {
+      const th = $('.thead', sec.el);
+      const n = th && $('[data-n]', th);
+      sec.th = th;
+      if (!n) return;
+      const big = document.createElement('span');
+      big.className = 't-bignum m';
+      big.setAttribute('aria-hidden', 'true');
+      big.dataset.r = '0';
+      big.dataset.dur = '1.6';
+      big.textContent = n.dataset.n;
+      th.prepend(big);
+      sec.big = big;
+    });
     $$('[data-rs]', tourEl).forEach((el) => {
-      splitWords(el, (w, i) => word('m m-word', w, i * 0.045, '0.8'));
-      $$('.m-word', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), dur: 0.8 }));
+      splitWords(el, (w, i) => {
+        const s = word('m m-word', w, i * (ZH ? 0.04 : 0.06), '0.9');
+        s.style.setProperty('--wd', (i * 0.11).toFixed(2)); // the sheen travels along the line
+        return s;
+      });
+      $$('.m-word', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), dur: 0.9 }));
     });
     $$('[data-rr]', tourEl).forEach((el) => {
       const base = num(el.dataset.r, 0) + 0.35;
       const rate = ZH ? 0.055 : 0.1;
-      splitWords(el, (w, i) => word('rw', w, base + i * rate, '0.35'));
-      $$('.rw', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), dur: 0.35 }));
+      splitWords(el, (w, i) => word('rw', w, base + i * rate, '0.7'));
+      $$('.rw', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), dur: 0.7, lin: true }));
     });
+    // the reading bar: sits beside the block being read and fills up while the page waits on it
+    readbar = document.createElement('div');
+    readbar.className = 'readbar';
+    readbar.setAttribute('aria-hidden', 'true');
+    readbar.innerHTML = '<i></i>';
+    document.body.appendChild(readbar);
     $$('[data-r]', tourEl).forEach((el) => tcues.push({ el, trig: el, delay: num(el.dataset.r, 0), dur: num(el.dataset.dur, 0.9) }));
     tcues.forEach((c) => {
       c.top = 0;
@@ -1104,13 +1439,14 @@
       const sec = tsecs.find((x) => x.el.contains(el)) || tsecs[tsecs.length - 1];
       const text = el.textContent.replace(/\s+/g, ' ').trim();
       const read = ZH ? text.replace(/\s/g, '').length / 11 : text.split(' ').length / 5.6;
-      const dwell = el.dataset.dwell ? parseFloat(el.dataset.dwell) : clamp(read + 1.2, 2.4, 10);
+      let dwell = el.dataset.dwell ? parseFloat(el.dataset.dwell) : clamp(read + 0.7, 2.2, 10);
+      if (el.classList.contains('thead')) dwell = Math.max(dwell, 4.6); // time to watch the title card
       const y0 = top - L.hdr - pad;
       // a block taller than the screen is panned through in pieces
       const pieces = r.height > avail ? Math.ceil((r.height - avail) / (avail * 0.7)) + 1 : 1;
       for (let k = 0; k < pieces; k++) {
         const y = pieces === 1 ? y0 : y0 + ((r.height - avail) * k) / (pieces - 1);
-        raw.push({ y: clamp(Math.round(y), 0, maxY), dwell: dwell / pieces, sec, el, whole: pieces === 1, bottom: top + r.height });
+        raw.push({ y: clamp(Math.round(y), 0, maxY), dwell: dwell / pieces, sec, els: [el], whole: pieces === 1, bottom: top + r.height });
       }
     });
     // Like a teleprompter: the page only moves on when the next block is not already on screen.
@@ -1119,15 +1455,30 @@
     raw.forEach((st) => {
       const prev = steps[steps.length - 1];
       const onScreen = prev && st.whole && st.sec === prev.sec && st.bottom <= prev.y + L.hdr + pad + avail;
-      if (prev && (onScreen || Math.abs(st.y - prev.y) < 40)) prev.dwell += st.dwell;
-      else steps.push(st);
+      if (prev && (onScreen || Math.abs(st.y - prev.y) < 40)) {
+        prev.dwell += st.dwell;
+        prev.els.push(...st.els);
+      } else steps.push(st);
+    });
+    // where the reading bar goes for each step: beside its blocks, within what the screen shows
+    steps.forEach((st) => {
+      let top = Infinity, bot = -Infinity, left = Infinity;
+      st.els.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        top = Math.min(top, r.top + sy);
+        bot = Math.max(bot, r.bottom + sy);
+        left = Math.min(left, r.left);
+      });
+      st.bt = Math.max(top, st.y + L.hdr + pad * 0.5);
+      st.bb = Math.min(bot, st.y + H - L.ctl - 10);
+      st.bl = left;
     });
     let tt = 0;
     let prevY = 0;
     steps.forEach((st, i) => {
       const d = Math.abs(st.y - prevY);
       st.y0 = prevY;
-      st.move = i === 0 ? 2.6 : clamp(0.8 + (d / H) * 0.9, 0.9, 2.6);
+      st.move = i === 0 ? 2.4 : clamp(0.55 + (d / H) * 0.5, 0.7, 1.5);
       st.start = tt;
       tt += st.move + st.dwell;
       prevY = st.y;
@@ -1135,6 +1486,9 @@
     tour = { steps, total: tt };
     tsecs.forEach((sec) => {
       sec.top = sec.el.getBoundingClientRect().top + sy;
+      sec.thTop = sec.th ? sec.th.getBoundingClientRect().top + sy : sec.top;
+      sec.thH = sec.th ? sec.th.offsetHeight : H;
+      sec.cardY = sec.thTop - L.hdr - pad;
       const own = steps.filter((x) => x.sec === sec);
       sec.start = own.length ? own[0].start : tt;
       const lastStep = own[own.length - 1];
@@ -1171,7 +1525,8 @@
       } else if (top > H * 1.05) {
         c.go = null; // left through the bottom: play again next time
       }
-      const p = c.go == null ? 0 : easeOut(clamp((now - c.go) / c.dur));
+      const k = c.go == null ? 0 : clamp((now - c.go) / c.dur);
+      const p = c.lin ? k : easeOut(k);
       if (p !== c.p) {
         c.p = p;
         c.el.style.setProperty('--p', p.toFixed(4));
@@ -1617,6 +1972,71 @@
     }
   }
 
+  // the field below the film: the current section's hero, centre stage on its title card, stepped aside
+  // (smaller, dimmer, at the edge) while the reader is in the section's text
+  function heroField(sec, sy) {
+    const k = sec ? smooth(H * 0.04, H * 0.55, sy - sec.cardY) : 1;
+    const a = L.heroAt, b = L.asideAt;
+    TC.x = lerp(TC.x, lerp(a.x, b.x, k), 0.08);
+    TC.y = lerp(TC.y, lerp(a.y, b.y, k), 0.08);
+    TC.s = lerp(TC.s, lerp(a.s, b.s, k), 0.08);
+    TC.since = tclock - tf.t0;
+    TC.sy = sy;
+    MOT.on = true;
+    MOT.sy = sy;
+    MOT.fade = TC.since < TDUR + MAXDEL ? 0.2 : lerp(0.36, 0.13, clamp(Math.abs(MOT.vel) / 1600));
+    fieldDim = lerp(fieldDim, lerp(1, isMobile ? 0.3 : 0.4, k), 0.06);
+    renderField(F[tf.cur], tf.prev ? F[tf.prev] : null, TC.since, tclock, 1, 0);
+    MOT.on = false;
+  }
+
+  // how fast the page is moving (smoothed), for streaks, trails and drag
+  let lastSy = 0;
+  function trackVel(dt) {
+    const sy = window.scrollY;
+    const raw = dt > 0 ? (sy - lastSy) / dt : 0;
+    lastSy = sy;
+    MOT.vel = lerp(MOT.vel, clamp(raw, -6000, 6000), 0.22);
+    if (Math.abs(MOT.vel) < 1) MOT.vel = 0;
+  }
+
+  // While the autopilot runs, the block being read is lit and the rest of the page steps back;
+  // the reading bar beside it fills up for as long as the page waits there.
+  let focusStep = null;
+  function updateFocus() {
+    const auto = playing && !readMode && t >= FILM;
+    doc.classList.toggle('tour-auto', auto);
+    let st = null;
+    if (auto) {
+      const tau = t - FILM;
+      for (const x of tour.steps) {
+        if (tau >= x.start) st = x;
+        else break;
+      }
+    }
+    if (st !== focusStep) {
+      if (focusStep) focusStep.els.forEach((el) => el.classList.remove('is-focus'));
+      if (st) {
+        st.els.forEach((el) => el.classList.add('is-focus'));
+        readbar.style.transform = `translate3d(${Math.round(st.bl - (isMobile ? 9 : 30))}px, ${Math.round(st.bt)}px, 0)`;
+        readbar.style.height = Math.max(24, Math.round(st.bb - st.bt)) + 'px';
+      }
+      focusStep = st;
+    }
+    readbar.classList.toggle('on', !!st);
+    if (st) readbar.style.setProperty('--rp', clamp((t - FILM - st.start - st.move) / st.dwell).toFixed(4));
+  }
+
+  // the chapter numbers drift slower than the page (parallax)
+  function parallaxNumbers(sy) {
+    for (const sec of tsecs) {
+      if (!sec.big) continue;
+      const d = sec.thTop - L.hdr - sy;
+      if (d > H * 1.5 || d < -sec.thH - H) continue;
+      sec.big.style.setProperty('--par', (d * -0.32).toFixed(1) + 'px');
+    }
+  }
+
   function paint() {
     const sy = window.scrollY;
     const filmVisible = sy < H * 1.02;
@@ -1635,7 +2055,7 @@
       drawField(ft, null, L.scroll0 - sy, filmBlend ? { from: filmBlend.from, since: tclock - filmBlend.t0 } : null);
     } else {
       const sec = sectionAt(sy);
-      const want = sec ? sec.form : 'drift';
+      const want = sec ? sec.form : 'dust';
       if (fieldMode !== 'tour') {
         fieldMode = 'tour';
         filmBlend = null;
@@ -1643,8 +2063,11 @@
       } else if (want !== tf.cur) {
         tf = { cur: want, prev: tf.cur, t0: tclock };
       }
-      fieldDim = lerp(fieldDim, isMobile ? 0.22 : 0.34, 0.05);
-      renderField(F[tf.cur], tf.prev ? F[tf.prev] : null, tclock - tf.t0, tclock, 1, 0);
+      heroField(sec, sy);
+    }
+    if (tourEl) {
+      updateFocus();
+      parallaxNumbers(sy);
     }
     updateUI();
     dirty = false;
@@ -1660,17 +2083,23 @@
     if (readMode) {
       tclock += dt;
       const sy = window.scrollY;
-      if (tourEl) renderTour(tclock, sy);
-      // a calm ring beside the film's content, then each section's own shape at the edge of the screen
-      const want = tsecs.length && sy + H * 0.45 >= tsecs[0].top ? sectionAt(sy).form : 'calm';
+      trackVel(dt);
+      if (tourEl) {
+        renderTour(tclock, sy);
+        updateFocus();
+        parallaxNumbers(sy);
+      }
+      // a calm ring beside the film's content, then each section's hero, stepped aside
+      const sec = tsecs.length && sy + H * 0.45 >= tsecs[0].top ? sectionAt(sy) : null;
+      const want = sec ? sec.form : 'calm';
       if (fieldMode !== 'read') {
         fieldMode = 'read';
         tf = { cur: want, prev: null, t0: tclock };
       } else if (want !== tf.cur) tf = { cur: want, prev: tf.cur, t0: tclock };
-      fieldDim = lerp(fieldDim, want === 'calm' ? (isMobile ? 0.28 : 0.42) : isMobile ? 0.22 : 0.34, 0.05);
-      renderField(F[tf.cur], tf.prev ? F[tf.prev] : null, tclock - tf.t0, tclock, 1, 0);
+      heroField(sec ? { cardY: -Infinity } : null, sy);
     } else {
       advance(dt);
+      trackVel(dt);
       paint();
     }
     requestAnimationFrame(frame);
@@ -1732,6 +2161,7 @@
       tclock += dt;
       dirty = true;
       setScroll(targetY(t));
+      trackVel(dt);
       paint();
     },
   };
