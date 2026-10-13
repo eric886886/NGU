@@ -170,7 +170,8 @@
     acc = s.end - (i < scenes.length - 1 ? OVER : 0);
   });
   const LAST = scenes[scenes.length - 1];
-  const TOTAL = LAST.end;
+  const FILM = LAST.end; // the film; the tour of the other pages follows it
+  let TOTAL = FILM;
 
   const forms = [];
   scenes.forEach((s) => s.forms.forEach((f) => forms.push({ name: f.name, t: s.start + f.at })));
@@ -446,6 +447,7 @@
     roiTop: 0,
     path: null,
     pathMs: [0, 0.25, 0.5, 0.75, 1],
+    scroll0: 0,
     cube: { x: 0, y: 0, s: 1 },
   };
 
@@ -497,8 +499,7 @@
   /* ---- formations: f(i, t, o) writes position, alpha, size and heat for particle i at time t */
 
   function logoForm(key) {
-    return (i, t, o) => {
-      const c = L[key];
+    return (i, t, o, c = L[key]) => {
       const p = LOGO[i] || LOGO[i % LOGO.length];
       const px = p[0] / 1000, py = p[1] / 1000;
       let x = c.x + px * c.s, y = c.y + py * c.s;
@@ -587,8 +588,7 @@
       o.h = R4[i] < 0.12 + fx.storm * 0.16 ? 1 : 0;
     },
 
-    calm(i, t, o) {
-      const c = L.calm;
+    calm(i, t, o, c = L.calm) {
       const a = R1[i] * TAU + t * 0.12;
       const r = c.r * (1 + (R3[i] - 0.5) * 0.07);
       o.x = c.x + Math.cos(a) * r;
@@ -729,10 +729,7 @@
       }
     },
 
-    cube(i, t, o) {
-      const c = L.cube;
-      const build = fx.cubeBuild;
-      const pulse = fx.cubePulse;
+    cube(i, t, o, c = L.cube, build = fx.cubeBuild, pulse = fx.cubePulse) {
       o.h = 0;
       let x, y, z;
       if (R2[i] < 0.72) {
@@ -773,6 +770,54 @@
     },
   };
 
+  // ---- formations for the tour below the film: placed relative to the screen, no anchors
+  Object.assign(F, {
+    ring: (i, t, o) => F.calm(i, t, o, L.tc.ring),
+    ring2: (i, t, o) => F.calm(i, t, o, L.tc.ring2),
+    cubeT: (i, t, o) => F.cube(i, t, o, L.tc.cube, 1, 0),
+    logoT: logoForm('logoT'),
+    logoC(i, t, o) {
+      F.logoT(i, t, o, L.logoC);
+      o.a *= 0.42;
+    },
+    stream(i, t, o) {
+      // inquiries come in scattered on the left and leave as one calm beam on the right
+      const u = (R1[i] + t * 0.04 * (0.7 + R2[i] * 0.6)) % 1;
+      const x = -60 + u * (W + 120);
+      const k = smooth(0.18, 0.6, u);
+      const spread = H * 0.15 * (1 - k) + 8 * k;
+      o.x = x;
+      o.y = L.tc.streamY + Math.sin(x * 0.006 + t * 0.6) * 16 + (R3[i] - 0.5) * 2 * spread + Math.sin(t * 2 + R4[i] * 30) * (1 - k) * 8;
+      o.a = (0.3 + 0.55 * k) * smooth(0, 0.06, u) * (1 - smooth(0.94, 1, u));
+      o.s = 0.85;
+      o.h = 0;
+    },
+    riseT(i, t, o) {
+      o.h = 0;
+      if (R2[i] < 0.82) {
+        const s = (R1[i] + t * 0.03) % 1;
+        const p = along(L.tc.rise, s);
+        const n = (R3[i] - 0.5) * 10;
+        o.x = p.x + p.nx * n;
+        o.y = p.y + p.ny * n;
+        o.a = 0.2 + 0.6 * s;
+        o.s = 0.85;
+      } else {
+        o.x = R1[i] * W + Math.sin(t * 0.5 + R4[i] * 9) * 12;
+        o.y = H - ((R3[i] + t * 0.03 * (0.5 + R4[i])) % 1) * H;
+        o.a = 0.2;
+        o.s = 0.7;
+      }
+    },
+    drift(i, t, o) {
+      o.x = R1[i] * W + Math.sin(t * 0.2 + R4[i] * 9) * 30;
+      o.y = H + 20 - ((R3[i] + t * 0.012 * (0.4 + R5[i])) % 1) * (H + 40);
+      o.a = 0.16 + 0.3 * R5[i];
+      o.s = 0.75;
+      o.h = 0;
+    },
+  });
+
   // values shared by every particle in a frame
   const PRE = { riseS: 0, hx: 0, hy: 0, ex: 0, ey: 0, ux: 1, uy: 0, px: 0, py: 0 };
   function prepare() {
@@ -808,13 +853,7 @@
 
   let fieldDim = 1;
 
-  function drawField(t, override) {
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.fillRect(0, 0, W, H);
-    ctx.globalCompositeOperation = 'lighter';
-
+  function drawField(t, override, oy = 0, blend = null) {
     let fc, fp = null, since = 99;
     if (override) {
       fc = F[override];
@@ -824,9 +863,23 @@
       if (k > 0) fp = F[forms[k - 1].name];
       since = t - forms[k].t;
     }
+    // coming back up from the tour: morph from the tour's formation into the film's
+    if (blend && blend.since < TDUR + MAXDEL) {
+      fp = F[blend.from];
+      since = blend.since;
+    }
+    renderField(fc, fp, since, t, override ? 1 : smooth(0.3, 2.5, t), oy);
+  }
+
+  function renderField(fc, fp, since, t, starIn, oy) {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';
+
     const trans = fp && since < TDUR + MAXDEL;
     prepare();
-    const starIn = override ? 1 : smooth(0.3, 2.5, t);
     const base = isMobile ? 2.6 : 3.1;
 
     for (let i = 0; i < N; i++) {
@@ -856,6 +909,7 @@
         } else {
           x = A.x; y = A.y; a = A.a; s = A.s; h = A.h;
         }
+        y += oy;
       }
       if (a < 0.01 || x < -30 || y < -30 || x > W + 30 || y > H + 30) continue;
       const r = base * s * SZ[i];
@@ -974,10 +1028,163 @@
     if (isMobile) L.cube = { x: W * 0.8, y: H - L.ctl - 62, s: Math.min(W * 0.1, 40) };
     else if (cube) L.cube = { x: cube.x, y: cube.y, s: Math.min(cube.w, cube.h) * 0.36 };
 
+    // formations used while touring the other pages (relative to the screen)
+    L.scroll0 = window.scrollY;
+    L.tc = {
+      // kept near the right edge, half off-screen, so they sit behind the margins rather than the text
+      ring: { x: W * 0.98, y: H * 0.52, r: Math.min(W, H) * (isMobile ? 0.3 : 0.36) },
+      ring2: { x: W * 1.0, y: H * 0.3, r: Math.min(W, H) * 0.3 },
+      cube: { x: W * (isMobile ? 0.86 : 0.92), y: H * 0.28, s: Math.min(W, H) * (isMobile ? 0.1 : 0.11) },
+      streamY: H * 0.86,
+      // a hockey-stick growth curve that keeps to the bottom and the right edge, clear of the text
+      rise: spline([
+        { x: W * 0.02, y: H * 0.97 },
+        { x: W * 0.5, y: H * 0.93 },
+        { x: W * 0.8, y: H * 0.8 },
+        { x: W * 0.95, y: H * 0.5 },
+        { x: W * 1.0, y: H * 0.14 },
+      ]),
+    };
+    L.logoT = { x: W * (isMobile ? 0.7 : 0.9), y: H * 0.56, s: Math.min(W * (isMobile ? 0.7 : 0.3), H * 0.5 * LOGO_ASPECT) };
+    L.logoC = { x: W * 0.5, y: H * 0.5, s: Math.min(W * 0.86, H * 0.8 * LOGO_ASPECT) };
+    measureTour();
+
     doc.classList.remove('measuring');
     // the read-mode backdrop: a slow ring on the right
     if (readMode) L.calm = { x: W * (isMobile ? 0.7 : 0.78), y: H * 0.42, r: Math.min(W, H) * 0.26 };
     dirty = true;
+  }
+
+  /* ------------------------------------------------------------------ the tour: the other pages, below the film */
+
+  // Elements in the tour appear when they scroll into view (time-based, so a paused page still finishes
+  // its entrances); headings rise word by word and paragraphs light up at reading pace.
+  const tourEl = $('#tour');
+  const tsecs = tourEl
+    ? $$('[data-tour]', tourEl).map((el) => ({ el, id: el.id, label: el.dataset.label, form: el.dataset.form || 'drift', start: 0, end: 0 }))
+    : [];
+  const tcues = [];
+  if (tourEl) {
+    $$('[data-rs]', tourEl).forEach((el) => {
+      splitWords(el, (w, i) => word('m m-word', w, i * 0.045, '0.8'));
+      $$('.m-word', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), dur: 0.8 }));
+    });
+    $$('[data-rr]', tourEl).forEach((el) => {
+      const base = num(el.dataset.r, 0) + 0.35;
+      const rate = ZH ? 0.055 : 0.1;
+      splitWords(el, (w, i) => word('rw', w, base + i * rate, '0.35'));
+      $$('.rw', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), dur: 0.35 }));
+    });
+    $$('[data-r]', tourEl).forEach((el) => tcues.push({ el, trig: el, delay: num(el.dataset.r, 0), dur: num(el.dataset.dur, 0.9) }));
+    tcues.forEach((c) => {
+      c.top = 0;
+      c.go = null;
+      c.p = -1;
+    });
+  }
+
+  // Autopilot: after the film the page glides from stop to stop ([data-stop] blocks) and lingers on each
+  // as long as its text takes to read. Its whole path is a function of time, so it sits on the same
+  // timeline (and progress bar) as the film.
+  let tour = { steps: [], total: 0 };
+
+  const docTop = (el) => el.getBoundingClientRect().top + window.scrollY;
+
+  function measureTour() {
+    if (!tourEl) return;
+    const sy = window.scrollY;
+    tcues.forEach((c) => (c.top = c.trig.getBoundingClientRect().top + sy));
+    const pad = isMobile ? 14 : Math.round(H * 0.08);
+    const avail = Math.max(200, H - L.hdr - L.ctl - pad - 16);
+    const maxY = Math.max(0, doc.scrollHeight - H);
+    const raw = [];
+    $$('[data-stop]', tourEl).forEach((el) => {
+      const r = el.getBoundingClientRect();
+      const top = r.top + sy;
+      const sec = tsecs.find((x) => x.el.contains(el)) || tsecs[tsecs.length - 1];
+      const text = el.textContent.replace(/\s+/g, ' ').trim();
+      const read = ZH ? text.replace(/\s/g, '').length / 11 : text.split(' ').length / 5.6;
+      const dwell = el.dataset.dwell ? parseFloat(el.dataset.dwell) : clamp(read + 1.2, 2.4, 10);
+      const y0 = top - L.hdr - pad;
+      // a block taller than the screen is panned through in pieces
+      const pieces = r.height > avail ? Math.ceil((r.height - avail) / (avail * 0.7)) + 1 : 1;
+      for (let k = 0; k < pieces; k++) {
+        const y = pieces === 1 ? y0 : y0 + ((r.height - avail) * k) / (pieces - 1);
+        raw.push({ y: clamp(Math.round(y), 0, maxY), dwell: dwell / pieces, sec, el, whole: pieces === 1, bottom: top + r.height });
+      }
+    });
+    // Like a teleprompter: the page only moves on when the next block is not already on screen.
+    // Blocks that fit below the current one are read in place; a new section always gets its own move.
+    const steps = [];
+    raw.forEach((st) => {
+      const prev = steps[steps.length - 1];
+      const onScreen = prev && st.whole && st.sec === prev.sec && st.bottom <= prev.y + L.hdr + pad + avail;
+      if (prev && (onScreen || Math.abs(st.y - prev.y) < 40)) prev.dwell += st.dwell;
+      else steps.push(st);
+    });
+    let tt = 0;
+    let prevY = 0;
+    steps.forEach((st, i) => {
+      const d = Math.abs(st.y - prevY);
+      st.y0 = prevY;
+      st.move = i === 0 ? 2.6 : clamp(0.8 + (d / H) * 0.9, 0.9, 2.6);
+      st.start = tt;
+      tt += st.move + st.dwell;
+      prevY = st.y;
+    });
+    tour = { steps, total: tt };
+    tsecs.forEach((sec) => {
+      sec.top = sec.el.getBoundingClientRect().top + sy;
+      const own = steps.filter((x) => x.sec === sec);
+      sec.start = own.length ? own[0].start : tt;
+      const lastStep = own[own.length - 1];
+      sec.end = lastStep ? lastStep.start + lastStep.move + lastStep.dwell : sec.start;
+    });
+    TOTAL = FILM + tt;
+    buildRail();
+  }
+
+  function tourY(tau) {
+    const steps = tour.steps;
+    if (!steps.length) return 0;
+    for (const st of steps) {
+      if (tau < st.start + st.move) return lerp(st.y0, st.y, easeInOut(clamp((tau - st.start) / st.move)));
+      if (tau < st.start + st.move + st.dwell) return st.y;
+    }
+    return steps[steps.length - 1].y;
+  }
+
+  // The moment on the timeline that matches a scroll position: the first stop at or below it,
+  // so carrying on from there always moves the page forward, never back up.
+  function tauAt(y) {
+    const steps = tour.steps;
+    if (!steps.length) return 0;
+    const st = steps.find((x) => x.y >= y - 4) || steps[steps.length - 1];
+    return st.start + st.move;
+  }
+
+  function renderTour(now, sy) {
+    for (const c of tcues) {
+      const top = c.top - sy;
+      if (c.go == null) {
+        if (top < H * 0.9) c.go = now + c.delay;
+      } else if (top > H * 1.05) {
+        c.go = null; // left through the bottom: play again next time
+      }
+      const p = c.go == null ? 0 : easeOut(clamp((now - c.go) / c.dur));
+      if (p !== c.p) {
+        c.p = p;
+        c.el.style.setProperty('--p', p.toFixed(4));
+      }
+    }
+  }
+
+  // which tour section is under the middle of the screen
+  function sectionAt(sy) {
+    const mid = sy + H * 0.45;
+    let cur = tsecs[0];
+    for (const sec of tsecs) if (sec.top <= mid) cur = sec;
+    return cur;
   }
 
   /* ------------------------------------------------------------------ playback state & UI */
@@ -990,6 +1197,16 @@
   let dirty = true;
   let menuOpen = false;
   let wasPlayingBeforeMenu = false;
+  let tclock = 0; // always-running clock for tour entrances and tour particles
+  let expectedY = 0; // where the autopilot last put the page
+  let glide = null; // a short smooth scroll (resume, chapter jump)
+  let savedFilmT = null; // film position to come back to after scrolling down mid-film
+  let tf = { cur: 'logoFin', prev: null, t0: -99 }; // tour particle formation
+  let filmBlend = null;
+  let fieldMode = 'film';
+  // Reading at your own pace pauses the film; it carries on by itself once the page has been still for a while.
+  const IDLE = 7;
+  let resumeAt = null;
 
   const ctl = $('#ctl');
   const playBtn = $('#play');
@@ -1001,14 +1218,24 @@
   const readBtn = $('#read');
   const flash = $('#flash');
 
-  const segs = scenes.map((s) => {
-    const seg = document.createElement('span');
-    seg.className = 'seg';
-    seg.style.setProperty('--d', s.dur.toFixed(2));
-    seg.appendChild(document.createElement('b'));
-    rail.insertBefore(seg, railTip);
-    return seg;
-  });
+  // chapters on the progress bar: the film's scenes, then the tour's sections
+  let chapters = [];
+  let segs = [];
+  function buildRail() {
+    chapters = scenes
+      .map((s) => ({ start: s.start, end: s.end, label: s.label }))
+      .concat(tsecs.map((sec) => ({ start: FILM + sec.start, end: FILM + sec.end, label: sec.label, sec })));
+    segs.forEach((seg) => seg.remove());
+    segs = chapters.map((c) => {
+      const seg = document.createElement('span');
+      seg.className = 'seg' + (c.sec ? ' tour-seg' : '');
+      seg.style.setProperty('--d', Math.max(1, c.end - c.start).toFixed(2));
+      seg.appendChild(document.createElement('b'));
+      rail.insertBefore(seg, railTip);
+      return seg;
+    });
+  }
+  buildRail();
 
   const fmt = (v) => {
     v = Math.max(0, Math.round(v));
@@ -1017,31 +1244,58 @@
 
   function setPlaying(v) {
     playing = v;
+    resumeAt = null;
     if (v && ended) {
       ended = false;
-      seek(0);
+      seek(0, true);
+    } else if (v) {
+      startGlide(); // ease from wherever the reader left the page back onto the path
     }
     syncButtons();
   }
 
   function syncButtons() {
     ctl.classList.toggle('paused', !playing && !ended);
+    ctl.classList.toggle('resuming', resumeAt != null && !playing);
     ctl.classList.toggle('ended', ended);
     playBtn.setAttribute('aria-label', ended ? UI.replay : playing ? UI.pause : UI.play);
   }
 
-  function seek(nt) {
+  // where the page should be at timeline position t
+  const targetY = (tt) => (tt < FILM ? 0 : tourY(tt - FILM));
+
+  function startGlide(dur = 0.9) {
+    if (readMode) return;
+    const from = window.scrollY;
+    if (Math.abs(from - targetY(t)) < 2) return;
+    glide = { from, t0: tclock, dur };
+  }
+
+  function setScroll(y) {
+    y = Math.round(y);
+    expectedY = y;
+    if (Math.abs(window.scrollY - y) >= 1) window.scrollTo(0, y);
+  }
+
+  function seek(nt, instant = false) {
     t = clamp(nt, 0, TOTAL);
     if (t < TOTAL) ended = false;
-    ctx.clearRect(0, 0, W, H);
+    if (t < FILM) {
+      ctx.clearRect(0, 0, W, H);
+      savedFilmT = null;
+    }
     dirty = true;
+    if (instant) {
+      glide = null;
+      setScroll(targetY(t));
+    } else startGlide();
     syncButtons();
   }
 
   function currentIndex() {
     let k = 0;
-    scenes.forEach((s, i) => {
-      if (t >= s.start) k = i;
+    chapters.forEach((c, i) => {
+      if (t >= c.start - 0.001) k = i;
     });
     return k;
   }
@@ -1049,11 +1303,21 @@
   function go(dir) {
     const k = currentIndex();
     let target;
-    if (dir < 0) target = t - scenes[k].start > 1.6 || k === 0 ? k : k - 1;
-    else target = Math.min(scenes.length - 1, k + 1);
-    if (dir > 0 && k === scenes.length - 1) return;
-    seek(scenes[target].start + (target === 0 ? 0 : 0.01));
+    if (dir < 0) target = t - chapters[k].start > 1.6 || k === 0 ? k : k - 1;
+    else target = Math.min(chapters.length - 1, k + 1);
+    if (dir > 0 && k === chapters.length - 1) return;
+    seek(chapters[target].start + (target === 0 ? 0 : 0.01));
     if (!playing && !ended) setPlaying(true);
+  }
+
+  // jump to an element of the tour (menu links, buttons) and stay there for a while
+  function jumpTo(el, auto = playing || resumeAt != null) {
+    const y = docTop(el) - L.hdr - (isMobile ? 14 : Math.round(H * 0.08));
+    playing = false;
+    seek(FILM + tauAt(y));
+    glide = { from: window.scrollY, t0: tclock, dur: 1.1, to: clamp(y, 0, doc.scrollHeight - H) };
+    resumeAt = auto ? tclock + 1.1 + IDLE : null;
+    syncButtons();
   }
 
   function doFlash(isPlay) {
@@ -1068,15 +1332,24 @@
     doFlash(playing);
   }
 
+  function currentLabel() {
+    const sy = window.scrollY;
+    if (t < FILM && sy < H * 0.5) return frontScene.label;
+    if (sy >= H * 0.5 && tsecs.length && !readMode) return sectionAt(sy).label; // whatever is on screen
+    const k = currentIndex();
+    return chapters[k] ? chapters[k].label : frontScene.label;
+  }
+
   function updateUI() {
-    scenes.forEach((s, i) => {
-      const f = clamp((t - s.start) / (s.end - s.start));
-      if (segs[i]._f !== f) {
+    chapters.forEach((c, i) => {
+      const f = clamp((t - c.start) / Math.max(0.001, c.end - c.start));
+      if (segs[i] && segs[i]._f !== f) {
         segs[i]._f = f;
         segs[i].style.setProperty('--f', f.toFixed(4));
       }
     });
-    const label = frontScene.label;
+    if (resumeAt != null && !playing) ctl.style.setProperty('--rk', clamp(1 - (resumeAt - tclock) / IDLE).toFixed(3));
+    const label = currentLabel();
     if (chapEl.textContent !== label) chapEl.textContent = label;
     const tt = fmt(t) + ' / ' + fmt(TOTAL);
     if (timeEl.textContent !== tt) timeEl.textContent = tt;
@@ -1089,7 +1362,7 @@
       const r = segs[i].getBoundingClientRect();
       if (clientX <= r.right + 2 || i === segs.length - 1) {
         const f = clamp((clientX - r.left) / r.width);
-        return { t: scenes[i].start + f * (scenes[i].end - scenes[i].start), i };
+        return { t: chapters[i].start + f * (chapters[i].end - chapters[i].start), i };
       }
     }
     return { t: 0, i: 0 };
@@ -1103,7 +1376,7 @@
   });
   rail.addEventListener('pointermove', (e) => {
     const hit = railTime(e.clientX);
-    railTip.textContent = scenes[hit.i].label;
+    railTip.textContent = chapters[hit.i].label;
     railTip.style.left = e.clientX - rail.getBoundingClientRect().left + 'px';
     if (dragging) seek(hit.t);
   });
@@ -1134,6 +1407,7 @@
     readMode = v;
     doc.classList.toggle('read', v);
     readBtn.textContent = v ? UI.film : UI.read;
+    glide = null;
     if (v) {
       showAllFinal();
       scenes.forEach((s) => {
@@ -1151,98 +1425,154 @@
         });
         s.xv = -1;
       });
-      window.scrollTo(0, 0);
-      seek(t >= TOTAL ? 0 : t);
+      measure();
+      seek(t >= TOTAL ? 0 : t, true);
       setPlaying(true);
     }
     measure();
   }
   readBtn.addEventListener('click', () => setRead(!readMode));
 
-  // click / tap on the stage toggles play
+  // click / tap on the film toggles play
   $('#stage').addEventListener('click', (e) => {
     if (readMode || e.target.closest('a, button, summary, input, .ctl')) return;
     toggle();
   });
 
+  const typing = (el) => el && el.closest && el.closest('input, textarea, select, [contenteditable="true"]');
+  const modalOpen = () => !!$('.demo-modal.is-open');
+
   // keyboard
   addEventListener('keydown', (e) => {
-    if (readMode || menuOpen || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (readMode || menuOpen || modalOpen() || typing(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
     const tag = (e.target.tagName || '').toLowerCase();
     if (e.key === ' ' || e.key === 'k') {
       if (tag === 'button' || tag === 'a' || tag === 'summary') return;
       e.preventDefault();
       toggle();
-    } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+    } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       go(1);
-    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       go(-1);
     } else if (e.key === 'Home') {
+      e.preventDefault();
       seek(0);
     } else if (e.key === 'End') {
+      e.preventDefault();
       seek(TOTAL);
     }
   });
 
-  // wheel → chapter (one jump per gesture)
-  let wheelLock = 0;
-  let wheelAcc = 0;
+  // The reader scrolled the page themselves: stop the autopilot and follow them on the timeline.
+  function userScrolled() {
+    const y = window.scrollY;
+    const auto = playing || resumeAt != null;
+    glide = null;
+    if (playing) {
+      playing = false;
+      syncButtons();
+    }
+    if (y > H * 0.35 && tour.steps.length) {
+      if (t < FILM) savedFilmT = t;
+      t = FILM + tauAt(y);
+    } else if (t >= FILM) {
+      t = savedFilmT != null ? savedFilmT : LAST.start + 2;
+      savedFilmT = null;
+    }
+    ended = false;
+    resumeAt = auto ? tclock + IDLE : null;
+    dirty = true;
+    syncButtons();
+  }
   addEventListener(
-    'wheel',
-    (e) => {
-      if (readMode || menuOpen || e.target.closest('.menu-panel, .nav.open')) return;
-      e.preventDefault();
-      const now = performance.now();
-      if (now < wheelLock) {
-        wheelLock = Math.max(wheelLock, now + 260);
-        return;
-      }
-      wheelAcc += Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-      if (Math.abs(wheelAcc) > 45) {
-        go(wheelAcc > 0 ? 1 : -1);
-        wheelAcc = 0;
-        wheelLock = now + 900;
-      }
+    'scroll',
+    () => {
+      if (readMode || capturing) return;
+      const y = window.scrollY;
+      if (Math.abs(y - expectedY) <= 3) return; // our own scrolling
+      expectedY = y;
+      userScrolled();
     },
-    { passive: false }
+    { passive: true }
   );
+  // a wheel or a finger on the page always wins over the autopilot
+  const grab = (e) => {
+    if (readMode || (e.target.closest && e.target.closest('.ctl, .nav, .demo-modal'))) return;
+    if (playing || glide) {
+      if (playing) resumeAt = tclock + IDLE;
+      glide = null;
+      playing = false;
+      syncButtons();
+    }
+  };
+  addEventListener('wheel', grab, { passive: true });
+  addEventListener('touchmove', grab, { passive: true });
 
-  // swipe → chapter
-  let touch0 = null;
-  $('#stage').addEventListener(
-    'touchstart',
-    (e) => {
-      const p = e.touches[0];
-      touch0 = { x: p.clientX, y: p.clientY };
-    },
-    { passive: true }
-  );
-  $('#stage').addEventListener(
-    'touchend',
-    (e) => {
-      if (!touch0 || readMode) return;
-      const p = e.changedTouches[0];
-      const dx = p.clientX - touch0.x, dy = p.clientY - touch0.y;
-      touch0 = null;
-      if (Math.abs(dy) > 60 && Math.abs(dy) > Math.abs(dx) * 1.3) go(dy < 0 ? 1 : -1);
-      else if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.3) go(dx < 0 ? 1 : -1);
-    },
-    { passive: true }
-  );
+  // filling in a form pauses everything
+  document.addEventListener('focusin', (e) => {
+    if (typing(e.target) && (playing || resumeAt != null)) setPlaying(false);
+  });
+
+  // Links to pages that now live on this page scroll to them instead of leaving.
+  const PAGE_IDS = {
+    'ai-agents': 'ai-solutions',
+    'base-ai-agent': 'startup',
+    'demo-center': 'demo',
+    cases: 'cases',
+    about: 'about',
+    'business-review': 'business-review',
+    contact: 'contact',
+  };
+  const SELF = ZH ? 'zh' : 'index';
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href]');
+    if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || a.target === '_blank') return;
+    const m = (a.getAttribute('href') || '').match(/^(zh-)?([a-z-]+)\.html(?:#([\w-]+))?$/);
+    if (!m) return;
+    const isZh = !!m[1] || m[2] === 'zh';
+    if (isZh !== ZH) return; // the other language: really navigate
+    let target = null;
+    if (m[2] === SELF && !m[3]) {
+      e.preventDefault();
+      closeMenu();
+      seek(0);
+      setPlaying(true);
+      return;
+    }
+    if (m[3]) target = document.getElementById(m[3]);
+    if (!target && PAGE_IDS[m[2]]) target = document.getElementById(PAGE_IDS[m[2]]);
+    if (!target) return;
+    e.preventDefault();
+    const auto = playing || resumeAt != null || (menuOpen && wasPlayingBeforeMenu);
+    closeMenu();
+    jumpTo(target, auto);
+  });
+
+  // demo buttons open the unlock form: the autopilot waits
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-demo-agent]') && (playing || resumeAt != null)) setPlaying(false);
+  });
 
   // mobile menu
   const nav = $('#nav');
   const navToggle = $('#navToggle');
   const menu = $('.menu', nav);
+  function closeMenu() {
+    if (menu.open && !nav.classList.contains('open')) menu.open = false;
+    if (!nav.classList.contains('open')) return;
+    menuOpen = false;
+    nav.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', 'false');
+  }
   navToggle.addEventListener('click', () => {
     menuOpen = !nav.classList.contains('open');
     nav.classList.toggle('open', menuOpen);
     navToggle.setAttribute('aria-expanded', String(menuOpen));
     if (menuOpen) {
       menu.open = true;
-      wasPlayingBeforeMenu = playing;
+      wasPlayingBeforeMenu = playing || resumeAt != null;
       if (playing) setPlaying(false);
     } else if (wasPlayingBeforeMenu && !readMode) {
       setPlaying(true);
@@ -1256,10 +1586,69 @@
   /* ------------------------------------------------------------------ main loop */
 
   let last = performance.now();
-  let idleT = 0;
   let resizeTimer = 0;
-
   let capturing = false;
+
+  function advance(dt) {
+    tclock += dt;
+    if (resumeAt != null && !playing) {
+      if (menuOpen || modalOpen() || typing(document.activeElement)) resumeAt = null;
+      else if (tclock >= resumeAt) setPlaying(true);
+    }
+    if (playing && !document.hidden) {
+      t += dt * speed;
+      if (t >= TOTAL) {
+        t = TOTAL;
+        playing = false;
+        ended = true;
+        syncButtons();
+      }
+      dirty = true;
+    }
+    // the page follows the timeline while playing (and during a glide)
+    if (playing || glide) {
+      let y = glide && glide.to != null ? glide.to : targetY(t);
+      if (glide) {
+        const k = clamp((tclock - glide.t0) / glide.dur);
+        y = lerp(glide.from, y, easeInOut(k));
+        if (k >= 1) glide = null;
+      }
+      setScroll(y);
+    }
+  }
+
+  function paint() {
+    const sy = window.scrollY;
+    const filmVisible = sy < H * 1.02;
+    const ft = Math.min(t, FILM);
+    if (filmVisible && dirty) renderDom(ft);
+    if (tourEl) renderTour(tclock, sy);
+
+    if (sy < H * 0.5) {
+      // the film (its particles scroll away with it)
+      if (fieldMode !== 'film') {
+        fieldMode = 'film';
+        filmBlend = { from: tf.cur, t0: tclock };
+      }
+      const target = isMobile ? frontScene.dimM : 1;
+      fieldDim = lerp(fieldDim, target, 0.06);
+      drawField(ft, null, L.scroll0 - sy, filmBlend ? { from: filmBlend.from, since: tclock - filmBlend.t0 } : null);
+    } else {
+      const sec = sectionAt(sy);
+      const want = sec ? sec.form : 'drift';
+      if (fieldMode !== 'tour') {
+        fieldMode = 'tour';
+        filmBlend = null;
+        tf = { cur: want, prev: forms[formIndex(ft)].name, t0: tclock };
+      } else if (want !== tf.cur) {
+        tf = { cur: want, prev: tf.cur, t0: tclock };
+      }
+      fieldDim = lerp(fieldDim, isMobile ? 0.22 : 0.34, 0.05);
+      renderField(F[tf.cur], tf.prev ? F[tf.prev] : null, tclock - tf.t0, tclock, 1, 0);
+    }
+    updateUI();
+    dirty = false;
+  }
 
   function frame(now) {
     const dt = Math.min(0.1, (now - last) / 1000);
@@ -1269,60 +1658,69 @@
       return;
     }
     if (readMode) {
-      idleT += dt;
-      fieldDim = lerp(fieldDim, isMobile ? 0.28 : 0.42, 0.05);
-      drawField(idleT, 'calm');
+      tclock += dt;
+      const sy = window.scrollY;
+      if (tourEl) renderTour(tclock, sy);
+      // a calm ring beside the film's content, then each section's own shape at the edge of the screen
+      const want = tsecs.length && sy + H * 0.45 >= tsecs[0].top ? sectionAt(sy).form : 'calm';
+      if (fieldMode !== 'read') {
+        fieldMode = 'read';
+        tf = { cur: want, prev: null, t0: tclock };
+      } else if (want !== tf.cur) tf = { cur: want, prev: tf.cur, t0: tclock };
+      fieldDim = lerp(fieldDim, want === 'calm' ? (isMobile ? 0.28 : 0.42) : isMobile ? 0.22 : 0.34, 0.05);
+      renderField(F[tf.cur], tf.prev ? F[tf.prev] : null, tclock - tf.t0, tclock, 1, 0);
     } else {
-      if (playing && !document.hidden) {
-        t += dt * speed;
-        if (t >= TOTAL) {
-          t = TOTAL;
-          playing = false;
-          ended = true;
-          syncButtons();
-        }
-        dirty = true;
-      }
-      if (dirty) renderDom(t);
-      const target = isMobile ? frontScene.dimM : 1;
-      fieldDim = lerp(fieldDim, target, 0.06);
-      drawField(t);
-      updateUI();
-      dirty = false;
+      advance(dt);
+      paint();
     }
     requestAnimationFrame(frame);
   }
 
   function start() {
-    const qt = parseFloat(params.get('t'));
-    if (!isNaN(qt)) t = clamp(qt, 0, TOTAL);
-    if (params.has('paused')) playing = false;
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
     measure();
+    const qt = parseFloat(params.get('t'));
+    if (!isNaN(qt)) seek(qt, true);
+    if (params.has('paused')) playing = false;
     if (params.has('read') || reduceMotion) setRead(true);
     syncButtons();
-    renderDom(t);
+    renderDom(Math.min(t, FILM));
     requestAnimationFrame((n) => {
       last = n;
       frame(n);
     });
   }
 
+  function remeasure() {
+    const wasTour = t >= FILM;
+    measure();
+    // keep the page where the timeline says it is
+    if (!readMode && (playing || wasTour)) setScroll(targetY(t));
+  }
   addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(measure, 120);
+    resizeTimer = setTimeout(remeasure, 120);
   });
-  mqMobile.addEventListener('change', measure);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  mqMobile.addEventListener('change', remeasure);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
   window.__naxa = {
     seek,
     get t() {
       return t;
     },
-    TOTAL,
+    get TOTAL() {
+      return TOTAL;
+    },
+    FILM,
+    get tour() {
+      return tour;
+    },
     scenes,
     setPlaying,
     setRead,
-    // Frame-by-frame rendering for recording a video of the film.
+    jumpTo,
+    // Frame-by-frame rendering for recording a video of the whole page.
     capture(on) {
       capturing = on;
       playing = false;
@@ -1331,10 +1729,10 @@
     },
     step(dt) {
       t = clamp(t + dt, 0, TOTAL);
-      renderDom(t);
-      fieldDim = lerp(fieldDim, isMobile ? frontScene.dimM : 1, 0.06);
-      drawField(t);
-      updateUI();
+      tclock += dt;
+      dirty = true;
+      setScroll(targetY(t));
+      paint();
     },
   };
 

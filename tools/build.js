@@ -9,6 +9,7 @@ const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 
 const css = read('src/motion.css');
 const js = read('src/motion.js');
+const demoJs = read('src/demo-center.js'); // unchanged copy of naxastudio.com/js/demo-center.js
 const icon = read('assets/logo-icon.txt').trim();
 const points = read('assets/logo-points.json').trim();
 
@@ -23,6 +24,7 @@ for (const [src, out] of [
   };
   swap('<link rel="stylesheet" href="motion.css" />', `<style>\n${css}</style>`);
   swap('<script src="motion.js"></script>', `<script>\n${js}</script>`);
+  if (html.includes('<script src="demo-center.js"></script>')) swap('<script src="demo-center.js"></script>', `<script>\n${demoJs}</script>`);
   swap('{{LOGO_ICON}}', icon);
   swap('{{LOGO_POINTS}}', points);
   fs.writeFileSync(path.join(root, out), html);

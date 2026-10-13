@@ -51,7 +51,6 @@
 html,
 body {
   margin: 0;
-  height: 100%;
 }
 
 html {
@@ -62,7 +61,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--text);
-  overflow: hidden;
+  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -389,10 +388,16 @@ ul {
 
 /* ---------- stage & scenes ---------- */
 
+/* the film fills the first screen; the tour of the other pages scrolls in below it */
 .stage {
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  height: 100svh;
   z-index: 2;
+  overflow: hidden; /* scenes waiting off to the side must not widen the page */
 }
 
 .scene {
@@ -1491,6 +1496,28 @@ ul {
   height: 19px;
 }
 
+/* paused by the reader's scrolling: a ring fills up until the film carries on by itself */
+.cbtn.main {
+  position: relative;
+}
+
+.cbtn.main::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: conic-gradient(#7fb6ff calc(var(--rk, 0) * 360deg), rgba(255, 255, 255, 0.14) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1.5px));
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.ctl.resuming .cbtn.main::after {
+  opacity: 1;
+}
+
 .cbtn.main .i-play,
 .cbtn.main .i-replay,
 .paused .cbtn.main .i-pause,
@@ -2087,6 +2114,1155 @@ ul {
   }
 }
 
+/* ---------- the tour: the other pages, below the film ---------- */
+
+.tour {
+  position: relative;
+  z-index: 2;
+  overflow-x: hidden;
+  overflow-x: clip;
+  margin-top: 100vh;
+  margin-top: 100svh;
+}
+
+.tsec {
+  position: relative;
+  padding: clamp(84px, 15vh, 170px) 0 clamp(40px, 6vh, 80px);
+}
+
+.tsec::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: min(var(--maxw), calc(100% - var(--gut) * 2));
+  height: 1px;
+  translate: -50% 0;
+  background: linear-gradient(90deg, transparent, rgba(159, 208, 255, 0.35), transparent);
+}
+
+.twrap {
+  width: min(var(--maxw), calc(100% - var(--gut) * 2));
+  margin: 0 auto;
+}
+
+.thead {
+  max-width: 1000px;
+  margin-bottom: clamp(48px, 9vh, 100px);
+}
+
+.thead .lead {
+  max-width: 700px;
+  margin-top: 26px;
+}
+
+.t-title,
+.t-sub,
+.quote-big,
+.case-h {
+  font-family: var(--display);
+  font-weight: 645;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.t-title {
+  font-size: clamp(36px, 5.2vw, 80px);
+  line-height: 1.02;
+}
+
+.t-sub {
+  font-size: clamp(26px, 3vw, 46px);
+  line-height: 1.06;
+  letter-spacing: -0.034em;
+}
+
+.quote-big {
+  font-size: clamp(34px, 4.6vw, 70px);
+  line-height: 1.04;
+}
+
+.t-title em,
+.t-title em .m-word,
+.t-sub em,
+.t-sub em .m-word,
+.quote-big em,
+.quote-big em .m-word {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.008em;
+  color: var(--accent);
+}
+
+.t-title em,
+.t-sub em,
+.quote-big em {
+  font-size: 1.07em;
+}
+
+/* extra entrances used in the tour */
+.m-sweep {
+  clip-path: inset(-2px calc((1 - var(--p)) * 100%) -2px 0);
+  transform: translate3d(calc((1 - var(--p)) * -20px), 0, 0);
+}
+
+.m-lift {
+  transform: translate3d(calc(var(--i, 0) * 26px), calc((1 - var(--p)) * 30px), 0);
+}
+
+.m-deal {
+  transform: translate3d(calc((1 - var(--p)) * 80px), 0, 0) rotate(calc((1 - var(--p)) * 6deg + var(--i, 0) * -0.7deg));
+}
+
+/* 10 · AI solutions: a spec sheet */
+.spec {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.spec-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 1.25fr);
+  gap: 28px;
+  align-items: baseline;
+  padding: 32px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.spec-row::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 1px;
+  width: calc(var(--p) * 100%);
+  background: linear-gradient(90deg, var(--blue), var(--cyan));
+  box-shadow: 0 0 12px rgba(54, 200, 224, 0.7);
+  opacity: calc(1 - var(--p) * 0.6);
+}
+
+.spec-n {
+  font-family: var(--display);
+  font-size: 46px;
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(159, 208, 255, 0.65);
+}
+
+.spec-row h3 {
+  font-family: var(--display);
+  font-size: clamp(22px, 2vw, 30px);
+  font-weight: 620;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.spec-d {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.spec-tags {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #dfe6f5;
+}
+
+.spec-tags li {
+  position: relative;
+  padding-left: 20px;
+}
+
+.spec-tags li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.spec-tags .fit::before {
+  background: var(--cyan);
+  box-shadow: 0 0 10px rgba(54, 200, 224, 0.8);
+}
+
+.spec-tags .rev::before {
+  border: 1.5px solid var(--amber);
+}
+
+.t-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  margin-top: 48px;
+  padding: 32px 36px;
+  border-radius: 24px;
+  border: 1px solid rgba(159, 208, 255, 0.22);
+  background: linear-gradient(120deg, rgba(47, 123, 255, 0.16), rgba(140, 124, 255, 0.08) 60%, rgba(13, 18, 33, 0.5));
+}
+
+.t-callout h3 {
+  font-family: var(--display);
+  font-size: clamp(22px, 2.2vw, 32px);
+  font-weight: 620;
+  letter-spacing: -0.025em;
+}
+
+.t-callout p {
+  max-width: 620px;
+  margin-top: 8px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* 11 · startup: the first layer */
+.layers-wrap,
+.lean,
+.output {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(32px, 6vw, 96px);
+  align-items: center;
+}
+
+.layers-wrap {
+  margin-bottom: clamp(70px, 12vh, 140px);
+}
+
+.layers-text .lead,
+.lean-text .lead,
+.output-text .lead {
+  margin-top: 22px;
+}
+
+.layers-title,
+.practice-title {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(24px, 2.2vw, 32px);
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.layers ol {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0 0;
+  padding: 0 80px 0 0;
+  list-style: none;
+}
+
+.layer {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  column-gap: 14px;
+  padding: 18px 22px;
+  border-radius: 16px;
+  border: 1px solid rgba(159, 208, 255, 0.2);
+  background: linear-gradient(100deg, rgba(47, 123, 255, 0.18), rgba(13, 18, 33, 0.6) 62%);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.layer-n,
+.pr-n,
+.sheet-n {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  color: var(--azure);
+}
+
+.layer-n {
+  grid-row: span 2;
+  padding-top: 5px;
+}
+
+.layer strong,
+.practice strong,
+.lean-steps strong,
+.sheet strong,
+.starts strong {
+  display: block;
+  font-family: var(--display);
+  font-size: 19px;
+  font-weight: 610;
+  letter-spacing: -0.015em;
+}
+
+.t-quote {
+  max-width: 1040px;
+  margin-top: clamp(30px, 6vh, 70px);
+  padding-left: clamp(18px, 3vw, 36px);
+  border-left: 2px solid rgba(159, 208, 255, 0.4);
+}
+
+.t-quote .body {
+  max-width: 720px;
+}
+
+.t-quote .btns {
+  margin-top: 30px;
+}
+
+/* 12 · demos: app windows, locked until the form is filled */
+.demos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.demo {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 20px 20px;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--card-b);
+  background: rgba(10, 14, 27, 0.78);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.demo-bar {
+  display: flex;
+  gap: 6px;
+  margin: 0 -20px;
+  padding: 12px 20px 10px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.demo-bar i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.demo-bar i:first-child {
+  background: rgba(255, 120, 110, 0.7);
+}
+
+.demo-bar i:nth-child(2) {
+  background: rgba(255, 196, 90, 0.7);
+}
+
+.demo-bar i:nth-child(3) {
+  background: rgba(90, 210, 140, 0.7);
+}
+
+.demo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.demo-head h3 {
+  font-family: var(--display);
+  font-size: 19px;
+  font-weight: 620;
+  letter-spacing: -0.015em;
+}
+
+.demo-button {
+  flex: none;
+  height: 34px;
+  padding: 0 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(159, 208, 255, 0.45);
+  background: rgba(47, 123, 255, 0.18);
+  color: #fff;
+  font: 600 13px var(--text);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.demo-button:hover {
+  background: rgba(47, 123, 255, 0.36);
+}
+
+.demo > p {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--card-b);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--azure);
+}
+
+.demo-preview {
+  display: none;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(54, 200, 224, 0.3);
+  background: rgba(54, 200, 224, 0.08);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.demo-preview.is-unlocked {
+  display: block;
+}
+
+.demo-preview strong {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7ee0d0;
+}
+
+.demo-preview p {
+  color: #dfe6f5;
+}
+
+.demo-lock {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  margin-top: auto;
+  padding: 16px 16px 16px 58px;
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.demo-lock i {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03));
+}
+
+.demo-lock i:nth-of-type(2) {
+  width: 72%;
+}
+
+.demo-lock i:nth-of-type(3) {
+  width: 86%;
+}
+
+.lock-ico {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  width: 22px;
+  height: 26px;
+  translate: 0 -50%;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 26' fill='none' stroke='%239fd0ff' stroke-width='1.6'><rect x='2' y='11' width='18' height='13' rx='3'/><path d='M6 11V7a5 5 0 0 1 10 0v4'/><circle cx='11' cy='17.5' r='1.6' fill='%239fd0ff'/></svg>")
+    center / contain no-repeat;
+}
+
+.demo:not(.locked-demo) .demo-lock {
+  display: none;
+}
+
+/* demo access dialog (same form as demo-center.html) */
+.demo-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  place-items: center;
+  padding: 20px;
+}
+
+.demo-modal.is-open {
+  display: grid;
+}
+
+.demo-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 4, 10, 0.72);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.demo-modal-panel {
+  position: relative;
+  width: min(660px, 100%);
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  padding: 28px;
+  border-radius: 22px;
+  border: 1px solid var(--card-b);
+  background: #0b1020;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+
+.demo-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.demo-modal-head .eyebrow {
+  margin-bottom: 10px;
+}
+
+.demo-modal-head h2 {
+  font-family: var(--display);
+  font-size: 28px;
+  font-weight: 640;
+  letter-spacing: -0.025em;
+}
+
+.modal-close {
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--card-b);
+  background: transparent;
+  color: var(--muted);
+  font: 500 13px var(--text);
+  cursor: pointer;
+}
+
+.access-form label,
+.contact-form label {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.field-row,
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.field-row .full,
+.form-grid .full {
+  grid-column: 1 / -1;
+}
+
+.field-hint {
+  margin-left: 4px;
+  font-size: 11px;
+  color: var(--dim);
+}
+
+.access-form input:not([type="checkbox"]),
+.access-form select,
+.contact-form input:not([type="checkbox"]),
+.contact-form select,
+.contact-form textarea {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  font: 15px var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.access-form input:focus,
+.access-form select:focus,
+.contact-form input:focus,
+.contact-form select:focus,
+.contact-form textarea:focus {
+  border-color: rgba(159, 208, 255, 0.7);
+  box-shadow: 0 0 0 4px rgba(47, 123, 255, 0.18);
+}
+
+.access-form select option,
+.contact-form select option {
+  background: #0b1020;
+}
+
+.contact-form textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.access-form input[type="checkbox"],
+.contact-form input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  margin: 0;
+  accent-color: #0a74ef;
+}
+
+.demo-consent {
+  margin: 18px 0 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.demo-consent ul {
+  margin: 8px 0;
+  padding-left: 18px;
+}
+
+.consent-fineprint a {
+  color: var(--azure);
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink) !important;
+  font-size: 14px !important;
+}
+
+.form-error {
+  display: none;
+  margin: 12px 0 0;
+  font-size: 13.5px;
+  color: #ff9f8f;
+}
+
+.form-error.is-visible {
+  display: block;
+}
+
+.access-form .btn,
+.contact-form .btn {
+  margin-top: 16px;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--text);
+}
+
+.unlock-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--dim);
+}
+
+/* 13 · cases: problem → AI solution → outcome */
+.case {
+  margin-bottom: clamp(60px, 10vh, 120px);
+}
+
+.case .eyebrow {
+  margin-bottom: 14px;
+}
+
+.case-h {
+  max-width: 920px;
+  font-size: clamp(26px, 3.1vw, 46px);
+  line-height: 1.06;
+}
+
+.case-flow {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 30px 0 0;
+}
+
+.case-flow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--amber), var(--blue) 50%, var(--cyan));
+  opacity: 0.8;
+}
+
+.cf {
+  margin: 0;
+  padding: 24px 28px 0 0;
+}
+
+.cf + .cf {
+  padding-left: 28px;
+  border-left: 1px solid var(--line);
+}
+
+.cf dt {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.cf dt::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.cf-p dt {
+  color: #ffc978;
+}
+
+.cf-p dt::before {
+  background: var(--amber);
+  box-shadow: 0 0 10px var(--amber);
+}
+
+.cf-s dt {
+  color: var(--azure);
+}
+
+.cf-s dt::before {
+  background: var(--blue);
+  box-shadow: 0 0 10px var(--blue);
+}
+
+.cf-o dt {
+  color: #7ee0d0;
+}
+
+.cf-o dt::before {
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+.cf dd {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.62;
+  color: #e3e9f7;
+}
+
+/* 14 · about: a manifesto */
+.manifesto {
+  display: grid;
+  gap: 30px;
+  max-width: 1040px;
+  margin-bottom: clamp(50px, 8vh, 90px);
+}
+
+.mf {
+  font-family: var(--serif);
+  font-size: clamp(26px, 2.7vw, 41px);
+  line-height: 1.28;
+  letter-spacing: -0.006em;
+  color: #eef2fb;
+}
+
+.mf-last {
+  font-style: italic;
+  background: var(--grad);
+  background-size: 240% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: gradflow 6s ease-in-out infinite alternate;
+}
+
+.reality {
+  margin-bottom: clamp(50px, 8vh, 90px);
+}
+
+.reality-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(28px, 5vw, 72px);
+  margin-top: 26px;
+}
+
+.reality-cols .lead {
+  max-width: none;
+  margin: 0;
+}
+
+.practice ul,
+.areas {
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.practice ul {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+}
+
+.practice li {
+  padding: 24px 26px 0 0;
+}
+
+.practice li + li {
+  padding-left: 26px;
+  border-left: 1px solid var(--line);
+}
+
+.practice strong {
+  margin: 10px 0 6px;
+}
+
+.t-about .t-quote,
+.t-review .output,
+.t-startup .t-quote {
+  margin-top: clamp(60px, 10vh, 120px);
+}
+
+/* 15 · business review */
+.lean {
+  align-items: start;
+  margin-bottom: clamp(70px, 12vh, 140px);
+}
+
+.lean-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.lean-steps li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  column-gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.ls-n {
+  grid-row: span 2;
+  font-family: var(--display);
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(159, 208, 255, 0.65);
+}
+
+.areas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 38px 44px;
+  margin-top: 40px;
+}
+
+.area h4 {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--azure);
+}
+
+.area p {
+  margin-top: 12px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: clamp(22px, 2vw, 29px);
+  line-height: 1.24;
+  color: #eef2fb;
+}
+
+.sheets {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sheet {
+  position: relative;
+  padding: 22px 24px 22px 72px;
+  border-radius: 4px 18px 18px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: linear-gradient(180deg, rgba(235, 242, 255, 0.09), rgba(235, 242, 255, 0.03));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.38);
+}
+
+.sheet::before {
+  content: "";
+  position: absolute;
+  left: 46px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 140, 140, 0.25);
+}
+
+.sheet-n {
+  position: absolute;
+  left: 18px;
+  top: 25px;
+}
+
+/* 16 · contact */
+.contact-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(32px, 6vw, 96px);
+  align-items: start;
+}
+
+.starts ul {
+  display: grid;
+  gap: 22px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.starts li {
+  padding-left: 20px;
+  border-left: 1px solid rgba(159, 208, 255, 0.35);
+}
+
+.contact-panel {
+  padding: 30px;
+  border-radius: 24px;
+  border: 1px solid var(--card-b);
+  background: rgba(10, 14, 27, 0.8);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+}
+
+.contact-form .consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 18px 0 4px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.site-end {
+  position: relative;
+  z-index: 2;
+  padding: 56px 0 calc(var(--ctl) + 44px);
+  border-top: 1px solid var(--line);
+}
+
+.end-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  font-size: 13.5px;
+  color: var(--dim);
+}
+
+.end-grid nav {
+  display: flex;
+  gap: 22px;
+}
+
+.end-grid nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.end-grid nav a:hover {
+  color: var(--ink);
+}
+
+@media (min-width: 760px) {
+  .demo,
+  .contact-panel {
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+  }
+}
+
+@media (max-width: 1180px) and (min-width: 760px) {
+  .spec-row {
+    grid-template-columns: 76px minmax(0, 1fr) minmax(0, 1.2fr);
+  }
+
+  .spec-tags {
+    grid-column: 2 / -1;
+  }
+
+  .demos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .areas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 759px) {
+  .tsec {
+    padding: 64px 0 28px;
+  }
+
+  .thead {
+    margin-bottom: 40px;
+  }
+
+  .t-title {
+    font-size: clamp(30px, 8.6vw, 40px);
+  }
+
+  .t-sub {
+    font-size: clamp(24px, 6.8vw, 30px);
+  }
+
+  .quote-big {
+    font-size: clamp(28px, 8vw, 38px);
+  }
+
+  .spec-row {
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 10px 14px;
+    padding: 22px 0;
+  }
+
+  .spec-n {
+    grid-row: span 3;
+    font-size: 32px;
+  }
+
+  .spec-d {
+    font-size: 15px;
+  }
+
+  .t-callout {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px;
+  }
+
+  .layers-wrap,
+  .lean,
+  .output,
+  .reality-cols,
+  .contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .layers ol {
+    padding-right: 30px;
+  }
+
+  .m-lift {
+    transform: translate3d(calc(var(--i, 0) * 10px), calc((1 - var(--p)) * 24px), 0);
+  }
+
+  .demos,
+  .areas,
+  .practice ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .practice li,
+  .practice li + li {
+    padding: 18px 0 18px 18px;
+    border-left: 1px solid rgba(159, 208, 255, 0.3);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .case-flow {
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: 18px;
+  }
+
+  .case-flow::before {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: auto;
+    width: 2px;
+    height: auto;
+    background: linear-gradient(180deg, var(--amber), var(--blue) 50%, var(--cyan));
+  }
+
+  .cf,
+  .cf + .cf {
+    padding: 0 0 20px;
+    border-left: 0;
+  }
+
+  .cf dd {
+    font-size: 15px;
+  }
+
+  .mf {
+    font-size: clamp(22px, 6.4vw, 28px);
+  }
+
+  .areas {
+    gap: 26px;
+  }
+
+  .area p {
+    font-size: 22px;
+  }
+
+  .sheet {
+    padding: 18px 18px 18px 62px;
+  }
+
+  .sheet::before {
+    left: 40px;
+  }
+
+  .sheet-n {
+    left: 14px;
+  }
+
+  .field-row,
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .contact-panel,
+  .demo-modal-panel {
+    padding: 20px;
+  }
+
+  .demo-modal {
+    padding: 10px;
+  }
+}
+
 /* ---------- Chinese page (zh.html): CJK fonts, upright serif accents, looser line-height ---------- */
 
 html:lang(zh) {
@@ -2173,6 +3349,74 @@ html:lang(zh) .gate strong {
   line-height: 1.2;
 }
 
+/* the tour in Chinese: no italics, roomier lines, slightly smaller display sizes for longer headlines */
+html:lang(zh) .t-title,
+html:lang(zh) .t-sub,
+html:lang(zh) .quote-big,
+html:lang(zh) .case-h {
+  letter-spacing: 0.005em;
+}
+
+html:lang(zh) .t-title {
+  font-size: clamp(32px, 4.1vw, 62px);
+  line-height: 1.22;
+}
+
+html:lang(zh) .t-sub {
+  font-size: clamp(24px, 2.6vw, 38px);
+  line-height: 1.32;
+}
+
+html:lang(zh) .quote-big {
+  font-size: clamp(28px, 3.6vw, 54px);
+  line-height: 1.26;
+}
+
+html:lang(zh) .case-h {
+  font-size: clamp(24px, 2.7vw, 40px);
+  line-height: 1.28;
+}
+
+html:lang(zh) .t-title em,
+html:lang(zh) .t-title em .m-word,
+html:lang(zh) .t-sub em,
+html:lang(zh) .t-sub em .m-word,
+html:lang(zh) .quote-big em,
+html:lang(zh) .quote-big em .m-word,
+html:lang(zh) .layers-title,
+html:lang(zh) .practice-title,
+html:lang(zh) .area p,
+html:lang(zh) .mf {
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+html:lang(zh) .t-title em,
+html:lang(zh) .t-sub em,
+html:lang(zh) .quote-big em {
+  font-size: 1em;
+}
+
+html:lang(zh) .mf {
+  font-weight: 500;
+  font-size: clamp(22px, 2.15vw, 33px);
+  line-height: 1.62;
+}
+
+html:lang(zh) .area p {
+  font-weight: 500;
+  font-size: clamp(18px, 1.55vw, 23px);
+  line-height: 1.55;
+}
+
+html:lang(zh) .spec-d,
+html:lang(zh) .cf dd,
+html:lang(zh) .demo p,
+html:lang(zh) .t-callout p {
+  line-height: 1.75;
+}
+
 @media (max-width: 759px) {
   html:lang(zh) .h-xl {
     font-size: clamp(36px, 10.5vw, 50px);
@@ -2189,6 +3433,23 @@ html:lang(zh) .gate strong {
   html:lang(zh) .lead,
   html:lang(zh) .body {
     line-height: 1.75;
+  }
+
+  html:lang(zh) .t-title {
+    font-size: clamp(26px, 7.4vw, 34px);
+  }
+
+  html:lang(zh) .t-sub,
+  html:lang(zh) .case-h {
+    font-size: clamp(21px, 5.9vw, 26px);
+  }
+
+  html:lang(zh) .quote-big {
+    font-size: clamp(24px, 6.8vw, 30px);
+  }
+
+  html:lang(zh) .mf {
+    font-size: clamp(19px, 5.4vw, 23px);
   }
 }
 
@@ -2219,6 +3480,12 @@ html.read .stage,
 html.no-js .stage {
   position: relative;
   inset: auto;
+  height: auto;
+}
+
+html.read .tour,
+html.no-js .tour {
+  margin-top: 0;
 }
 
 html.read .scene,
@@ -2736,6 +4003,379 @@ html.read #read {
       </section>
     </main>
 
+    <!-- 短片放完后页面继续往下走：其他页面的内容依次自动展示 -->
+    <div class="tour" id="tour">
+      <!-- 10 · AI 方案 (zh-ai-agents.html) -->
+      <section class="tsec t-agents" id="ai-solutions" data-tour data-label="AI 方案" data-form="ring">
+        <div class="twrap">
+          <header class="thead" data-stop>
+            <p class="eyebrow m m-rise" data-r data-n="10">AI 方案</p>
+            <h2 class="t-title" data-rs>帮<span class="wg">小企业</span><span class="wg">更快</span>回复客户、<span class="wg">更稳</span>跟进销售、<em><span class="wg">更少做</span><span class="wg">重复杂活。</span></em></h2>
+            <p class="lead m m-fade" data-r="0.5" data-rr>纳想 NaxaStudio 会根据你的业务情况，帮你把客户咨询、销售跟进、营销内容和重复行政工作做得更快、更清楚、更稳定。</p>
+          </header>
+          <ol class="spec">
+            <li class="spec-row m m-sweep" id="ai-receptionist" data-r data-stop>
+              <span class="spec-n">01</span>
+              <h3>AI 接待助手</h3>
+              <p class="spec-d">更快回复客户咨询，收集缺失信息，减少漏接和慢回。</p>
+            </li>
+            <li class="spec-row m m-sweep" id="ai-sales" data-r data-stop>
+              <span class="spec-n">02</span>
+              <h3>AI 销售跟进助手</h3>
+              <p class="spec-d">整理潜在客户、准备跟进草稿，让更多线索有下一步。</p>
+            </li>
+            <li class="spec-row m m-sweep" id="ai-marketing" data-r data-stop>
+              <span class="spec-n">03</span>
+              <h3>AI 营销助手</h3>
+              <p class="spec-d">把老板的想法变成内容方向、文案草稿和营销任务。</p>
+            </li>
+            <li class="spec-row m m-sweep" id="ai-research" data-r data-stop>
+              <span class="spec-n">04</span>
+              <h3>AI 研究助手</h3>
+              <p class="spec-d">整理市场、工具、竞争对手或客户资料，帮助老板更快判断。</p>
+            </li>
+            <li class="spec-row m m-sweep" id="ai-workflow" data-r data-stop>
+              <span class="spec-n">05</span>
+              <h3>AI 流程助手</h3>
+              <p class="spec-d">把重复行政工作变成清单、模板、交接记录和下一步提醒。</p>
+            </li>
+          </ol>
+          <aside class="t-callout m m-rise" data-r data-stop>
+            <div>
+              <h3>不知道先做哪个？</h3>
+              <p>先做 AI 业务诊断，找出最影响时间、成本和销售机会的流程。</p>
+            </div>
+            <a class="btn primary" href="zh-business-review.html">先做业务诊断</a>
+          </aside>
+        </div>
+      </section>
+
+      <!-- 11 · 起步 AI 方案 (zh-base-ai-agent.html) -->
+      <section class="tsec t-startup" id="startup" data-tour data-label="起步 AI 方案" data-form="cubeT">
+        <div class="twrap">
+          <header class="thead" data-stop>
+            <p class="eyebrow m m-rise" data-r data-n="11">起步 AI 方案</p>
+            <h2 class="t-title" data-rs><span class="wg">在雇</span>完整团队之前，<em>先让 AI 帮你处理<span class="wg">最重复的</span>客户和行政工作。</em></h2>
+            <p class="lead m m-fade" data-r="0.5" data-rr>起步 AI 方案可以先处理客户咨询、整理信息、生成回复草稿和下一步清单，让老板更快判断和跟进。</p>
+            <div class="btns m m-rise" data-r="0.8">
+              <a class="btn primary" href="zh-contact.html">获取定制 AI 计划</a>
+              <a class="btn ghost" href="zh-ai-agents.html">比较 AI 方案</a>
+            </div>
+          </header>
+          <div class="layers-wrap" data-stop>
+            <div class="layers-text">
+              <h3 class="t-sub" data-rs>适合<span class="wg">刚开始</span>创业或团队<span class="wg">还很小的</span>阶段。</h3>
+              <p class="lead m m-fade" data-r="0.4" data-rr>如果你暂时还不想马上雇前台、销售助理、营销助理或行政人员，可以先用一个实用 AI 方案处理最重复、最耗时的工作。</p>
+            </div>
+            <div class="layers">
+              <h4 class="layers-title m m-blur" data-r="0.3">它可以先帮你做什么</h4>
+              <ol>
+                <li class="layer m m-lift" style="--i: 0" data-r="0.6"><span class="layer-n">01</span><strong>收集客户信息</strong><span class="t">把客户需求、联系方式、服务类型和紧急程度整理清楚。</span></li>
+                <li class="layer m m-lift" style="--i: 1" data-r="0.9"><span class="layer-n">02</span><strong>生成摘要和下一步</strong><span class="t">让老板快速知道客户要什么、还缺什么、下一步该做什么。</span></li>
+                <li class="layer m m-lift" style="--i: 2" data-r="1.2"><span class="layer-n">03</span><strong>准备回复草稿</strong><span class="t">让回复更快、更专业，也减少重复打字。</span></li>
+                <li class="layer m m-lift" style="--i: 3" data-r="1.5"><span class="layer-n">04</span><strong>建立流程清单</strong><span class="t">把重复工作整理成清楚的步骤和模板。</span></li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12 · Demo (zh-demo-center.html) -->
+      <section class="tsec t-demo" id="demo" data-tour data-label="Demo" data-form="stream">
+        <div class="twrap">
+          <header class="thead" data-stop>
+            <p class="eyebrow m m-rise" data-r data-n="12">AI Demo</p>
+            <h2 class="t-title" data-rs>选择你想<em>先看的 AI Demo。</em></h2>
+            <p class="lead m m-fade" data-r="0.5" data-rr>点击 Demo，填写姓名和一个联系方式后解锁预览。</p>
+          </header>
+          <div class="demos" data-stop>
+            <article class="demo locked-demo m m-pop" data-r="0" data-demo-card="AI 接待助手">
+              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="demo-head"><h3>AI 接待助手</h3><button class="demo-button" type="button" data-demo-agent="AI 接待助手" data-demo-url="ai-receptionist-demo/">Demo</button></div>
+              <p>更快回应客户咨询，收集缺失信息，准备摘要。</p>
+              <div class="tag-row"><span class="tag">客户咨询</span><span class="tag">快速回复</span></div>
+              <div class="demo-preview" data-demo-preview>
+                <strong>已解锁 Demo 预览</strong>
+                <p>客户询问服务后，AI 收集姓名、联系方式、需求、紧急程度和偏好语言，并生成老板可看的摘要。</p>
+              </div>
+              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
+            </article>
+            <article class="demo locked-demo m m-pop" data-r="0.15" data-demo-card="AI 销售跟进助手">
+              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="demo-head"><h3>AI 销售跟进助手</h3><button class="demo-button" type="button" data-demo-agent="AI 销售跟进助手" data-demo-url="ai-sales-demo/">Demo</button></div>
+              <p>整理潜在客户状态，准备下一步和跟进草稿。</p>
+              <div class="tag-row"><span class="tag">销售跟进</span><span class="tag">线索整理</span></div>
+              <div class="demo-preview" data-demo-preview>
+                <strong>已解锁 Demo 预览</strong>
+                <p>潜在客户只提供部分信息时，系统整理预算、时间、需求匹配度、缺失信息和跟进草稿。</p>
+              </div>
+              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
+            </article>
+            <article class="demo locked-demo m m-pop" data-r="0.3" data-demo-card="AI 营销助手">
+              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="demo-head"><h3>AI 营销助手</h3><button class="demo-button" type="button" data-demo-agent="AI 营销助手" data-demo-url="ai-marketing-demo/">Demo</button></div>
+              <p>把老板的服务想法变成内容方向和文案草稿。</p>
+              <div class="tag-row"><span class="tag">内容</span><span class="tag">营销计划</span></div>
+              <div class="demo-preview" data-demo-preview>
+                <strong>已解锁 Demo 预览</strong>
+                <p>老板描述一个新服务后，系统整理营销角度、目标客户、三条内容草稿和行动建议。</p>
+              </div>
+              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
+            </article>
+            <article class="demo locked-demo m m-pop" data-r="0.45" data-demo-card="AI 研究助手">
+              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="demo-head"><h3>AI 研究助手</h3><button class="demo-button" type="button" data-demo-agent="AI 研究助手">Demo</button></div>
+              <p>把比较和研究资料整理成更容易决策的摘要。</p>
+              <div class="tag-row"><span class="tag">研究</span><span class="tag">比较</span></div>
+              <div class="demo-preview" data-demo-preview>
+                <strong>已解锁 Demo 预览</strong>
+                <p>老板需要比较工具、市场或竞争对手时，系统整理标准、发现、优缺点和后续问题。</p>
+              </div>
+              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
+            </article>
+            <article class="demo locked-demo m m-pop" data-r="0.6" data-demo-card="AI 流程助手">
+              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="demo-head"><h3>AI 流程助手</h3><button class="demo-button" type="button" data-demo-agent="AI 流程助手">Demo</button></div>
+              <p>用清单和模板减少重复行政工作。</p>
+              <div class="tag-row"><span class="tag">行政流程</span><span class="tag">清单模板</span></div>
+              <div class="demo-preview" data-demo-preview>
+                <strong>已解锁 Demo 预览</strong>
+                <p>重复行政流程被拆成信息收集、老板确认、客户更新、完成记录和下一步提醒。</p>
+              </div>
+              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
+            </article>
+            <article class="demo locked-demo m m-pop" data-r="0.75" data-demo-card="起步 AI 方案">
+              <div class="demo-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+              <div class="demo-head"><h3>起步 AI 方案</h3><button class="demo-button" type="button" data-demo-agent="起步 AI 方案">Demo</button></div>
+              <p>先从一个最重要的流程开始，处理咨询、摘要、草稿和下一步。</p>
+              <div class="tag-row"><span class="tag">起步方案</span><span class="tag">老板支持</span></div>
+              <div class="demo-preview" data-demo-preview>
+                <strong>已解锁 Demo 预览</strong>
+                <p>AI 接收客户请求，参考业务信息，准备回复草稿，并标记需要老板确认的地方。</p>
+              </div>
+              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- 13 · 案例 (zh-cases.html) -->
+      <section class="tsec t-cases" id="cases" data-tour data-label="案例" data-form="riseT">
+        <div class="twrap">
+          <header class="thead" data-stop>
+            <p class="eyebrow m m-rise" data-r data-n="13">应用案例</p>
+            <h2 class="t-title" data-rs>看 AI 方案如何解决<span class="wg">小企业</span><em><span class="wg">最耗时间、</span><span class="wg">最容易</span><span class="wg">漏单的</span>问题。</em></h2>
+            <p class="lead m m-fade" data-r="0.5" data-rr>这些是案例式场景，用来说明客户遇到什么麻烦、适合用哪个 AI 方案、最后能改善什么业务结果。</p>
+          </header>
+          <article class="case" data-stop>
+            <p class="eyebrow m m-rise" data-r>本地服务行业</p>
+            <h3 class="case-h" data-rs>漏接电话正在变成漏掉订单。</h3>
+            <dl class="case-flow">
+              <div class="cf cf-p m m-rise" data-r="0.4"><dt>问题</dt><dd>老板经常在现场忙，电话、表单和私信不能及时回复，客户很容易转去找别人。</dd></div>
+              <div class="cf cf-s m m-rise" data-r="0.8"><dt>AI 方案</dt><dd>AI 接待助手先收集服务需求、地点、紧急程度、联系方式和缺失信息，再整理成清楚的客户摘要。</dd></div>
+              <div class="cf cf-o m m-rise" data-r="1.2"><dt>改善</dt><dd>客户更快得到回应，老板看到的是整理好的需求，咨询更不容易冷掉。</dd></div>
+            </dl>
+          </article>
+          <article class="case" data-stop>
+            <p class="eyebrow m m-rise" data-r>专业服务</p>
+            <h3 class="case-h" data-rs>潜在客户<span class="wg">问完一次，</span>就没有<span class="wg">后续。</span></h3>
+            <dl class="case-flow">
+              <div class="cf cf-p m m-rise" data-r="0.4"><dt>问题</dt><dd>客户发来的信息很短，团队很难判断谁比较认真，也不知道下一步该问什么。</dd></div>
+              <div class="cf cf-s m m-rise" data-r="0.8"><dt>AI 方案</dt><dd>AI 销售跟进助手整理购买意向、时间、预算信号和缺失背景，并准备跟进草稿。</dd></div>
+              <div class="cf cf-o m m-rise" data-r="1.2"><dt>改善</dt><dd>老板更容易判断优先级，跟进更稳定，也更容易推动合适的客户进入下一步。</dd></div>
+            </dl>
+          </article>
+          <article class="case" data-stop>
+            <p class="eyebrow m m-rise" data-r>创业公司</p>
+            <h3 class="case-h" data-rs><span class="wg">一忙起来，</span><span class="wg">营销</span>内容<span class="wg">就停了。</span></h3>
+            <dl class="case-flow">
+              <div class="cf cf-p m m-rise" data-r="0.4"><dt>问题</dt><dd>老板有服务想法和客户故事，但没有时间持续写帖子、邮件或活动文案。</dd></div>
+              <div class="cf cf-s m m-rise" data-r="0.8"><dt>AI 方案</dt><dd>AI 营销助手把服务笔记变成内容方向、帖子草稿、行动号召和可重复使用的表达。</dd></div>
+              <div class="cf cf-o m m-rise" data-r="1.2"><dt>改善</dt><dd>营销更容易持续，内容从结构化草稿开始，老板不用每次都从空白页面开始写。</dd></div>
+            </dl>
+          </article>
+          <article class="case" data-stop>
+            <p class="eyebrow m m-rise" data-r>成长型运营</p>
+            <h3 class="case-h" data-rs>重复行政工作<span class="wg">拖慢</span><span class="wg">每一次</span>交接。</h3>
+            <dl class="case-flow">
+              <div class="cf cf-p m m-rise" data-r="0.4"><dt>问题</dt><dd>客户资料分散在邮件、表单、笔记和表格里，团队反复复制、整理、确认下一步。</dd></div>
+              <div class="cf cf-s m m-rise" data-r="0.8"><dt>AI 方案</dt><dd>AI 流程助手把流程整理成清单、交接记录、缺失资料提醒和重复任务提示。</dd></div>
+              <div class="cf cf-o m m-rise" data-r="1.2"><dt>改善</dt><dd>团队交接更清楚，重复解释更少，日常工作更容易稳定推进。</dd></div>
+            </dl>
+          </article>
+          <div class="t-quote" data-stop>
+            <p class="eyebrow m m-rise" data-r>核心逻辑</p>
+            <h3 class="quote-big" data-rs>先找出正在<em>损失时间、客户或跟进机会</em>的流程。</h3>
+            <p class="body m m-fade" data-r="0.6" data-rr>AI 方案不是因为听起来高级才做，而是因为某个重复问题正在消耗注意力、回复速度或销售机会。</p>
+            <div class="btns m m-rise" data-r="1">
+              <a class="btn primary" href="zh-business-review.html">预约业务诊断</a>
+              <a class="btn ghost" href="zh-demo-center.html">查看 Demo</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 14 · 关于 (zh-about.html) -->
+      <section class="tsec t-about" id="about" data-tour data-label="关于" data-form="logoT">
+        <div class="twrap">
+          <header class="thead" data-stop>
+            <p class="eyebrow m m-rise" data-r data-n="14">关于纳想 NaxaStudio</p>
+            <h2 class="t-title" data-rs>陪你借助 AI 的力量，<em>把想法变成现实。</em></h2>
+          </header>
+          <div class="manifesto" data-stop>
+            <p class="mf m m-fade" data-r data-rr>NaxaStudio 是为那些有想法、但需要一个方法把想法变成现实的人而存在的。</p>
+            <p class="mf m m-fade" data-r="0.2" data-rr>不管你是想发展一门生意，做一个有意义的项目，实现一个梦想，还是想走过业务里的某个卡点，最难的往往不是想法本身，而是踏出第一步，并持续推进下去。</p>
+          </div>
+          <div class="manifesto" data-stop>
+            <p class="mf m m-fade" data-r data-rr>我们相信 AI 不应该是冰冷、遥远、复杂的技术。它应该成为一个实用的解决方案，帮助人从想法走向行动，从行动走向真实的结果。</p>
+            <p class="mf mf-last m m-blur" data-r="0.4">NaxaStudio 存在的原因，就是陪你借助 AI 的力量，把想法变成现实。</p>
+          </div>
+          <div class="reality" data-stop>
+            <h3 class="t-sub" data-rs>先把想法变成<em>可以执行的<span class="wg">第一步。</span></em></h3>
+            <div class="reality-cols">
+              <p class="lead m m-fade" data-r="0.3" data-rr>客户来了怎么回、线索怎么跟、资料怎么整理、内容怎么持续做，这些问题比技术本身更重要。我们帮你先把这些环节理顺，再用 AI 把行动持续推进下去。</p>
+              <p class="lead m m-fade" data-r="0.6" data-rr>我们的团队有业务咨询经验，也有服务私人客户和小商户的银行相关经验。这个背景让我们更理解小企业的预算压力、现金流压力、客户跟进压力和日常运营卡点。</p>
+            </div>
+          </div>
+          <div class="practice" data-stop>
+            <h4 class="practice-title m m-blur" data-r>我们的工作方式</h4>
+            <ul>
+              <li class="m m-rise" data-r="0.3"><span class="pr-n">01</span><strong>理解老板的实际压力</strong><span class="t">客户要回复、线索要跟进、杂事要处理，但时间和预算有限。</span></li>
+              <li class="m m-rise" data-r="0.6"><span class="pr-n">02</span><strong>优先解决最影响收入的流程</strong><span class="t">从容易漏客户、拖跟进、重复耗时的地方开始。</span></li>
+              <li class="m m-rise" data-r="0.9"><span class="pr-n">03</span><strong>做小企业真正用得上的方案</strong><span class="t">清楚、实用、可执行，而不是复杂昂贵的大项目。</span></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 15 · AI 业务诊断 (zh-business-review.html) -->
+      <section class="tsec t-review" id="business-review" data-tour data-label="AI 业务诊断" data-form="ring2">
+        <div class="twrap">
+          <header class="thead" data-stop>
+            <p class="eyebrow m m-rise" data-r data-n="15">AI 业务诊断</p>
+            <h2 class="t-title" data-rs>先找出<span class="wg">最耗时间、</span><span class="wg">最容易</span><span class="wg">漏单、</span><em><span class="wg">最影响</span>收入的流程。</em></h2>
+            <p class="lead m m-fade" data-r="0.5" data-rr>我们先看你的客户咨询、销售跟进、营销内容、资料整理和日常行政，找出最值得先改善的一个环节。</p>
+            <div class="btns m m-rise" data-r="0.8">
+              <a class="btn primary" href="zh-contact.html">预约 AI 业务诊断</a>
+              <a class="btn ghost" href="zh-demo-center.html">查看 Demo</a>
+            </div>
+          </header>
+          <div class="lean" data-stop>
+            <div class="lean-text">
+              <p class="eyebrow m m-rise" data-r>先轻量启动，再决定怎么投入</p>
+              <h3 class="t-sub" data-rs>把创业想法整理成<span class="wg">第一个</span>可以执行的业务计划。</h3>
+              <p class="lead m m-fade" data-r="0.4" data-rr>如果你有很多想法，但不知道先做什么，业务诊断会帮你明确服务方向、目标客户、客户从咨询到成交的流程，以及第一个值得先做的 AI 支持方案。</p>
+            </div>
+            <ol class="lean-steps">
+              <li class="m m-rise" data-r="0.6"><span class="ls-n">01</span><strong>从想法到服务</strong><span class="t">先明确你卖什么、卖给谁、客户为什么愿意买。</span></li>
+              <li class="m m-rise" data-r="0.9"><span class="ls-n">02</span><strong>低成本启动流程</strong><span class="t">在请完整团队之前，先规划咨询、跟进、内容和行政怎么跑起来。</span></li>
+              <li class="m m-rise" data-r="1.2"><span class="ls-n">03</span><strong>第一个 AI 方案</strong><span class="t">先做一个能节省时间、降低成本、支持早期增长的实用方案。</span></li>
+            </ol>
+          </div>
+          <div class="areas-wrap" data-stop>
+            <p class="eyebrow m m-rise" data-r>诊断重点</p>
+            <h3 class="t-sub" data-rs>把老板每天反复处理的事情，整理成<em>清楚、<span class="wg">可执行的</span>改进方案。</em></h3>
+            <div class="areas">
+              <article class="area m m-rise" data-r="0.3"><h4>客户咨询</h4><p>哪些信息经常缺失？客户第一次联系后有没有被及时回应？</p></article>
+              <article class="area m m-rise" data-r="0.45"><h4>销售跟进</h4><p>哪些潜在客户没有下一步？哪些跟进容易忘记或拖延？</p></article>
+              <article class="area m m-rise" data-r="0.6"><h4>营销任务</h4><p>哪些内容、活动或客户沟通长期不稳定？</p></article>
+              <article class="area m m-rise" data-r="0.75"><h4>资料整理</h4><p>哪些信息需要反复复制、总结、检查或分类？</p></article>
+              <article class="area m m-rise" data-r="0.9"><h4>行政流程</h4><p>哪些日常工作最耗时间，但又必须重复做？</p></article>
+              <article class="area m m-rise" data-r="1.05"><h4>优先顺序</h4><p>先做最影响时间、成本、客户体验和收入机会的流程。</p></article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 16 · 联系 (zh-contact.html) -->
+      <section class="tsec t-contact" id="contact" data-tour data-label="联系" data-form="logoC">
+        <div class="twrap">
+          <header class="thead" data-stop>
+            <p class="eyebrow m m-rise" data-r data-n="16">联系</p>
+            <h2 class="t-title" data-rs>告诉我们你想先改善<em>哪个业务环节。</em></h2>
+            <p class="lead m m-fade" data-r="0.5" data-rr>告诉我们你的业务现在最耗时间、最容易漏客户、或最影响销售的流程。</p>
+          </header>
+          <div class="contact-grid" data-stop data-dwell="12">
+            <div class="starts">
+              <h3 class="t-sub m m-blur" data-r>适合咨询的问题</h3>
+              <ul>
+                <li class="m m-rise" data-r="0.3"><strong>客户回复太慢</strong><span class="t">咨询来了，但老板或团队经常忙不过来。</span></li>
+                <li class="m m-rise" data-r="0.5"><strong>销售跟进不稳定</strong><span class="t">潜在客户没有持续跟进，机会容易流失。</span></li>
+                <li class="m m-rise" data-r="0.7"><strong>重复工作太多</strong><span class="t">整理资料、写回复、做清单占用太多时间。</span></li>
+              </ul>
+            </div>
+            <div class="contact-panel m m-pop" data-r="0.4">
+              <form class="contact-form" action="mailto:contact@naxastudio.com" method="post" enctype="text/plain">
+                <div class="form-grid">
+                  <label>姓名<input name="name" autocomplete="name" required /></label>
+                  <label>公司 / 生意名称<input name="business_name" autocomplete="organization" /></label>
+                  <label>邮箱<input name="email" type="email" autocomplete="email" required /></label>
+                  <label>电话<input name="phone" type="tel" autocomplete="tel" /></label>
+                  <label>业务类型<input name="business_type" /></label>
+                  <label>偏好语言<select name="preferred_language"><option>中文</option><option>英文</option><option>中英文都可以</option></select></label>
+                  <label class="full">你希望 AI 先帮你处理什么问题？<textarea name="ai_help" required></textarea></label>
+                  <label class="full">感兴趣的方向<select name="interest"><option>AI 业务诊断</option><option>起步 AI 方案</option><option>AI 接待助手</option><option>AI 销售跟进助手</option><option>AI 营销助手</option><option>AI 研究助手</option><option>AI 流程助手</option></select></label>
+                </div>
+                <label class="full consent"><input name="consent" type="checkbox" required /> 我同意 纳想 NaxaStudio 就本次咨询请求联系我。</label>
+                <button class="btn primary" type="submit">提交咨询请求</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="site-end" data-stop data-dwell="4">
+        <div class="twrap end-grid">
+          <a class="brand" href="zh.html" aria-label="纳想 NaxaStudio 首页">
+            <span class="brand-tile"><img src="data:image/jpeg;base64,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" alt="" width="36" height="36" /></span>
+            <span class="brand-text">纳想 NaxaStudio <small>AI 执行力系统</small></span>
+          </a>
+          <p>纳想 NaxaStudio. 帮你借助实用 AI，把想法变成行动和结果。</p>
+          <nav aria-label="页脚链接"><a href="zh-contact.html">联系</a><a href="zh-privacy.html">隐私与条款</a><a href="index.html" lang="en">EN</a></nav>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Demo 访问（和 zh-demo-center.html 相同的规则：姓名、邮箱或电话、Demo 密码、同意条款） -->
+    <div class="demo-modal" data-demo-modal aria-hidden="true">
+      <div class="demo-modal-backdrop" data-demo-close></div>
+      <div class="demo-modal-panel" role="dialog" aria-modal="true" aria-labelledby="demo-modal-title">
+        <div class="demo-modal-head">
+          <div>
+            <p class="eyebrow">Demo 访问</p>
+            <h2 id="demo-modal-title">解锁 Demo 预览</h2>
+          </div>
+          <button class="modal-close" type="button" data-demo-close aria-label="关闭 Demo 表单">关闭</button>
+        </div>
+        <form class="access-form" data-demo-access-form novalidate>
+          <div class="field-row">
+            <label class="full">选择的 Demo<input name="selected_demo" data-selected-demo readonly placeholder="请选择一个 AI Demo" /></label>
+            <label>姓名<input name="name" autocomplete="name" required /></label>
+            <label>邮箱 <span class="field-hint">建议填写</span><input name="email" type="email" autocomplete="email" /></label>
+            <label>电话 <span class="field-hint">可选</span><input name="phone" type="tel" autocomplete="tel" /></label>
+            <label>Demo 密码<input name="demo_password" type="password" autocomplete="off" required /></label>
+            <label>业务类型<select name="business_type"><option value="">请选择</option><option>初创公司</option><option>本地小企业</option><option>服务团队</option><option>专业服务</option><option>其他</option></select></label>
+          </div>
+          <div class="demo-consent">
+            <p>点击“我同意”并使用本 Demo，即代表你确认：</p>
+            <ul>
+              <li>你已年满 18 岁。</li>
+              <li>你了解自己正在使用 AI Demo 服务。</li>
+              <li>你同意 Demo 互动内容可被记录或保存，用于提供服务和改善体验。</li>
+            </ul>
+            <p class="consent-fineprint">你已了解我们的 <a href="zh-privacy.html">隐私与条款</a>。你提供的信息可能会用于提供本 Demo 服务，并回应你的请求。</p>
+          </div>
+          <label class="checkbox-label">
+            <input name="terms" type="checkbox" />
+            <span>我同意。</span>
+          </label>
+          <p class="form-error" data-demo-error role="alert"></p>
+          <button class="btn primary" type="submit">解锁 Demo 预览</button>
+          <p class="unlock-note" data-demo-status>请选择一个 Demo 继续。</p>
+        </form>
+      </div>
+    </div>
+
     <div class="flash" id="flash" aria-hidden="true"></div>
 
     <div class="ctl" id="ctl" role="group" aria-label="播放控制">
@@ -2933,7 +4573,8 @@ html.read #read {
     acc = s.end - (i < scenes.length - 1 ? OVER : 0);
   });
   const LAST = scenes[scenes.length - 1];
-  const TOTAL = LAST.end;
+  const FILM = LAST.end; // the film; the tour of the other pages follows it
+  let TOTAL = FILM;
 
   const forms = [];
   scenes.forEach((s) => s.forms.forEach((f) => forms.push({ name: f.name, t: s.start + f.at })));
@@ -3209,6 +4850,7 @@ html.read #read {
     roiTop: 0,
     path: null,
     pathMs: [0, 0.25, 0.5, 0.75, 1],
+    scroll0: 0,
     cube: { x: 0, y: 0, s: 1 },
   };
 
@@ -3260,8 +4902,7 @@ html.read #read {
   /* ---- formations: f(i, t, o) writes position, alpha, size and heat for particle i at time t */
 
   function logoForm(key) {
-    return (i, t, o) => {
-      const c = L[key];
+    return (i, t, o, c = L[key]) => {
       const p = LOGO[i] || LOGO[i % LOGO.length];
       const px = p[0] / 1000, py = p[1] / 1000;
       let x = c.x + px * c.s, y = c.y + py * c.s;
@@ -3350,8 +4991,7 @@ html.read #read {
       o.h = R4[i] < 0.12 + fx.storm * 0.16 ? 1 : 0;
     },
 
-    calm(i, t, o) {
-      const c = L.calm;
+    calm(i, t, o, c = L.calm) {
       const a = R1[i] * TAU + t * 0.12;
       const r = c.r * (1 + (R3[i] - 0.5) * 0.07);
       o.x = c.x + Math.cos(a) * r;
@@ -3492,10 +5132,7 @@ html.read #read {
       }
     },
 
-    cube(i, t, o) {
-      const c = L.cube;
-      const build = fx.cubeBuild;
-      const pulse = fx.cubePulse;
+    cube(i, t, o, c = L.cube, build = fx.cubeBuild, pulse = fx.cubePulse) {
       o.h = 0;
       let x, y, z;
       if (R2[i] < 0.72) {
@@ -3536,6 +5173,54 @@ html.read #read {
     },
   };
 
+  // ---- formations for the tour below the film: placed relative to the screen, no anchors
+  Object.assign(F, {
+    ring: (i, t, o) => F.calm(i, t, o, L.tc.ring),
+    ring2: (i, t, o) => F.calm(i, t, o, L.tc.ring2),
+    cubeT: (i, t, o) => F.cube(i, t, o, L.tc.cube, 1, 0),
+    logoT: logoForm('logoT'),
+    logoC(i, t, o) {
+      F.logoT(i, t, o, L.logoC);
+      o.a *= 0.42;
+    },
+    stream(i, t, o) {
+      // inquiries come in scattered on the left and leave as one calm beam on the right
+      const u = (R1[i] + t * 0.04 * (0.7 + R2[i] * 0.6)) % 1;
+      const x = -60 + u * (W + 120);
+      const k = smooth(0.18, 0.6, u);
+      const spread = H * 0.15 * (1 - k) + 8 * k;
+      o.x = x;
+      o.y = L.tc.streamY + Math.sin(x * 0.006 + t * 0.6) * 16 + (R3[i] - 0.5) * 2 * spread + Math.sin(t * 2 + R4[i] * 30) * (1 - k) * 8;
+      o.a = (0.3 + 0.55 * k) * smooth(0, 0.06, u) * (1 - smooth(0.94, 1, u));
+      o.s = 0.85;
+      o.h = 0;
+    },
+    riseT(i, t, o) {
+      o.h = 0;
+      if (R2[i] < 0.82) {
+        const s = (R1[i] + t * 0.03) % 1;
+        const p = along(L.tc.rise, s);
+        const n = (R3[i] - 0.5) * 10;
+        o.x = p.x + p.nx * n;
+        o.y = p.y + p.ny * n;
+        o.a = 0.2 + 0.6 * s;
+        o.s = 0.85;
+      } else {
+        o.x = R1[i] * W + Math.sin(t * 0.5 + R4[i] * 9) * 12;
+        o.y = H - ((R3[i] + t * 0.03 * (0.5 + R4[i])) % 1) * H;
+        o.a = 0.2;
+        o.s = 0.7;
+      }
+    },
+    drift(i, t, o) {
+      o.x = R1[i] * W + Math.sin(t * 0.2 + R4[i] * 9) * 30;
+      o.y = H + 20 - ((R3[i] + t * 0.012 * (0.4 + R5[i])) % 1) * (H + 40);
+      o.a = 0.16 + 0.3 * R5[i];
+      o.s = 0.75;
+      o.h = 0;
+    },
+  });
+
   // values shared by every particle in a frame
   const PRE = { riseS: 0, hx: 0, hy: 0, ex: 0, ey: 0, ux: 1, uy: 0, px: 0, py: 0 };
   function prepare() {
@@ -3571,13 +5256,7 @@ html.read #read {
 
   let fieldDim = 1;
 
-  function drawField(t, override) {
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-    ctx.fillRect(0, 0, W, H);
-    ctx.globalCompositeOperation = 'lighter';
-
+  function drawField(t, override, oy = 0, blend = null) {
     let fc, fp = null, since = 99;
     if (override) {
       fc = F[override];
@@ -3587,9 +5266,23 @@ html.read #read {
       if (k > 0) fp = F[forms[k - 1].name];
       since = t - forms[k].t;
     }
+    // coming back up from the tour: morph from the tour's formation into the film's
+    if (blend && blend.since < TDUR + MAXDEL) {
+      fp = F[blend.from];
+      since = blend.since;
+    }
+    renderField(fc, fp, since, t, override ? 1 : smooth(0.3, 2.5, t), oy);
+  }
+
+  function renderField(fc, fp, since, t, starIn, oy) {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';
+
     const trans = fp && since < TDUR + MAXDEL;
     prepare();
-    const starIn = override ? 1 : smooth(0.3, 2.5, t);
     const base = isMobile ? 2.6 : 3.1;
 
     for (let i = 0; i < N; i++) {
@@ -3619,6 +5312,7 @@ html.read #read {
         } else {
           x = A.x; y = A.y; a = A.a; s = A.s; h = A.h;
         }
+        y += oy;
       }
       if (a < 0.01 || x < -30 || y < -30 || x > W + 30 || y > H + 30) continue;
       const r = base * s * SZ[i];
@@ -3737,10 +5431,163 @@ html.read #read {
     if (isMobile) L.cube = { x: W * 0.8, y: H - L.ctl - 62, s: Math.min(W * 0.1, 40) };
     else if (cube) L.cube = { x: cube.x, y: cube.y, s: Math.min(cube.w, cube.h) * 0.36 };
 
+    // formations used while touring the other pages (relative to the screen)
+    L.scroll0 = window.scrollY;
+    L.tc = {
+      // kept near the right edge, half off-screen, so they sit behind the margins rather than the text
+      ring: { x: W * 0.98, y: H * 0.52, r: Math.min(W, H) * (isMobile ? 0.3 : 0.36) },
+      ring2: { x: W * 1.0, y: H * 0.3, r: Math.min(W, H) * 0.3 },
+      cube: { x: W * (isMobile ? 0.86 : 0.92), y: H * 0.28, s: Math.min(W, H) * (isMobile ? 0.1 : 0.11) },
+      streamY: H * 0.86,
+      // a hockey-stick growth curve that keeps to the bottom and the right edge, clear of the text
+      rise: spline([
+        { x: W * 0.02, y: H * 0.97 },
+        { x: W * 0.5, y: H * 0.93 },
+        { x: W * 0.8, y: H * 0.8 },
+        { x: W * 0.95, y: H * 0.5 },
+        { x: W * 1.0, y: H * 0.14 },
+      ]),
+    };
+    L.logoT = { x: W * (isMobile ? 0.7 : 0.9), y: H * 0.56, s: Math.min(W * (isMobile ? 0.7 : 0.3), H * 0.5 * LOGO_ASPECT) };
+    L.logoC = { x: W * 0.5, y: H * 0.5, s: Math.min(W * 0.86, H * 0.8 * LOGO_ASPECT) };
+    measureTour();
+
     doc.classList.remove('measuring');
     // the read-mode backdrop: a slow ring on the right
     if (readMode) L.calm = { x: W * (isMobile ? 0.7 : 0.78), y: H * 0.42, r: Math.min(W, H) * 0.26 };
     dirty = true;
+  }
+
+  /* ------------------------------------------------------------------ the tour: the other pages, below the film */
+
+  // Elements in the tour appear when they scroll into view (time-based, so a paused page still finishes
+  // its entrances); headings rise word by word and paragraphs light up at reading pace.
+  const tourEl = $('#tour');
+  const tsecs = tourEl
+    ? $$('[data-tour]', tourEl).map((el) => ({ el, id: el.id, label: el.dataset.label, form: el.dataset.form || 'drift', start: 0, end: 0 }))
+    : [];
+  const tcues = [];
+  if (tourEl) {
+    $$('[data-rs]', tourEl).forEach((el) => {
+      splitWords(el, (w, i) => word('m m-word', w, i * 0.045, '0.8'));
+      $$('.m-word', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), dur: 0.8 }));
+    });
+    $$('[data-rr]', tourEl).forEach((el) => {
+      const base = num(el.dataset.r, 0) + 0.35;
+      const rate = ZH ? 0.055 : 0.1;
+      splitWords(el, (w, i) => word('rw', w, base + i * rate, '0.35'));
+      $$('.rw', el).forEach((w) => tcues.push({ el: w, trig: el, delay: parseFloat(w.dataset.at), dur: 0.35 }));
+    });
+    $$('[data-r]', tourEl).forEach((el) => tcues.push({ el, trig: el, delay: num(el.dataset.r, 0), dur: num(el.dataset.dur, 0.9) }));
+    tcues.forEach((c) => {
+      c.top = 0;
+      c.go = null;
+      c.p = -1;
+    });
+  }
+
+  // Autopilot: after the film the page glides from stop to stop ([data-stop] blocks) and lingers on each
+  // as long as its text takes to read. Its whole path is a function of time, so it sits on the same
+  // timeline (and progress bar) as the film.
+  let tour = { steps: [], total: 0 };
+
+  const docTop = (el) => el.getBoundingClientRect().top + window.scrollY;
+
+  function measureTour() {
+    if (!tourEl) return;
+    const sy = window.scrollY;
+    tcues.forEach((c) => (c.top = c.trig.getBoundingClientRect().top + sy));
+    const pad = isMobile ? 14 : Math.round(H * 0.08);
+    const avail = Math.max(200, H - L.hdr - L.ctl - pad - 16);
+    const maxY = Math.max(0, doc.scrollHeight - H);
+    const raw = [];
+    $$('[data-stop]', tourEl).forEach((el) => {
+      const r = el.getBoundingClientRect();
+      const top = r.top + sy;
+      const sec = tsecs.find((x) => x.el.contains(el)) || tsecs[tsecs.length - 1];
+      const text = el.textContent.replace(/\s+/g, ' ').trim();
+      const read = ZH ? text.replace(/\s/g, '').length / 11 : text.split(' ').length / 5.6;
+      const dwell = el.dataset.dwell ? parseFloat(el.dataset.dwell) : clamp(read + 1.2, 2.4, 10);
+      const y0 = top - L.hdr - pad;
+      // a block taller than the screen is panned through in pieces
+      const pieces = r.height > avail ? Math.ceil((r.height - avail) / (avail * 0.7)) + 1 : 1;
+      for (let k = 0; k < pieces; k++) {
+        const y = pieces === 1 ? y0 : y0 + ((r.height - avail) * k) / (pieces - 1);
+        raw.push({ y: clamp(Math.round(y), 0, maxY), dwell: dwell / pieces, sec, el, whole: pieces === 1, bottom: top + r.height });
+      }
+    });
+    // Like a teleprompter: the page only moves on when the next block is not already on screen.
+    // Blocks that fit below the current one are read in place; a new section always gets its own move.
+    const steps = [];
+    raw.forEach((st) => {
+      const prev = steps[steps.length - 1];
+      const onScreen = prev && st.whole && st.sec === prev.sec && st.bottom <= prev.y + L.hdr + pad + avail;
+      if (prev && (onScreen || Math.abs(st.y - prev.y) < 40)) prev.dwell += st.dwell;
+      else steps.push(st);
+    });
+    let tt = 0;
+    let prevY = 0;
+    steps.forEach((st, i) => {
+      const d = Math.abs(st.y - prevY);
+      st.y0 = prevY;
+      st.move = i === 0 ? 2.6 : clamp(0.8 + (d / H) * 0.9, 0.9, 2.6);
+      st.start = tt;
+      tt += st.move + st.dwell;
+      prevY = st.y;
+    });
+    tour = { steps, total: tt };
+    tsecs.forEach((sec) => {
+      sec.top = sec.el.getBoundingClientRect().top + sy;
+      const own = steps.filter((x) => x.sec === sec);
+      sec.start = own.length ? own[0].start : tt;
+      const lastStep = own[own.length - 1];
+      sec.end = lastStep ? lastStep.start + lastStep.move + lastStep.dwell : sec.start;
+    });
+    TOTAL = FILM + tt;
+    buildRail();
+  }
+
+  function tourY(tau) {
+    const steps = tour.steps;
+    if (!steps.length) return 0;
+    for (const st of steps) {
+      if (tau < st.start + st.move) return lerp(st.y0, st.y, easeInOut(clamp((tau - st.start) / st.move)));
+      if (tau < st.start + st.move + st.dwell) return st.y;
+    }
+    return steps[steps.length - 1].y;
+  }
+
+  // The moment on the timeline that matches a scroll position: the first stop at or below it,
+  // so carrying on from there always moves the page forward, never back up.
+  function tauAt(y) {
+    const steps = tour.steps;
+    if (!steps.length) return 0;
+    const st = steps.find((x) => x.y >= y - 4) || steps[steps.length - 1];
+    return st.start + st.move;
+  }
+
+  function renderTour(now, sy) {
+    for (const c of tcues) {
+      const top = c.top - sy;
+      if (c.go == null) {
+        if (top < H * 0.9) c.go = now + c.delay;
+      } else if (top > H * 1.05) {
+        c.go = null; // left through the bottom: play again next time
+      }
+      const p = c.go == null ? 0 : easeOut(clamp((now - c.go) / c.dur));
+      if (p !== c.p) {
+        c.p = p;
+        c.el.style.setProperty('--p', p.toFixed(4));
+      }
+    }
+  }
+
+  // which tour section is under the middle of the screen
+  function sectionAt(sy) {
+    const mid = sy + H * 0.45;
+    let cur = tsecs[0];
+    for (const sec of tsecs) if (sec.top <= mid) cur = sec;
+    return cur;
   }
 
   /* ------------------------------------------------------------------ playback state & UI */
@@ -3753,6 +5600,16 @@ html.read #read {
   let dirty = true;
   let menuOpen = false;
   let wasPlayingBeforeMenu = false;
+  let tclock = 0; // always-running clock for tour entrances and tour particles
+  let expectedY = 0; // where the autopilot last put the page
+  let glide = null; // a short smooth scroll (resume, chapter jump)
+  let savedFilmT = null; // film position to come back to after scrolling down mid-film
+  let tf = { cur: 'logoFin', prev: null, t0: -99 }; // tour particle formation
+  let filmBlend = null;
+  let fieldMode = 'film';
+  // Reading at your own pace pauses the film; it carries on by itself once the page has been still for a while.
+  const IDLE = 7;
+  let resumeAt = null;
 
   const ctl = $('#ctl');
   const playBtn = $('#play');
@@ -3764,14 +5621,24 @@ html.read #read {
   const readBtn = $('#read');
   const flash = $('#flash');
 
-  const segs = scenes.map((s) => {
-    const seg = document.createElement('span');
-    seg.className = 'seg';
-    seg.style.setProperty('--d', s.dur.toFixed(2));
-    seg.appendChild(document.createElement('b'));
-    rail.insertBefore(seg, railTip);
-    return seg;
-  });
+  // chapters on the progress bar: the film's scenes, then the tour's sections
+  let chapters = [];
+  let segs = [];
+  function buildRail() {
+    chapters = scenes
+      .map((s) => ({ start: s.start, end: s.end, label: s.label }))
+      .concat(tsecs.map((sec) => ({ start: FILM + sec.start, end: FILM + sec.end, label: sec.label, sec })));
+    segs.forEach((seg) => seg.remove());
+    segs = chapters.map((c) => {
+      const seg = document.createElement('span');
+      seg.className = 'seg' + (c.sec ? ' tour-seg' : '');
+      seg.style.setProperty('--d', Math.max(1, c.end - c.start).toFixed(2));
+      seg.appendChild(document.createElement('b'));
+      rail.insertBefore(seg, railTip);
+      return seg;
+    });
+  }
+  buildRail();
 
   const fmt = (v) => {
     v = Math.max(0, Math.round(v));
@@ -3780,31 +5647,58 @@ html.read #read {
 
   function setPlaying(v) {
     playing = v;
+    resumeAt = null;
     if (v && ended) {
       ended = false;
-      seek(0);
+      seek(0, true);
+    } else if (v) {
+      startGlide(); // ease from wherever the reader left the page back onto the path
     }
     syncButtons();
   }
 
   function syncButtons() {
     ctl.classList.toggle('paused', !playing && !ended);
+    ctl.classList.toggle('resuming', resumeAt != null && !playing);
     ctl.classList.toggle('ended', ended);
     playBtn.setAttribute('aria-label', ended ? UI.replay : playing ? UI.pause : UI.play);
   }
 
-  function seek(nt) {
+  // where the page should be at timeline position t
+  const targetY = (tt) => (tt < FILM ? 0 : tourY(tt - FILM));
+
+  function startGlide(dur = 0.9) {
+    if (readMode) return;
+    const from = window.scrollY;
+    if (Math.abs(from - targetY(t)) < 2) return;
+    glide = { from, t0: tclock, dur };
+  }
+
+  function setScroll(y) {
+    y = Math.round(y);
+    expectedY = y;
+    if (Math.abs(window.scrollY - y) >= 1) window.scrollTo(0, y);
+  }
+
+  function seek(nt, instant = false) {
     t = clamp(nt, 0, TOTAL);
     if (t < TOTAL) ended = false;
-    ctx.clearRect(0, 0, W, H);
+    if (t < FILM) {
+      ctx.clearRect(0, 0, W, H);
+      savedFilmT = null;
+    }
     dirty = true;
+    if (instant) {
+      glide = null;
+      setScroll(targetY(t));
+    } else startGlide();
     syncButtons();
   }
 
   function currentIndex() {
     let k = 0;
-    scenes.forEach((s, i) => {
-      if (t >= s.start) k = i;
+    chapters.forEach((c, i) => {
+      if (t >= c.start - 0.001) k = i;
     });
     return k;
   }
@@ -3812,11 +5706,21 @@ html.read #read {
   function go(dir) {
     const k = currentIndex();
     let target;
-    if (dir < 0) target = t - scenes[k].start > 1.6 || k === 0 ? k : k - 1;
-    else target = Math.min(scenes.length - 1, k + 1);
-    if (dir > 0 && k === scenes.length - 1) return;
-    seek(scenes[target].start + (target === 0 ? 0 : 0.01));
+    if (dir < 0) target = t - chapters[k].start > 1.6 || k === 0 ? k : k - 1;
+    else target = Math.min(chapters.length - 1, k + 1);
+    if (dir > 0 && k === chapters.length - 1) return;
+    seek(chapters[target].start + (target === 0 ? 0 : 0.01));
     if (!playing && !ended) setPlaying(true);
+  }
+
+  // jump to an element of the tour (menu links, buttons) and stay there for a while
+  function jumpTo(el, auto = playing || resumeAt != null) {
+    const y = docTop(el) - L.hdr - (isMobile ? 14 : Math.round(H * 0.08));
+    playing = false;
+    seek(FILM + tauAt(y));
+    glide = { from: window.scrollY, t0: tclock, dur: 1.1, to: clamp(y, 0, doc.scrollHeight - H) };
+    resumeAt = auto ? tclock + 1.1 + IDLE : null;
+    syncButtons();
   }
 
   function doFlash(isPlay) {
@@ -3831,15 +5735,24 @@ html.read #read {
     doFlash(playing);
   }
 
+  function currentLabel() {
+    const sy = window.scrollY;
+    if (t < FILM && sy < H * 0.5) return frontScene.label;
+    if (sy >= H * 0.5 && tsecs.length && !readMode) return sectionAt(sy).label; // whatever is on screen
+    const k = currentIndex();
+    return chapters[k] ? chapters[k].label : frontScene.label;
+  }
+
   function updateUI() {
-    scenes.forEach((s, i) => {
-      const f = clamp((t - s.start) / (s.end - s.start));
-      if (segs[i]._f !== f) {
+    chapters.forEach((c, i) => {
+      const f = clamp((t - c.start) / Math.max(0.001, c.end - c.start));
+      if (segs[i] && segs[i]._f !== f) {
         segs[i]._f = f;
         segs[i].style.setProperty('--f', f.toFixed(4));
       }
     });
-    const label = frontScene.label;
+    if (resumeAt != null && !playing) ctl.style.setProperty('--rk', clamp(1 - (resumeAt - tclock) / IDLE).toFixed(3));
+    const label = currentLabel();
     if (chapEl.textContent !== label) chapEl.textContent = label;
     const tt = fmt(t) + ' / ' + fmt(TOTAL);
     if (timeEl.textContent !== tt) timeEl.textContent = tt;
@@ -3852,7 +5765,7 @@ html.read #read {
       const r = segs[i].getBoundingClientRect();
       if (clientX <= r.right + 2 || i === segs.length - 1) {
         const f = clamp((clientX - r.left) / r.width);
-        return { t: scenes[i].start + f * (scenes[i].end - scenes[i].start), i };
+        return { t: chapters[i].start + f * (chapters[i].end - chapters[i].start), i };
       }
     }
     return { t: 0, i: 0 };
@@ -3866,7 +5779,7 @@ html.read #read {
   });
   rail.addEventListener('pointermove', (e) => {
     const hit = railTime(e.clientX);
-    railTip.textContent = scenes[hit.i].label;
+    railTip.textContent = chapters[hit.i].label;
     railTip.style.left = e.clientX - rail.getBoundingClientRect().left + 'px';
     if (dragging) seek(hit.t);
   });
@@ -3897,6 +5810,7 @@ html.read #read {
     readMode = v;
     doc.classList.toggle('read', v);
     readBtn.textContent = v ? UI.film : UI.read;
+    glide = null;
     if (v) {
       showAllFinal();
       scenes.forEach((s) => {
@@ -3914,98 +5828,154 @@ html.read #read {
         });
         s.xv = -1;
       });
-      window.scrollTo(0, 0);
-      seek(t >= TOTAL ? 0 : t);
+      measure();
+      seek(t >= TOTAL ? 0 : t, true);
       setPlaying(true);
     }
     measure();
   }
   readBtn.addEventListener('click', () => setRead(!readMode));
 
-  // click / tap on the stage toggles play
+  // click / tap on the film toggles play
   $('#stage').addEventListener('click', (e) => {
     if (readMode || e.target.closest('a, button, summary, input, .ctl')) return;
     toggle();
   });
 
+  const typing = (el) => el && el.closest && el.closest('input, textarea, select, [contenteditable="true"]');
+  const modalOpen = () => !!$('.demo-modal.is-open');
+
   // keyboard
   addEventListener('keydown', (e) => {
-    if (readMode || menuOpen || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (readMode || menuOpen || modalOpen() || typing(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
     const tag = (e.target.tagName || '').toLowerCase();
     if (e.key === ' ' || e.key === 'k') {
       if (tag === 'button' || tag === 'a' || tag === 'summary') return;
       e.preventDefault();
       toggle();
-    } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+    } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       go(1);
-    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       go(-1);
     } else if (e.key === 'Home') {
+      e.preventDefault();
       seek(0);
     } else if (e.key === 'End') {
+      e.preventDefault();
       seek(TOTAL);
     }
   });
 
-  // wheel → chapter (one jump per gesture)
-  let wheelLock = 0;
-  let wheelAcc = 0;
+  // The reader scrolled the page themselves: stop the autopilot and follow them on the timeline.
+  function userScrolled() {
+    const y = window.scrollY;
+    const auto = playing || resumeAt != null;
+    glide = null;
+    if (playing) {
+      playing = false;
+      syncButtons();
+    }
+    if (y > H * 0.35 && tour.steps.length) {
+      if (t < FILM) savedFilmT = t;
+      t = FILM + tauAt(y);
+    } else if (t >= FILM) {
+      t = savedFilmT != null ? savedFilmT : LAST.start + 2;
+      savedFilmT = null;
+    }
+    ended = false;
+    resumeAt = auto ? tclock + IDLE : null;
+    dirty = true;
+    syncButtons();
+  }
   addEventListener(
-    'wheel',
-    (e) => {
-      if (readMode || menuOpen || e.target.closest('.menu-panel, .nav.open')) return;
-      e.preventDefault();
-      const now = performance.now();
-      if (now < wheelLock) {
-        wheelLock = Math.max(wheelLock, now + 260);
-        return;
-      }
-      wheelAcc += Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-      if (Math.abs(wheelAcc) > 45) {
-        go(wheelAcc > 0 ? 1 : -1);
-        wheelAcc = 0;
-        wheelLock = now + 900;
-      }
+    'scroll',
+    () => {
+      if (readMode || capturing) return;
+      const y = window.scrollY;
+      if (Math.abs(y - expectedY) <= 3) return; // our own scrolling
+      expectedY = y;
+      userScrolled();
     },
-    { passive: false }
+    { passive: true }
   );
+  // a wheel or a finger on the page always wins over the autopilot
+  const grab = (e) => {
+    if (readMode || (e.target.closest && e.target.closest('.ctl, .nav, .demo-modal'))) return;
+    if (playing || glide) {
+      if (playing) resumeAt = tclock + IDLE;
+      glide = null;
+      playing = false;
+      syncButtons();
+    }
+  };
+  addEventListener('wheel', grab, { passive: true });
+  addEventListener('touchmove', grab, { passive: true });
 
-  // swipe → chapter
-  let touch0 = null;
-  $('#stage').addEventListener(
-    'touchstart',
-    (e) => {
-      const p = e.touches[0];
-      touch0 = { x: p.clientX, y: p.clientY };
-    },
-    { passive: true }
-  );
-  $('#stage').addEventListener(
-    'touchend',
-    (e) => {
-      if (!touch0 || readMode) return;
-      const p = e.changedTouches[0];
-      const dx = p.clientX - touch0.x, dy = p.clientY - touch0.y;
-      touch0 = null;
-      if (Math.abs(dy) > 60 && Math.abs(dy) > Math.abs(dx) * 1.3) go(dy < 0 ? 1 : -1);
-      else if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.3) go(dx < 0 ? 1 : -1);
-    },
-    { passive: true }
-  );
+  // filling in a form pauses everything
+  document.addEventListener('focusin', (e) => {
+    if (typing(e.target) && (playing || resumeAt != null)) setPlaying(false);
+  });
+
+  // Links to pages that now live on this page scroll to them instead of leaving.
+  const PAGE_IDS = {
+    'ai-agents': 'ai-solutions',
+    'base-ai-agent': 'startup',
+    'demo-center': 'demo',
+    cases: 'cases',
+    about: 'about',
+    'business-review': 'business-review',
+    contact: 'contact',
+  };
+  const SELF = ZH ? 'zh' : 'index';
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href]');
+    if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || a.target === '_blank') return;
+    const m = (a.getAttribute('href') || '').match(/^(zh-)?([a-z-]+)\.html(?:#([\w-]+))?$/);
+    if (!m) return;
+    const isZh = !!m[1] || m[2] === 'zh';
+    if (isZh !== ZH) return; // the other language: really navigate
+    let target = null;
+    if (m[2] === SELF && !m[3]) {
+      e.preventDefault();
+      closeMenu();
+      seek(0);
+      setPlaying(true);
+      return;
+    }
+    if (m[3]) target = document.getElementById(m[3]);
+    if (!target && PAGE_IDS[m[2]]) target = document.getElementById(PAGE_IDS[m[2]]);
+    if (!target) return;
+    e.preventDefault();
+    const auto = playing || resumeAt != null || (menuOpen && wasPlayingBeforeMenu);
+    closeMenu();
+    jumpTo(target, auto);
+  });
+
+  // demo buttons open the unlock form: the autopilot waits
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('[data-demo-agent]') && (playing || resumeAt != null)) setPlaying(false);
+  });
 
   // mobile menu
   const nav = $('#nav');
   const navToggle = $('#navToggle');
   const menu = $('.menu', nav);
+  function closeMenu() {
+    if (menu.open && !nav.classList.contains('open')) menu.open = false;
+    if (!nav.classList.contains('open')) return;
+    menuOpen = false;
+    nav.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', 'false');
+  }
   navToggle.addEventListener('click', () => {
     menuOpen = !nav.classList.contains('open');
     nav.classList.toggle('open', menuOpen);
     navToggle.setAttribute('aria-expanded', String(menuOpen));
     if (menuOpen) {
       menu.open = true;
-      wasPlayingBeforeMenu = playing;
+      wasPlayingBeforeMenu = playing || resumeAt != null;
       if (playing) setPlaying(false);
     } else if (wasPlayingBeforeMenu && !readMode) {
       setPlaying(true);
@@ -4019,10 +5989,69 @@ html.read #read {
   /* ------------------------------------------------------------------ main loop */
 
   let last = performance.now();
-  let idleT = 0;
   let resizeTimer = 0;
-
   let capturing = false;
+
+  function advance(dt) {
+    tclock += dt;
+    if (resumeAt != null && !playing) {
+      if (menuOpen || modalOpen() || typing(document.activeElement)) resumeAt = null;
+      else if (tclock >= resumeAt) setPlaying(true);
+    }
+    if (playing && !document.hidden) {
+      t += dt * speed;
+      if (t >= TOTAL) {
+        t = TOTAL;
+        playing = false;
+        ended = true;
+        syncButtons();
+      }
+      dirty = true;
+    }
+    // the page follows the timeline while playing (and during a glide)
+    if (playing || glide) {
+      let y = glide && glide.to != null ? glide.to : targetY(t);
+      if (glide) {
+        const k = clamp((tclock - glide.t0) / glide.dur);
+        y = lerp(glide.from, y, easeInOut(k));
+        if (k >= 1) glide = null;
+      }
+      setScroll(y);
+    }
+  }
+
+  function paint() {
+    const sy = window.scrollY;
+    const filmVisible = sy < H * 1.02;
+    const ft = Math.min(t, FILM);
+    if (filmVisible && dirty) renderDom(ft);
+    if (tourEl) renderTour(tclock, sy);
+
+    if (sy < H * 0.5) {
+      // the film (its particles scroll away with it)
+      if (fieldMode !== 'film') {
+        fieldMode = 'film';
+        filmBlend = { from: tf.cur, t0: tclock };
+      }
+      const target = isMobile ? frontScene.dimM : 1;
+      fieldDim = lerp(fieldDim, target, 0.06);
+      drawField(ft, null, L.scroll0 - sy, filmBlend ? { from: filmBlend.from, since: tclock - filmBlend.t0 } : null);
+    } else {
+      const sec = sectionAt(sy);
+      const want = sec ? sec.form : 'drift';
+      if (fieldMode !== 'tour') {
+        fieldMode = 'tour';
+        filmBlend = null;
+        tf = { cur: want, prev: forms[formIndex(ft)].name, t0: tclock };
+      } else if (want !== tf.cur) {
+        tf = { cur: want, prev: tf.cur, t0: tclock };
+      }
+      fieldDim = lerp(fieldDim, isMobile ? 0.22 : 0.34, 0.05);
+      renderField(F[tf.cur], tf.prev ? F[tf.prev] : null, tclock - tf.t0, tclock, 1, 0);
+    }
+    updateUI();
+    dirty = false;
+  }
 
   function frame(now) {
     const dt = Math.min(0.1, (now - last) / 1000);
@@ -4032,60 +6061,69 @@ html.read #read {
       return;
     }
     if (readMode) {
-      idleT += dt;
-      fieldDim = lerp(fieldDim, isMobile ? 0.28 : 0.42, 0.05);
-      drawField(idleT, 'calm');
+      tclock += dt;
+      const sy = window.scrollY;
+      if (tourEl) renderTour(tclock, sy);
+      // a calm ring beside the film's content, then each section's own shape at the edge of the screen
+      const want = tsecs.length && sy + H * 0.45 >= tsecs[0].top ? sectionAt(sy).form : 'calm';
+      if (fieldMode !== 'read') {
+        fieldMode = 'read';
+        tf = { cur: want, prev: null, t0: tclock };
+      } else if (want !== tf.cur) tf = { cur: want, prev: tf.cur, t0: tclock };
+      fieldDim = lerp(fieldDim, want === 'calm' ? (isMobile ? 0.28 : 0.42) : isMobile ? 0.22 : 0.34, 0.05);
+      renderField(F[tf.cur], tf.prev ? F[tf.prev] : null, tclock - tf.t0, tclock, 1, 0);
     } else {
-      if (playing && !document.hidden) {
-        t += dt * speed;
-        if (t >= TOTAL) {
-          t = TOTAL;
-          playing = false;
-          ended = true;
-          syncButtons();
-        }
-        dirty = true;
-      }
-      if (dirty) renderDom(t);
-      const target = isMobile ? frontScene.dimM : 1;
-      fieldDim = lerp(fieldDim, target, 0.06);
-      drawField(t);
-      updateUI();
-      dirty = false;
+      advance(dt);
+      paint();
     }
     requestAnimationFrame(frame);
   }
 
   function start() {
-    const qt = parseFloat(params.get('t'));
-    if (!isNaN(qt)) t = clamp(qt, 0, TOTAL);
-    if (params.has('paused')) playing = false;
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
     measure();
+    const qt = parseFloat(params.get('t'));
+    if (!isNaN(qt)) seek(qt, true);
+    if (params.has('paused')) playing = false;
     if (params.has('read') || reduceMotion) setRead(true);
     syncButtons();
-    renderDom(t);
+    renderDom(Math.min(t, FILM));
     requestAnimationFrame((n) => {
       last = n;
       frame(n);
     });
   }
 
+  function remeasure() {
+    const wasTour = t >= FILM;
+    measure();
+    // keep the page where the timeline says it is
+    if (!readMode && (playing || wasTour)) setScroll(targetY(t));
+  }
   addEventListener('resize', () => {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(measure, 120);
+    resizeTimer = setTimeout(remeasure, 120);
   });
-  mqMobile.addEventListener('change', measure);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+  mqMobile.addEventListener('change', remeasure);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
   window.__naxa = {
     seek,
     get t() {
       return t;
     },
-    TOTAL,
+    get TOTAL() {
+      return TOTAL;
+    },
+    FILM,
+    get tour() {
+      return tour;
+    },
     scenes,
     setPlaying,
     setRead,
-    // Frame-by-frame rendering for recording a video of the film.
+    jumpTo,
+    // Frame-by-frame rendering for recording a video of the whole page.
     capture(on) {
       capturing = on;
       playing = false;
@@ -4094,10 +6132,10 @@ html.read #read {
     },
     step(dt) {
       t = clamp(t + dt, 0, TOTAL);
-      renderDom(t);
-      fieldDim = lerp(fieldDim, isMobile ? frontScene.dimM : 1, 0.06);
-      drawField(t);
-      updateUI();
+      tclock += dt;
+      dirty = true;
+      setScroll(targetY(t));
+      paint();
     },
   };
 
@@ -4108,6 +6146,189 @@ html.read #read {
     console.error(err);
     doc.classList.add('read');
   }
+})();
+</script>
+    <script>
+(() => {
+  const form = document.querySelector("[data-demo-access-form]");
+  const error = document.querySelector("[data-demo-error]");
+  const status = document.querySelector("[data-demo-status]");
+  const cards = Array.from(document.querySelectorAll(".locked-demo"));
+  const previews = Array.from(document.querySelectorAll("[data-demo-preview]"));
+  const demoButtons = Array.from(document.querySelectorAll("[data-demo-agent]"));
+  const selectedDemo = document.querySelector("[data-selected-demo]");
+  const modal = document.querySelector("[data-demo-modal]");
+  const closeButtons = Array.from(document.querySelectorAll("[data-demo-close]"));
+  const storageKey = "naxa-demo-center-unlocked";
+  const passwordStorageKey = "naxa-demo-password-unlocked";
+  const expectedPasswordHash = "d352d1791a2184a0973dfee87a9d384544827e622b6a11b388e32696a66ad149";
+
+  if (!form || !error || !status || !modal) return;
+
+  let activeButton = null;
+  const isChinese = document.documentElement.lang.toLowerCase().startsWith("zh");
+  const text = {
+    unlocked: isChinese ? "Demo 预览已解锁。" : "Demo previews are unlocked for this browser session.",
+    chooseDemo: isChinese ? "请选择一个 Demo 继续。" : "Choose a demo to continue.",
+    enterName: isChinese ? "请输入姓名。" : "Please enter your name.",
+    enterContact: isChinese ? "请填写邮箱或电话号码其中一个。" : "Please enter either an email address or phone number.",
+    enterPassword: isChinese ? "请输入 Demo 密码。" : "Please enter the demo password.",
+    wrongPassword: isChinese ? "Demo 密码不正确。" : "The demo password is not correct.",
+    acceptTerms: isChinese ? "请勾选“我同意”后继续。" : "Please check “I agree” to continue.",
+    viewDemo: isChinese ? "查看预览" : "View preview",
+    openDemo: isChinese ? "打开 Demo" : "Open demo",
+    openingDemo: isChinese ? "正在打开 Demo..." : "Opening demo..."
+  };
+
+  const unlock = () => {
+    cards.forEach((card) => card.classList.remove("locked-demo"));
+    previews.forEach((preview) => preview.classList.add("is-unlocked"));
+    demoButtons.forEach((button) => {
+      button.textContent = button.dataset.demoUrl ? text.openDemo : text.viewDemo;
+    });
+    status.textContent = text.unlocked;
+  };
+
+  const openDemoUrl = (button) => {
+    const demoUrl = button?.dataset.demoUrl;
+    if (!demoUrl) return false;
+    status.textContent = text.openingDemo;
+    window.location.href = demoUrl;
+    return true;
+  };
+
+  const lock = () => {
+    cards.forEach((card) => card.classList.add("locked-demo"));
+    previews.forEach((preview) => preview.classList.remove("is-unlocked"));
+    demoButtons.forEach((button) => {
+      button.textContent = "Demo";
+    });
+  };
+
+  const openModal = () => {
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+    const nameInput = form.querySelector('input[name="name"]');
+    if (nameInput) nameInput.focus();
+  };
+
+  const closeModal = () => {
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    if (activeButton) activeButton.focus();
+  };
+
+  const isUnlocked = () => {
+    try {
+      return window.sessionStorage.getItem(storageKey) === "true";
+    } catch {
+      return previews.some((preview) => preview.classList.contains("is-unlocked"));
+    }
+  };
+
+  const toHex = (buffer) => Array.from(new Uint8Array(buffer))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+
+  const isPasswordValid = async (password) => {
+    const data = new TextEncoder().encode(password);
+    const hash = toHex(await window.crypto.subtle.digest("SHA-256", data));
+    return hash === expectedPasswordHash;
+  };
+
+  const chooseDemo = (agentName, button) => {
+    activeButton = button;
+    if (selectedDemo) selectedDemo.value = agentName;
+
+    if (isUnlocked()) {
+      if (openDemoUrl(button)) return;
+      status.textContent = isChinese ? `${agentName} Demo 预览已解锁。` : `${agentName} demo preview is unlocked.`;
+      return;
+    }
+
+    status.textContent = isChinese ? `已选择 ${agentName}。请完成表单解锁 Demo 预览。` : `${agentName} selected. Complete the form to unlock this demo preview.`;
+    openModal();
+  };
+
+  try {
+    if (window.sessionStorage.getItem(storageKey) === "true") {
+      unlock();
+    } else {
+      lock();
+    }
+  } catch {
+    lock();
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    error.classList.remove("is-visible");
+    error.textContent = "";
+
+    const data = new FormData(form);
+    const name = String(data.get("name") || "").trim();
+    const email = String(data.get("email") || "").trim();
+    const phone = String(data.get("phone") || "").trim();
+    const demoPassword = String(data.get("demo_password") || "");
+    const accepted = data.get("terms") === "on";
+
+    if (!name) {
+      error.textContent = text.enterName;
+      error.classList.add("is-visible");
+      return;
+    }
+
+    if (!email && !phone) {
+      error.textContent = text.enterContact;
+      error.classList.add("is-visible");
+      return;
+    }
+
+    if (!demoPassword) {
+      error.textContent = text.enterPassword;
+      error.classList.add("is-visible");
+      return;
+    }
+
+    if (!(await isPasswordValid(demoPassword))) {
+      error.textContent = text.wrongPassword;
+      error.classList.add("is-visible");
+      return;
+    }
+
+    if (!accepted) {
+      error.textContent = text.acceptTerms;
+      error.classList.add("is-visible");
+      return;
+    }
+
+    try {
+      window.sessionStorage.setItem(storageKey, "true");
+      window.sessionStorage.setItem(passwordStorageKey, "true");
+    } catch {
+      // Demo still unlocks if sessionStorage is unavailable.
+    }
+
+    unlock();
+    closeModal();
+    openDemoUrl(activeButton);
+  });
+
+  demoButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      chooseDemo(button.dataset.demoAgent || "AI Agent Demo", button);
+    });
+  });
+
+  closeButtons.forEach((button) => {
+    button.addEventListener("click", closeModal);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && modal.classList.contains("is-open")) {
+      closeModal();
+    }
+  });
 })();
 </script>
   </body>
