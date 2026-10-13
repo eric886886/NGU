@@ -72,38 +72,34 @@
       </a>
       <div class="hdr-tools">
         <a href="zh.html" class="lang" lang="zh">中文</a>
-        <button class="chap-btn" id="navToggle" type="button" aria-expanded="false" aria-controls="nav">
-          <span class="chap-ico" aria-hidden="true"><i></i><i></i><i></i></span><span class="chap-txt">Chapters</span>
+        <button class="ask-btn" id="navToggle" type="button" aria-expanded="false" aria-controls="nav">
+          <span class="ask-spark" aria-hidden="true"></span><span class="ask-ph">Ask a question…</span><span class="ask-short">Ask</span>
         </button>
         <a href="business-review.html" class="cta">Book a Business Review</a>
       </div>
-      <!-- the chapters: the whole page as a table of contents (the film's chapters are filled in by motion.js) -->
-      <nav class="chapters" id="nav" aria-label="Chapters">
-        <div class="chap-inner">
-          <p class="chap-hint">Pick a chapter to play from there.</p>
-          <div class="chap-col">
-            <p class="chap-h">The film</p>
-            <ol class="chap-list chap-film"></ol>
-          </div>
-          <div class="chap-col">
-            <p class="chap-h">And then</p>
-            <ol class="chap-list chap-pages">
-            <li><a href="about.html"><span class="cn">10</span><span class="cl">About</span></a></li>
-            <li><a href="ai-agents.html"><span class="cn">11</span><span class="cl">AI Solutions</span></a>
-              <span class="chap-sub"><a href="ai-agents.html#ai-receptionist">AI Receptionist</a><a href="ai-agents.html#ai-sales">AI Sales Agent</a><a href="ai-agents.html#ai-marketing">AI Marketing Agent</a><a href="ai-agents.html#ai-research">AI Research Agent</a><a href="ai-agents.html#ai-workflow">AI Workflow Agent</a></span></li>
-            <li><a href="base-ai-agent.html"><span class="cn">12</span><span class="cl">Startup AI Solution</span></a></li>
-            <li><a href="demo-center.html"><span class="cn">13</span><span class="cl">Demo</span></a></li>
-            <li><a href="cases.html"><span class="cn">14</span><span class="cl">Cases</span></a></li>
-            <li><a href="business-review.html"><span class="cn">15</span><span class="cl">AI Business Review</span></a></li>
-            <li><a href="contact.html"><span class="cn">16</span><span class="cl">Contact</span></a></li>
-            </ol>
-          </div>
-          <div class="chap-foot">
-            <a href="zh.html" class="lang" lang="zh">中文</a>
-            <a href="business-review.html" class="cta">Book a Business Review</a>
-          </div>
+      <!-- ask: visitors type a question; the answer is found in this page's own text (motion.js) -->
+      <div class="ask" id="nav" role="dialog" aria-label="Ask a question">
+        <button class="ask-close" type="button" aria-label="Close"></button>
+        <p class="ask-intro">Ask whatever you want to know. The answers come from this website.</p>
+        <form class="ask-form" autocomplete="off">
+          <input class="ask-input" name="q" type="text" placeholder="Ask anything, e.g. Can you help me reply to customers faster?" enterkeyhint="send" />
+          <button class="ask-send" type="submit" aria-label="Send"></button>
+        </form>
+        <div class="ask-log" aria-live="polite"></div>
+        <div class="ask-sugg">
+          <p class="ask-h">Try asking</p>
+          <button type="button" class="ask-q">What can you help me with?</button>
+          <button type="button" class="ask-q">My team is small. Where do I start?</button>
+          <button type="button" class="ask-q">Can you help me reply to customers faster?</button>
+          <button type="button" class="ask-q">Can I see a demo first?</button>
+          <button type="button" class="ask-q">How does pricing work?</button>
         </div>
-      </nav>
+        <nav class="ask-links" aria-label="Or go straight to">
+          <p class="ask-h">Or go straight to</p>
+          <a href="about.html">About</a><a href="ai-agents.html">AI Solutions</a><a href="base-ai-agent.html">Startup AI Solution</a><a href="demo-center.html">Demo</a><a href="cases.html">Cases</a><a href="business-review.html">AI Business Review</a><a href="contact.html">Contact</a>
+        </nav>
+        <a href="business-review.html" class="cta ask-cta">Book a Business Review</a>
+      </div>
     </header>
 
     <main class="stage" id="stage">

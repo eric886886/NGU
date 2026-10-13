@@ -26,38 +26,34 @@
       </a>
       <div class="hdr-tools">
         <a href="index.html" class="lang" lang="en">EN</a>
-        <button class="chap-btn" id="navToggle" type="button" aria-expanded="false" aria-controls="nav">
-          <span class="chap-ico" aria-hidden="true"><i></i><i></i><i></i></span><span class="chap-txt">章节</span>
+        <button class="ask-btn" id="navToggle" type="button" aria-expanded="false" aria-controls="nav">
+          <span class="ask-spark" aria-hidden="true"></span><span class="ask-ph">问点什么…</span><span class="ask-short">问问题</span>
         </button>
         <a href="zh-business-review.html" class="cta">预约业务诊断</a>
       </div>
-      <!-- the chapters: the whole page as a table of contents (the film's chapters are filled in by motion.js) -->
-      <nav class="chapters" id="nav" aria-label="章节">
-        <div class="chap-inner">
-          <p class="chap-hint">点哪一章，就从哪里开始播放。</p>
-          <div class="chap-col">
-            <p class="chap-h">短片</p>
-            <ol class="chap-list chap-film"></ol>
-          </div>
-          <div class="chap-col">
-            <p class="chap-h">接着往下</p>
-            <ol class="chap-list chap-pages">
-            <li><a href="zh-about.html"><span class="cn">10</span><span class="cl">关于</span></a></li>
-            <li><a href="zh-ai-agents.html"><span class="cn">11</span><span class="cl">AI 方案</span></a>
-              <span class="chap-sub"><a href="zh-ai-agents.html#ai-receptionist">AI 接待助手</a><a href="zh-ai-agents.html#ai-sales">AI 销售跟进助手</a><a href="zh-ai-agents.html#ai-marketing">AI 营销助手</a><a href="zh-ai-agents.html#ai-research">AI 研究助手</a><a href="zh-ai-agents.html#ai-workflow">AI 流程助手</a></span></li>
-            <li><a href="zh-base-ai-agent.html"><span class="cn">12</span><span class="cl">起步方案</span></a></li>
-            <li><a href="zh-demo-center.html"><span class="cn">13</span><span class="cl">Demo</span></a></li>
-            <li><a href="zh-cases.html"><span class="cn">14</span><span class="cl">案例</span></a></li>
-            <li><a href="zh-business-review.html"><span class="cn">15</span><span class="cl">AI 业务诊断</span></a></li>
-            <li><a href="zh-contact.html"><span class="cn">16</span><span class="cl">联系</span></a></li>
-            </ol>
-          </div>
-          <div class="chap-foot">
-            <a href="index.html" class="lang" lang="en">EN</a>
-            <a href="zh-business-review.html" class="cta">预约业务诊断</a>
-          </div>
+      <!-- ask: visitors type a question; the answer is found in this page's own text (motion.js) -->
+      <div class="ask" id="nav" role="dialog" aria-label="提问">
+        <button class="ask-close" type="button" aria-label="关闭"></button>
+        <p class="ask-intro">有什么想知道的，直接问。答案都来自这个网站上的内容。</p>
+        <form class="ask-form" autocomplete="off">
+          <input class="ask-input" name="q" type="text" placeholder="问点什么，比如：能帮我更快回复客户吗？" enterkeyhint="send" />
+          <button class="ask-send" type="submit" aria-label="发送"></button>
+        </form>
+        <div class="ask-log" aria-live="polite"></div>
+        <div class="ask-sugg">
+          <p class="ask-h">可以这样问</p>
+          <button type="button" class="ask-q">你们能帮我做什么？</button>
+          <button type="button" class="ask-q">我团队很小，该从哪里开始？</button>
+          <button type="button" class="ask-q">能帮我更快回复客户吗？</button>
+          <button type="button" class="ask-q">能先看看 Demo 吗？</button>
+          <button type="button" class="ask-q">收费怎么算？</button>
         </div>
-      </nav>
+        <nav class="ask-links" aria-label="或者直接跳到">
+          <p class="ask-h">或者直接跳到</p>
+          <a href="zh-about.html">关于</a><a href="zh-ai-agents.html">AI 方案</a><a href="zh-base-ai-agent.html">起步方案</a><a href="zh-demo-center.html">Demo</a><a href="zh-cases.html">案例</a><a href="zh-business-review.html">AI 业务诊断</a><a href="zh-contact.html">联系</a>
+        </nav>
+        <a href="zh-business-review.html" class="cta ask-cta">预约业务诊断</a>
+      </div>
     </header>
 
     <main class="stage" id="stage">

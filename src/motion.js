@@ -2083,7 +2083,12 @@
     return st;
   }
 
-  const docTop = (el) => el.getBoundingClientRect().top + window.scrollY;
+  // where an element sits in the page layout, ignoring entrance transforms that have not settled yet
+  const docTop = (el) => {
+    let y = 0;
+    for (let e = el; e; e = e.offsetParent) y += e.offsetTop;
+    return y;
+  };
 
   function measureTour() {
     if (!tourEl) return;
@@ -2542,7 +2547,7 @@
   // keyboard
   addEventListener('keydown', (e) => {
     if (menuOpen && e.key === 'Escape') {
-      navToggle.click();
+      closeAsk();
       return;
     }
     if (readMode || menuOpen || modalOpen() || typing(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -2660,39 +2665,226 @@
     if (e.target.closest('[data-demo-agent]') && (playing || resumeAt != null)) setPlaying(false);
   });
 
-  // The chapters: the whole page as a table of contents. The film's chapters are listed from its scenes;
-  // the other pages are links (to their own pages, so search engines still find them) that scroll here.
+  // Ask: the visitor types a question and the answer is looked up in this page's own text. A familiar kind
+  // of question points at the part of the page about it; anything else is matched word by word against
+  // every piece of text; a question the page cannot answer goes into the contact form, ready to send.
+  // (The lines around the answers are new; the answers themselves are quoted from the page.)
   const nav = $('#nav');
   const navToggle = $('#navToggle');
-  const filmList = $('.chap-film', nav);
-  const chapLinks = [];
-  scenes.forEach((sc, k) => {
-    const li = document.createElement('li');
-    const a = document.createElement('a');
-    a.href = '#' + sc.el.dataset.scene;
-    a.dataset.scene = String(k);
-    const n = sc.el.querySelector('[data-n]');
-    a.innerHTML = `<span class="cn">${n ? n.dataset.n : '·'}</span><span class="cl"></span>`;
-    a.querySelector('.cl').textContent = sc.label;
-    li.appendChild(a);
-    filmList.appendChild(li);
-    chapLinks.push({ a, ch: k });
-  });
-  $$('.chap-pages > li > a', nav).forEach((a) => {
-    const m = (a.getAttribute('href') || '').match(/^(?:zh-)?([a-z-]+)\.html/);
-    const sec = m && tsecs.findIndex((x) => x.id === PAGE_IDS[m[1]]);
-    if (sec >= 0) chapLinks.push({ a, ch: scenes.length + sec });
-  });
-  $$('.chap-list > li', nav).forEach((li, i) => li.style.setProperty('--i', i));
-
-  // mark where the reader is: chapters already seen, the one playing, the ones still ahead
-  function markChapters() {
-    const now = t < FILM && window.scrollY < H * 0.5 ? scenes.indexOf(frontScene) : currentIndex();
-    chapLinks.forEach(({ a, ch }) => {
-      a.classList.toggle('is-now', ch === now);
-      a.classList.toggle('is-past', ch < now);
-    });
+  const askForm = $('.ask-form', nav);
+  const askInput = $('.ask-input', nav);
+  const askLog = $('.ask-log', nav);
+  const SAY = ZH
+    ? {
+        hello: '你好！想了解什么都可以问，比如下面这些。',
+        price: '具体价格要看你的业务情况。我们会先从一个小而实用的第一步开始，而不是一上来就做大项目：',
+        services: '我们帮小企业做这几类 AI 助手，点名字可以直接看：',
+        agent: (n) => `这正是「${n}」做的事：`,
+        start: '团队还小也没关系，可以从这里开始：',
+        demo: '可以，先看看 Demo：',
+        cases: '这里有几个真实场景的例子：',
+        about: '先说说我们为什么做这件事：',
+        team: '关于我们的团队：',
+        review: '第一步通常是 AI 业务诊断：',
+        contact: '可以直接在页面最后留下你的问题：',
+        human: 'AI 先帮你整理、准备，决定还是由老板来做：',
+        found: '页面里最相关的是这一段：',
+        handoff: '这个问题当面聊会更清楚。我已经把它填进了联系表单，你只要留个联系方式就行。',
+        go: '带我去看 →',
+        fill: '去填写 →',
+      }
+    : {
+        hello: 'Hi! Ask anything you would like to know, for example:',
+        price: 'Pricing depends on your business. We start with one small, practical first step rather than a large project:',
+        services: 'We build these kinds of AI agents for small businesses. Tap a name to see it:',
+        agent: (n) => `That is what the ${n} is for:`,
+        start: 'A small team is fine. This is where to start:',
+        demo: 'Yes, you can preview the demos first:',
+        cases: 'Here are a few examples from real situations:',
+        about: 'First, why we do this:',
+        team: 'About our team:',
+        review: 'The first step is usually an AI Business Review:',
+        contact: 'You can leave your question at the end of the page:',
+        human: 'AI supports the work; people stay in charge:',
+        found: 'This is the closest part of the page:',
+        handoff: 'That is easier to answer in a conversation. I have put your question into the contact form, so you only need to add your details.',
+        go: 'Show me →',
+        fill: 'Fill it in →',
+      };
+  // the kinds of questions people ask, the words that give them away, and where the page answers them
+  const INTENTS = [
+    { id: 'hello', zh: ['你好', '您好', '嗨', '哈喽', '在吗'], en: ['hello', 'hi ', 'hey', 'good morning'] },
+    { id: 'price', zh: ['多少钱', '价格', '收费', '费用', '报价', '预算', '贵', '便宜', '价钱', '成本'], en: ['price', 'pricing', 'cost', 'how much', 'fee', 'budget', 'expensive', 'cheap', 'quote', 'afford'], x: { zh: '#about .practice li:nth-child(3)', en: '#about .practice li:nth-child(2)' }, fill: true },
+    { id: 'services', zh: ['能做什么', '可以做什么', '帮我做什么', '能帮我什么', '服务', '做什么的', '提供什么', '有哪些', '产品', '功能', '你们是做'], en: ['what can you', 'what do you do', 'services', 'offer', 'solutions', 'products', 'help me with', 'what do you'], list: true, t: '#ai-solutions' },
+    { id: 'agent', zh: ['回复', '回客户', '回消息', '咨询', '客服', '接待助手', '接待', '前台', '漏接', '电话', '私信', '留言', '询价', '慢回'], en: ['reply', 'respond', 'inquir', 'receptionist', 'missed call', 'calls', 'phone', 'front desk', 'customer service', 'messages', 'quote request', 'requests'], t: '#ai-receptionist' },
+    { id: 'agent', zh: ['销售跟进助手', '销售', '跟进', '潜在客户', '线索', '成交', '转化', '丢单'], en: ['sales', 'lead', 'follow', 'prospect', 'closing', 'conversion', 'deal'], t: '#ai-sales' },
+    { id: 'agent', zh: ['营销助手', '营销', '内容', '文案', '文章', '帖子', '广告', '推广', '社交媒体', '宣传', '小红书', '朋友圈', '公众号', '抖音'], en: ['marketing', 'content', 'post', 'campaign', 'social', 'advert', 'promot', 'copy', 'newsletter', 'blog', 'article'], t: '#ai-marketing' },
+    { id: 'agent', zh: ['研究助手', '研究', '调研', '比较', '竞争对手', '对手', '市场分析', '找资料'], en: ['research', 'compare', 'competitor', 'market', 'vendor', 'analysis'], t: '#ai-research' },
+    { id: 'agent', zh: ['流程助手', '行政', '流程', '清单', '重复', '交接', '杂事', '表格', '文书'], en: ['admin', 'workflow', 'checklist', 'repetitive', 'handoff', 'paperwork', 'spreadsheet'], t: '#ai-workflow' },
+    { id: 'start', zh: ['从哪', '怎么开始', '开始', '第一步', '起步', '刚创业', '创业', '小团队', '团队很小', '人手', '请人', '招人', '雇'], en: ['start', 'begin', 'first step', 'where do i', 'small team', 'startup', 'hire', 'hiring', 'one person'], t: '#startup .thead' },
+    { id: 'demo', zh: ['demo', '演示', '试用', '效果', '体验'], en: ['demo', 'try it', 'preview', 'see it', 'trial', 'see how'], t: '#demo .thead' },
+    { id: 'cases', zh: ['案例', '例子', '真实', '成功', '别人怎么用'], en: ['case', 'example', 'results', 'success', 'real business', 'stories'], t: '#cases .thead' },
+    { id: 'about', zh: ['你们是谁', '关于', '公司', '为什么', '理念', '纳想是'], en: ['who are you', 'about you', 'about naxa', 'your company', 'why', 'mission', 'naxastudio', 'behind'], t: '#about', x: '#about .manifesto' },
+    { id: 'team', zh: ['团队', '背景', '经验', '银行', '创始人'], en: ['team', 'background', 'experience', 'bank', 'founder', 'advisor'], t: '#about .reality', x: '#about .reality-cols p:nth-child(2)' },
+    { id: 'review', zh: ['诊断', '评估', '怎么合作', '合作', '咨询流程'], en: ['review', 'assessment', 'audit', 'how do you work', 'work together', 'engagement'], t: '#business-review .thead' },
+    { id: 'contact', zh: ['联系', '邮箱', '微信', '预约', '聊聊', '见面', '约个'], en: ['contact', 'email', 'call you', 'book', 'meet', 'talk to', 'reach'], t: '#contact .thead', form: true },
+    { id: 'human', zh: ['人工', '取代', '替代', '靠谱', '出错', '控制', '失业'], en: ['human', 'replace', 'trust', 'mistake', 'control', 'autopilot', 'jobs'], t: { zh: '#startup .thead', en: '#about .practice li:nth-child(3)' } },
+  ];
+  const pick = (v) => (v && typeof v === 'object' ? v[ZH ? 'zh' : 'en'] : v);
+  const clean = (str) => str.replace(/\s+/g, ' ').trim();
+  // a heading and its first real sentence, quoted from the page
+  function excerpt(el) {
+    const head = el.querySelector('h2, h3, h4, strong');
+    const body = $$('p, .t, .spec-d, dd', el).find((x) => !x.matches('.eyebrow') && !x.closest('.demo-preview, .ask') && clean(x.textContent).length > 12);
+    let text = body ? clean(body.textContent) : clean(el.textContent);
+    const max = ZH ? 150 : 260;
+    if (text.length > max) text = text.slice(0, max).replace(/\s+\S*$/, '') + '…';
+    return { title: head ? clean(head.textContent) : '', text };
   }
+  // anything else: compare the question with every piece of text on the page. Words that appear almost
+  // everywhere say nothing; a word the page never uses means the page cannot answer it.
+  const STOP = new Set('what when where which with your that this have does about could would should there their from into they them will just like also very more some much than then make need want help know tell show support'.split(' '));
+  const ZSTOP = new Set('你们 我们 可以 帮我 什么 怎么 是不 不是 有没 没有 能不 不能 一下 一个 这个 那个 如果 需要 吗'.split(' '));
+  const terms = (str) => {
+    str = str.toLowerCase();
+    if (ZH) {
+      const t = str.replace(/[^一-鿿a-z0-9]/g, '');
+      const g = [];
+      for (let i = 0; i < t.length - 1; i++) g.push(t.slice(i, i + 2));
+      return g.filter((w) => !ZSTOP.has(w));
+    }
+    return (str.match(/[a-z]{4,}/g) || []).filter((w) => !STOP.has(w)).map((w) => w.replace(/(ing|ed|es|s)$/, ''));
+  };
+  function search(q) {
+    const pool = items.filter((it) => it.kind !== 'small' && !it.el.closest('.bridge')).map((it) => ({ el: it.el, txt: it.el.textContent.toLowerCase() }));
+    const qt = [...new Set(terms(q))]
+      .map((w) => ({ w, df: pool.filter((p) => p.txt.includes(w)).length }))
+      .filter((x) => x.df < pool.length * 0.25);
+    if (!qt.length) return null;
+    let best = null, bs = 0, bn = 0;
+    for (const p of pool) {
+      let sc = 0, n = 0;
+      for (const x of qt) if (x.df && p.txt.includes(x.w)) (sc += Math.log(pool.length / x.df)), n++;
+      if (sc > bs) (bs = sc), (bn = n), (best = p.el);
+    }
+    const need = ZH ? Math.max(2, Math.ceil(qt.length * 0.3)) : Math.max(1, Math.ceil(qt.length * 0.6));
+    return bn >= need ? best : null;
+  }
+  function match(q) {
+    const s = ' ' + q.toLowerCase() + ' ';
+    let best = null, bs = 0;
+    for (const it of INTENTS) {
+      let sc = 0;
+      for (const k of (ZH ? it.zh.concat(it.en) : it.en)) if (s.includes(k)) sc += k.length;
+      if (sc > bs) (bs = sc), (best = it);
+    }
+    return best;
+  }
+
+  let askJumped = false;
+  function show(el) {
+    if (!el) return;
+    jumpTo(el, false);
+    askJumped = true;
+    el.classList.remove('is-answer');
+    void el.offsetWidth;
+    el.classList.add('is-answer');
+    setTimeout(() => el.classList.remove('is-answer'), 6200);
+  }
+  function typeInto(el, text, cps) {
+    const t0 = performance.now();
+    const tick = (now) => {
+      const n = Math.min(text.length, Math.floor(((now - t0) / 1000) * cps));
+      el.textContent = text.slice(0, n);
+      if (n < text.length) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }
+  function button(cls, label, fn) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = cls;
+    b.textContent = label;
+    b.addEventListener('click', fn);
+    return b;
+  }
+  function answer(q) {
+    q = q.trim();
+    if (!q) return;
+    const turn = document.createElement('div');
+    turn.className = 'ask-turn';
+    const you = document.createElement('p');
+    you.className = 'ask-you';
+    you.textContent = q;
+    const lead = document.createElement('p');
+    lead.className = 'ask-lead';
+    const acts = document.createElement('div');
+    acts.className = 'ask-acts';
+    turn.append(you, lead);
+
+    const it = match(q);
+    let target = null, quote = null, fill = false;
+    if (it && it.id === 'hello') {
+      lead.textContent = SAY.hello;
+    } else if (it && it.list) {
+      lead.textContent = SAY.services;
+      const names = document.createElement('div');
+      names.className = 'ask-names';
+      $$('.spec-row', $(it.t)).forEach((row) => names.append(button('', clean($('h3', row).textContent), () => leave(row))));
+      turn.append(names);
+      target = $(it.t + ' .thead');
+    } else if (it) {
+      target = $(pick(it.t) || pick(it.x));
+      const ex = excerpt($(pick(it.x) || pick(it.t)));
+      lead.textContent = it.id === 'agent' ? SAY.agent(ex.title) : SAY[it.id];
+      quote = ex;
+      fill = !!it.fill;
+      if (it.form) target = $('#contact .contact-panel');
+    } else {
+      const el = search(q);
+      if (el) {
+        target = el;
+        quote = excerpt(el);
+        lead.textContent = SAY.found;
+      } else {
+        lead.textContent = SAY.handoff;
+        fill = true;
+      }
+    }
+    if (quote) {
+      const bq = document.createElement('blockquote');
+      bq.className = 'ask-quote';
+      if (quote.title && !(it && it.id === 'agent')) {
+        const st = document.createElement('strong');
+        st.textContent = quote.title;
+        bq.append(st);
+      }
+      const tx = document.createElement('span');
+      bq.append(tx);
+      turn.append(bq);
+      typeInto(tx, quote.text, ZH ? 26 : 70);
+    }
+    if (fill) {
+      const ta = $('#contact textarea');
+      if (ta) ta.value = q;
+      acts.append(button('ask-go', SAY.fill, () => leave($('#contact .contact-panel'))));
+    }
+    if (target && !fill) acts.append(button('ask-go', SAY.go, () => leave(target)));
+    if (acts.children.length) turn.append(acts);
+    // the newest answer sits right under the question box; earlier ones fade below it
+    askLog.prepend(turn);
+    while (askLog.children.length > 3) askLog.lastChild.remove();
+    nav.classList.add('asked');
+    nav.scrollTo({ top: 0, behavior: 'smooth' });
+    // on a wide screen the page moves to the answer behind the panel straight away
+    if (target && !fill && !isMobile && !readMode) show(target);
+  }
+  askForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    answer(askInput.value);
+    askInput.value = '';
+  });
+  $$('.ask-q', nav).forEach((b) => b.addEventListener('click', () => answer(b.textContent)));
 
   function closeMenu() {
     if (!nav.classList.contains('open')) return;
@@ -2700,38 +2892,35 @@
     nav.classList.remove('open');
     navToggle.setAttribute('aria-expanded', 'false');
   }
-  navToggle.addEventListener('click', () => {
-    menuOpen = !nav.classList.contains('open');
-    if (menuOpen) markChapters();
-    nav.classList.toggle('open', menuOpen);
-    navToggle.setAttribute('aria-expanded', String(menuOpen));
-    if (menuOpen) {
-      wasPlayingBeforeMenu = playing || resumeAt != null;
-      if (playing) setPlaying(false);
-    } else if (wasPlayingBeforeMenu && !readMode) {
-      setPlaying(true);
-    }
-  });
-  // a chapter of the film: play from its beginning
-  nav.addEventListener('click', (e) => {
-    const a = e.target.closest('a[data-scene]');
-    if (!a) return;
-    e.preventDefault();
-    const sc = scenes[+a.dataset.scene];
+  // closing the panel: carry on playing, or (after an answer) stay on it a while first
+  function closeAsk() {
     closeMenu();
-    if (readMode) {
-      sc.el.scrollIntoView({ behavior: 'smooth' });
-      return;
-    }
-    seek(sc.start + 0.01);
-    setPlaying(true);
+    if (!wasPlayingBeforeMenu || readMode) return;
+    if (askJumped) {
+      playing = false;
+      resumeAt = tclock + 1.1 + IDLE;
+      syncButtons();
+    } else setPlaying(true);
+  }
+  // an answer's link: close the panel and go to that part of the page
+  function leave(el) {
+    show(el);
+    closeAsk();
+  }
+  navToggle.addEventListener('click', () => {
+    if (nav.classList.contains('open')) return closeAsk();
+    menuOpen = true;
+    askJumped = false;
+    nav.classList.add('open');
+    navToggle.setAttribute('aria-expanded', 'true');
+    wasPlayingBeforeMenu = playing || resumeAt != null;
+    if (playing) setPlaying(false);
+    setTimeout(() => askInput.focus({ preventScroll: true }), 60);
   });
-  // a click on the veil around the list closes it
-  nav.addEventListener('click', (e) => {
-    if (e.target === nav) {
-      closeMenu();
-      if (wasPlayingBeforeMenu && !readMode) setPlaying(true);
-    }
+  $('.ask-close', nav).addEventListener('click', closeAsk);
+  // a click elsewhere on the page closes the panel
+  document.addEventListener('click', (e) => {
+    if (menuOpen && !nav.contains(e.target) && !navToggle.contains(e.target) && !e.target.closest('.ctl')) closeAsk();
   });
 
   // While the film plays and nobody touches anything, the header steps back to just the logo.
