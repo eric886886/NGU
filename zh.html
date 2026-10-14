@@ -7645,6 +7645,9 @@ html.read #read {
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       go(-1);
+    } else if ((e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === 'ArrowUp' || e.key === 'PageUp') && onFilm()) {
+      e.preventDefault();
+      turn(e.key === 'ArrowDown' || e.key === 'PageDown' ? 1 : -1);
     } else if (e.key === 'Home') {
       e.preventDefault();
       seek(0);
@@ -7696,8 +7699,75 @@ html.read #read {
       syncButtons();
     }
   };
-  addEventListener('wheel', grab, { passive: true });
-  addEventListener('touchmove', grab, { passive: true });
+
+  // On the film a swipe, a wheel turn or ↓ moves one chapter, like turning a page, instead of scrolling
+  // past the whole film at once; from its last chapter the next one carries on into the page below.
+  // Whether a gesture turns pages is decided when it starts, so scrolling back up out of the page
+  // lands on the film and stops there.
+  const onFilm = () => t < FILM && !readMode && !menuOpen && !modalOpen() && !capturing && window.scrollY < 4;
+  const ownScroll = (e) => e.target.closest && e.target.closest('#nav, .demo-modal, .ctl, input, textarea, select');
+  let lastTurn = 0;
+  function turn(dir) {
+    const now = performance.now();
+    if (now - lastTurn < 450) return;
+    lastTurn = now;
+    const target = clamp(currentIndex() + dir, 0, chapters.length - 1);
+    seek(chapters[target].start + (target === 0 ? 0 : 0.01));
+    if (!playing && !ended) setPlaying(true);
+  }
+  let wheelAt = 0, wheelSum = 0, wheelFilm = false, wheelDone = false;
+  addEventListener(
+    'wheel',
+    (e) => {
+      const now = e.timeStamp; // when the event happened, not when a busy frame got round to it
+      if (now - wheelAt > 220) {
+        // a new gesture (a trackpad keeps sending events while it coasts, so one swipe is one gesture)
+        wheelSum = 0;
+        wheelDone = false;
+        wheelFilm = onFilm() && !ownScroll(e) && !e.ctrlKey;
+      }
+      wheelAt = now;
+      if (!wheelFilm) return grab(e);
+      e.preventDefault();
+      if (wheelDone) return;
+      wheelSum += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+      if (Math.abs(wheelSum) >= 40) {
+        wheelDone = true;
+        turn(Math.sign(wheelSum));
+      }
+    },
+    { passive: false }
+  );
+  let touch0 = null;
+  addEventListener(
+    'touchstart',
+    (e) => {
+      touch0 = e.touches.length === 1 && onFilm() && !ownScroll(e) ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+    },
+    { passive: true }
+  );
+  addEventListener(
+    'touchmove',
+    (e) => {
+      if (touch0 && e.touches.length > 1) touch0 = null; // a pinch is a zoom, not a swipe
+      if (!touch0) return grab(e);
+      e.preventDefault(); // the film stays put; the swipe is read when the finger lifts
+    },
+    { passive: false }
+  );
+  addEventListener(
+    'touchend',
+    (e) => {
+      if (!touch0) return;
+      const p = e.changedTouches[0];
+      const dx = p.clientX - touch0.x;
+      const dy = touch0.y - p.clientY;
+      touch0 = null;
+      if (Math.abs(dy) > 40 && Math.abs(dy) > Math.abs(dx)) turn(Math.sign(dy));
+    },
+    { passive: true }
+  );
+  addEventListener('touchcancel', () => (touch0 = null), { passive: true });
 
   // filling in a form pauses everything
   document.addEventListener('focusin', (e) => {
@@ -7974,6 +8044,7 @@ html.read #read {
     menuOpen = false;
     nav.classList.remove('open');
     navToggle.setAttribute('aria-expanded', 'false');
+    if (nav.contains(document.activeElement)) document.activeElement.blur(); // Space and the arrows work on the page again
   }
   // closing the panel: carry on playing, or (after an answer) stay on it a while first
   function closeAsk() {
