@@ -2505,7 +2505,32 @@
     speedBtn.textContent = speed + '×';
   });
 
+  // Switching between the film and the plain page keeps your place: the page opens at the chapter or
+  // block that is playing, and the film carries on from whatever you were reading.
+  let readY = 0;
+  function sceneNow() {
+    let cur = scenes[0];
+    for (const sc of scenes) if (t >= sc.start - 0.001) cur = sc;
+    return cur;
+  }
+  function readingNow() {
+    // on the plain page: the last chapter or block whose top has passed the reading line
+    const line = L.hdr + H * 0.2;
+    let el = scenes[0].el;
+    for (const sc of scenes) if (sc.el.getBoundingClientRect().top <= line) el = sc.el;
+    if (tourEl) for (const x of $$('[data-stop]', tourEl)) if (x.getBoundingClientRect().top <= line) el = x;
+    return el;
+  }
   function setRead(v) {
+    let anchor = null, off = 0, scene = null, el = null;
+    if (v) {
+      if (t < FILM) scene = sceneNow();
+      else if (tourEl) {
+        const st = stepAt(t - FILM);
+        anchor = st ? st.els[0] : $('[data-stop]', tourEl);
+        off = anchor.getBoundingClientRect().top;
+      }
+    } else if (Math.abs(window.scrollY - readY) > 30) el = readingNow(); // moved since opening the page
     readMode = v;
     doc.classList.toggle('read', v);
     readBtn.textContent = v ? UI.film : UI.read;
@@ -2516,7 +2541,12 @@
         s.vis = false;
         s.el.classList.remove('on', 'front');
       });
-      window.scrollTo(0, 0);
+      measure();
+      let y = 0;
+      if (anchor) y = anchor.getBoundingClientRect().top + window.scrollY - clamp(off, L.hdr + 12, H * 0.45);
+      else if (scene && scene !== scenes[0]) y = $('.wrap', scene.el).getBoundingClientRect().top + window.scrollY - L.hdr - 24;
+      window.scrollTo(0, Math.max(0, Math.round(y)));
+      readY = window.scrollY;
     } else {
       scenes.forEach((s) => {
         s.counts.forEach((c) => (c.last = null));
@@ -2528,10 +2558,15 @@
         s.xv = -1;
       });
       measure();
-      seek(t >= TOTAL ? 0 : t, true);
+      let nt = t >= TOTAL ? 0 : t;
+      if (el) {
+        const sc = scenes.find((x) => x.el === el);
+        nt = sc ? sc.start + (sc === scenes[0] ? 0 : 0.01) : FILM + tauAt(docTop(el) - L.hdr - (isMobile ? 14 : Math.round(H * 0.08)));
+      }
+      seek(nt, true);
       setPlaying(true);
+      measure();
     }
-    measure();
   }
   readBtn.addEventListener('click', () => setRead(!readMode));
 
