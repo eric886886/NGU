@@ -26,8 +26,180 @@
 
   const ZH = (doc.lang || '').toLowerCase().startsWith('zh');
   const UI = ZH
-    ? { play: '播放', pause: '暂停', replay: '重新播放', read: '按页面阅读', film: '按短片播放' }
-    : { play: 'Play', pause: 'Pause', replay: 'Replay', read: 'Read as page', film: 'Play as film' };
+    ? {
+        play: '播放',
+        pause: '暂停',
+        replay: '重新播放',
+        read: '按页面阅读',
+        film: '按短片播放',
+        pickHint: '你也有这些问题吗？点一下你有的。',
+        pickGo: '好了，继续 →',
+        fit: '适合你',
+        wish: '我最想先解决：',
+        sound: '声音',
+      }
+    : {
+        play: 'Play',
+        pause: 'Pause',
+        replay: 'Replay',
+        read: 'Read as page',
+        film: 'Play as film',
+        pickHint: 'Sound familiar? Tap the ones you have.',
+        pickGo: 'Done, carry on →',
+        fit: 'For you',
+        wish: 'What I would like to solve first: ',
+        sound: 'Sound',
+      };
+
+  // Pick your pains (film chapter 03): the problems can be tapped; the agents that answer them are marked
+  // for the visitor later on, and the contact form starts with them. The hint and button are added here,
+  // so a page without JavaScript never shows controls that do nothing. (New text, not from the original.)
+  const PICK = { set: new Set(), msg: '' };
+  const painCol = $('.s-pain .col-l');
+  if (painCol) {
+    const hint = document.createElement('div');
+    hint.className = 'pick-hint m m-rise';
+    hint.dataset.at = '16.8';
+    hint.innerHTML = `<p>${UI.pickHint}</p><button type="button" class="pick-go" hidden>${UI.pickGo}</button>`;
+    painCol.appendChild(hint);
+  }
+  const pains = $$('.s-pain .pain');
+
+  // Sound, off until the visitor switches it on: a soft pad that follows each chapter's mood, small ticks as
+  // text is written, a breath of air between chapters, a chime when an idea lands. All of it is generated
+  // in the browser; nothing is downloaded and no audio starts by itself.
+  const Sound = (() => {
+    let ac = null, master = null, on = false, pad = null, noiseBuf = null, lastTick = 0, lvl = 0;
+    const CHORDS = {
+      night: [110, 164.81, 246.94, 329.63],
+      aqua: [130.81, 196, 293.66, 392],
+      ember: [98, 146.83, 233.08, 293.66],
+      growth: [146.83, 220, 329.63, 369.99],
+      gold: [164.81, 246.94, 369.99, 415.3],
+      dawn: [174.61, 261.63, 349.23, 440],
+    };
+    let mood = 'night';
+    function init() {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      ac = new AC();
+      master = ac.createGain();
+      master.gain.value = 0;
+      const comp = ac.createDynamicsCompressor();
+      master.connect(comp);
+      comp.connect(ac.destination);
+      // the pad: four voices, each two slightly detuned saws, through a slowly breathing low-pass filter
+      const filter = ac.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 650;
+      filter.Q.value = 0.6;
+      const lfo = ac.createOscillator();
+      const lfoG = ac.createGain();
+      lfo.frequency.value = 0.06;
+      lfoG.gain.value = 240;
+      lfo.connect(lfoG);
+      lfoG.connect(filter.frequency);
+      lfo.start();
+      const padG = ac.createGain();
+      padG.gain.value = 0.045;
+      filter.connect(padG);
+      padG.connect(master);
+      pad = CHORDS[mood].map((f) => {
+        const g = ac.createGain();
+        g.gain.value = 0.25;
+        g.connect(filter);
+        return [-7, 7].map((dt) => {
+          const o = ac.createOscillator();
+          o.type = 'sawtooth';
+          o.frequency.value = f;
+          o.detune.value = dt;
+          o.connect(g);
+          o.start();
+          return o;
+        });
+      });
+      noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      return true;
+    }
+    function noise(dur, f0, f1, gain, q) {
+      const now = ac.currentTime;
+      const src = ac.createBufferSource();
+      src.buffer = noiseBuf;
+      const bp = ac.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.Q.value = q;
+      bp.frequency.setValueAtTime(f0, now);
+      bp.frequency.exponentialRampToValueAtTime(f1, now + dur);
+      const g = ac.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(gain, now + dur * 0.3);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      src.connect(bp);
+      bp.connect(g);
+      g.connect(master);
+      src.start(now, Math.random() * 0.5);
+      src.stop(now + dur + 0.05);
+    }
+    const live = () => on && ac && lvl > 0.01;
+    return {
+      get on() {
+        return on;
+      },
+      toggle() {
+        if (!ac && !init()) return false;
+        on = !on;
+        if (on && ac.state === 'suspended') ac.resume();
+        return on;
+      },
+      // how loud overall: full while playing, quiet while paused, silent when off or hidden
+      level(v) {
+        v = on ? v : 0;
+        if (!ac || Math.abs(v - lvl) < 0.005) return;
+        lvl = v;
+        master.gain.setTargetAtTime(v, ac.currentTime, 0.5);
+      },
+      mood(m) {
+        mood = CHORDS[m] ? m : 'night';
+        if (!pad) return;
+        const fs = CHORDS[mood];
+        pad.forEach((pair, k) => pair.forEach((o) => o.frequency.setTargetAtTime(fs[k], ac.currentTime, 0.8)));
+      },
+      tick() {
+        if (!live()) return;
+        if (ac.currentTime - lastTick < 0.075) return;
+        lastTick = ac.currentTime;
+        noise(0.05, 3000 + Math.random() * 1800, 2200, 0.035, 5);
+      },
+      whoosh() {
+        if (live()) noise(1.2, 260, 2000, 0.07, 0.8);
+      },
+      ping(v = 1) {
+        if (!live()) return;
+        const now = ac.currentTime;
+        const o = ac.createOscillator();
+        o.type = 'sine';
+        const f = v < 1 ? 660 : 880;
+        o.frequency.setValueAtTime(f, now);
+        o.frequency.exponentialRampToValueAtTime(f * 1.5, now + 0.16);
+        const g = ac.createGain();
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.07, now + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
+        o.connect(g);
+        g.connect(master);
+        o.start(now);
+        o.stop(now + 1);
+      },
+    };
+  })();
+  pains.forEach((el, k) => {
+    el.dataset.pick = k;
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-pressed', 'false');
+    el.tabIndex = 0;
+  });
 
   /* ------------------------------------------------------------------ split headings into words */
 
@@ -189,6 +361,9 @@
     roiDim: 1,
     storm: 0,
     flowActive: -1,
+    storyP: 0,
+    storyAI: 0,
+    fit: [0, 0, 0, 0, 0, 0], // agents that answer the visitor's picked problems
   };
 
   const flowNum = $('#flowNum');
@@ -220,7 +395,19 @@
 
   const cueAct = (c, lt, lead = 0, len = 1.3) => easeInOut(clamp((lt - c.at + lead) / len));
 
+  const storyBadge = $('#storyBadge');
   const hooks = {
+    // the opening: messages pour in and the unread count climbs, until the AI takes them over
+    story(lt) {
+      fx.storyP = smooth(0.4, 6.2, lt);
+      fx.storyAI = smooth(6.5, 7.9, lt);
+      if (!storyBadge) return;
+      let v;
+      if (lt < 6.5) v = lt < 0.8 ? 0 : lt < 2.2 ? Math.round(37 * easeOut((lt - 0.8) / 1.4)) : lt < 3.6 ? 37 : Math.round(lerp(37, 99, easeInOut(clamp((lt - 3.6) / 2.6))));
+      else v = Math.round(99 * (1 - easeInOut(clamp((lt - 6.5) / 1.3))));
+      setText(storyBadge, lt >= 7.8 ? '✓' : v >= 99 ? '99+' : String(v));
+      storyBadge.classList.toggle('done', lt >= 7.8);
+    },
     flow(lt, s) {
       let k = -1;
       s.ons.forEach((o, i) => {
@@ -357,6 +544,7 @@
       const s = scenes[i];
       if (hooks[s.id]) hooks[s.id](clamp(t - s.start, 0, s.dur), s);
     }
+    if (front && front !== frontScene && front.idx > 0) Sound.whoosh(); // a breath of air between chapters
     frontScene = front || scenes[0];
   }
 
@@ -397,7 +585,7 @@
     for (let i = 0; i < N; i++) a[i] = rnd();
     return a;
   };
-  const R1 = mk(), R2 = mk(), R3 = mk(), R4 = mk(), R5 = mk(), R6 = mk();
+  const R1 = mk(), R2 = mk(), R3 = mk(), R4 = mk(), R5 = mk(), R6 = mk(), R7 = mk();
   const DEL = new Float32Array(N), SW = new Float32Array(N), ANG = new Float32Array(N), SZ = new Float32Array(N);
   const COL = new Uint8Array(N), STAR = new Uint8Array(N);
   for (let i = 0; i < N; i++) {
@@ -413,7 +601,7 @@
 
   // Glow sprites: 0 white-blue core, 1 light azure, 2 brand blue, 3 indigo, 4 teal, 5 amber (alerts)
   const PAL = ['234,244,255', '159,208,255', '79,155,255', '96,118,255', '54,200,224', '255,181,71'];
-  const SPR = PAL.map((rgb) => {
+  const sprite = (rgb) => {
     const c = document.createElement('canvas');
     c.width = c.height = 64;
     const g = c.getContext('2d');
@@ -425,7 +613,41 @@
     g.fillStyle = gr;
     g.fillRect(0, 0, 64, 64);
     return c;
-  });
+  };
+  const SPR = PAL.map(sprite);
+  // Each chapter has a mood: the particles, the glow behind them and the accent colour of the headlines
+  // shift with it (a pressured amber for problems, clear aqua for solutions, green for growth, gold for
+  // returns, a dawn pink for beginnings). The particles change colour one by one, so it washes through.
+  const MOODS = {
+    night: { pal: PAL, bg: ['47,110,255', '140,124,255', '54,200,224'], acc: '169,200,255' },
+    aqua: { pal: ['230,252,255', '150,232,255', '64,196,240', '82,150,255', '40,222,214', '255,181,71'], bg: ['30,160,235', '60,110,255', '60,230,220'], acc: '143,230,255' },
+    ember: { pal: ['255,240,226', '255,204,150', '255,150,96', '240,98,90', '255,176,110', '255,92,70'], bg: ['225,105,55', '160,60,95', '255,165,80'], acc: '255,195,154' },
+    growth: { pal: ['238,255,244', '170,240,205', '86,214,160', '64,170,232', '128,232,178', '255,196,92'], bg: ['35,185,135', '55,125,230', '140,230,170'], acc: '157,240,198' },
+    gold: { pal: ['255,249,230', '255,228,160', '255,196,96', '236,160,84', '255,214,128', '255,150,70'], bg: ['225,165,55', '195,115,60', '255,220,140'], acc: '255,217,140' },
+    dawn: { pal: ['255,244,240', '255,206,196', '250,160,178', '186,140,255', '255,192,150', '255,181,71'], bg: ['235,115,150', '145,105,255', '255,185,140'], acc: '255,188,208' },
+  };
+  for (const k in MOODS) MOODS[k].spr = k === 'night' ? SPR : MOODS[k].pal.map(sprite);
+  const MOOD_OF = {
+    story: 'ember',
+    intro: 'night',
+    hero: 'night',
+    flow: 'aqua',
+    pain: 'ember',
+    solutions: 'aqua',
+    outcomes: 'growth',
+    roi: 'gold',
+    founders: 'dawn',
+    start: 'aqua',
+    finale: 'night',
+    about: 'night',
+    'ai-solutions': 'aqua',
+    startup: 'dawn',
+    demo: 'night',
+    cases: 'growth',
+    'business-review': 'gold',
+    contact: 'dawn',
+  };
+  const MOOD = { cur: 'night', prev: 'night', t0: -99, m: 1, sc: SPR, sp: SPR, css: '' };
 
   let W = innerWidth, H = innerHeight, DPR = 1;
   const L = {
@@ -449,6 +671,8 @@
     pathMs: [0, 0.25, 0.5, 0.75, 1],
     scroll0: 0,
     cube: { x: 0, y: 0, s: 1 },
+    phone: { x: 0, y: 0, w: 120, h: 240 },
+    ill: { x: 0, y: 0, s: 100 },
   };
 
   /* ---- polyline helpers (Catmull-Rom through control points) */
@@ -521,7 +745,92 @@
     };
   }
 
+  // a little hash for per-row randomness
+  const hsh = (k, j) => hash(k, j);
+
   const F = {
+    // the opening: a phone, its messages pouring in faster and faster, then neatly taken care of
+    phone(i, t, o) {
+      const c = L.phone;
+      const P = fx.storyP, Q = fx.storyAI;
+      const g = R2[i];
+      o.h = 0;
+      o.s = 0.85;
+      if (g < 0.34) {
+        // the outline, with rounded corners
+        onRect(R1[i], -0.5, -0.5, 0.5, 0.5);
+        let x = PT.x, y = PT.y * 0.5;
+        const cr = 0.11;
+        const ax = Math.abs(x), ay = Math.abs(y);
+        if (ax > 0.5 - cr && ay > 0.25 - cr * 0.5) {
+          const cx = Math.sign(x) * (0.5 - cr), cy = Math.sign(y) * (0.25 - cr * 0.5);
+          const a = Math.atan2(y - cy, x - cx);
+          x = cx + Math.cos(a) * cr;
+          y = cy + Math.sin(a) * cr * 0.5;
+        }
+        o.x = c.x + x * c.w;
+        o.y = c.y + y * 2 * c.h;
+        o.a = 0.55 + 0.2 * Math.sin(t * 1.3 + R3[i] * 6);
+        return;
+      }
+      if (g < 0.4) {
+        // the earpiece at the top
+        o.x = c.x + (R1[i] - 0.5) * 0.22 * c.w;
+        o.y = c.y - 0.44 * c.h;
+        o.a = 0.5;
+        o.s = 0.7;
+        return;
+      }
+      if (g < 0.8) {
+        // messages: rows scrolling up as they arrive, faster under pressure; tidy and ticked off once the
+        // AI has them
+        const rows = 9;
+        const k = i % rows;
+        const phase = t * 0.12 * (1 - Q) + P * P * 3.2;
+        const yy = (((k + phase * rows) % rows) + rows) % rows / rows;
+        const y = 0.38 - yy * 0.76;
+        const side = (k + Math.floor(phase * rows)) % 2 ? 1 : -1;
+        const width = 0.28 + hsh(k, 5) * 0.36;
+        const u = R1[i];
+        let x = side < 0 ? -0.4 + u * width : 0.4 - u * width;
+        // tidy: every row the same, a tick at its end
+        let nx = -0.36 + u * 0.56, ny = y;
+        if (R3[i] < 0.16) {
+          const v = R4[i];
+          if (v < 0.4) (nx = 0.28 + v * 0.1), (ny = y + v * 0.09);
+          else (nx = 0.32 + (v - 0.4) * 0.16), (ny = y + 0.036 - (v - 0.4) * 0.12);
+        }
+        x = lerp(x, nx, Q);
+        o.x = c.x + x * c.w;
+        o.y = c.y + lerp(y, ny, Q) * c.h;
+        const edge = smooth(-0.4, -0.3, y) * (1 - smooth(0.3, 0.4, y));
+        o.a = (0.35 + 0.3 * P) * edge * (0.6 + 0.4 * Q);
+        o.h = Q < 0.5 && side < 0 && P > 0.35 && hsh(k, 2) < 0.6 ? 1 : 0;
+        return;
+      }
+      if (g < 0.92) {
+        // notifications flying in from everywhere
+        const u = (R1[i] + t * (0.22 + 0.5 * P)) % 1;
+        const d = (0.9 + R3[i]) * Math.max(c.w, c.h) * 1.3;
+        const sx = c.x + Math.cos(ANG[i]) * d, sy = c.y + Math.sin(ANG[i]) * d * 0.7;
+        const ex = c.x + (R4[i] - 0.5) * 0.5 * c.w, ey = c.y - 0.28 * c.h;
+        const e = u * u;
+        o.x = lerp(sx, ex, e);
+        o.y = lerp(sy, ey, e);
+        o.a = (0.15 + 0.7 * u) * P * (1 - Q);
+        o.h = 1;
+        o.s = 0.75;
+        return;
+      }
+      // the glow of the unread badge
+      const a = R1[i] * TAU + t * 2;
+      const r = c.w * 0.09 * Math.sqrt(R3[i]);
+      o.x = c.x + 0.5 * c.w + Math.cos(a) * r;
+      o.y = c.y - 0.5 * c.h + Math.sin(a) * r;
+      o.a = 0.5 * smooth(0.6, 1.2, t);
+      o.h = Q < 0.5 ? 1 : 0;
+    },
+
     seed(i, t, o) {
       const c = L.intro;
       const a = R1[i] * TAU + t * (0.5 + R2[i] * 0.9);
@@ -629,6 +938,7 @@
       const ry = core.y + Math.sin(ra) * rr * 0.78;
       const sat = sats[k - 1];
       const act = fx.hubAct[k - 1];
+      const fit = fx.fit[k - 1];
       if (R2[i] < 0.45) {
         // data streaming from the core to each agent
         const u = (R4[i] + t * 0.22) % 1;
@@ -641,10 +951,11 @@
       } else {
         const sa = R1[i] * TAU + t * 1.1;
         const sr = 3 + R3[i] * 9;
-        o.x = lerp(rx, sat.x + Math.cos(sa) * sr, act);
-        o.y = lerp(ry, sat.y + Math.sin(sa) * sr, act);
-        o.a = lerp(0.3, 0.42, act);
-        o.s = 0.8;
+        o.x = lerp(rx, sat.x + Math.cos(sa) * sr * (1 + fit * 0.8), act);
+        o.y = lerp(ry, sat.y + Math.sin(sa) * sr * (1 + fit * 0.8), act);
+        o.a = lerp(0.3, 0.42, act) * (1 + fit * 0.9);
+        o.s = 0.8 * (1 + fit * 0.3);
+        o.h = fit && R4[i] < 0.3 ? 1 : 0;
       }
     },
 
@@ -1474,13 +1785,34 @@
     return out;
   }
 
-  // The swarm: while the autopilot reads a section, about 40% of the particles leave the hero, fly to the
-  // spot where the next piece of text is about to appear, draw an icon of what it is about, burst into
-  // the text as it appears, and settle as a glowing underline beneath it, until the next piece is due.
-  const SWARM = { on: false, d: 0, icon: 'target', c: null, p: null, last: null, rel: null, relC: null };
+  // The swarm: while the autopilot reads a section, about 40% of the particles leave the hero. Most of them
+  // draw a large picture of what is being read beside the text (morphing from one passage's picture to the
+  // next: a problem's storm turns into the agent that solves it, then into growth); the rest become the pen
+  // that writes the text out and settles as a glowing underline beneath it.
+  const SWARM = { on: false, d: 0, icon: 'target', pIcon: null, c: null, p: null, last: null, rel: null, relC: null };
   const SWARM_FRAC = 0.42;
+  const ILL_FRAC = 0.62; // of the swarm, the share that draws the picture
   const IP = { x: 0, y: 0, a: 1, h: 0 };
   const SP = { x: 0, y: 0, a: 0, s: 1, h: 0 };
+  const QP = { x: 0, y: 0, a: 0, h: 0 };
+  // where particle i of the picture sits for an icon (or back in the hero if the passage has no picture)
+  function illPoint(i, t, icon, fx, fy, fa) {
+    if (!icon || icon === 'none') {
+      QP.x = fx;
+      QP.y = fy;
+      QP.a = fa;
+      QP.h = 0;
+      return QP;
+    }
+    iconPoint(icon, i, t, IP);
+    const c = L.ill;
+    const k = icon === 'storm' ? 1.12 : 1;
+    QP.x = c.x + IP.x * c.s * k;
+    QP.y = c.y + IP.y * c.s * k;
+    QP.a = 0.92 * IP.a * clamp((c.s - 18) / 26);
+    QP.h = IP.h;
+    return QP;
+  }
   // the pen: half the swarm is a small bright point at the letter being written, half a fading trail
   // along what was just written
   const PEN = { x: 0, y: 0, h: 16, hist: [], head: 0 };
@@ -1522,12 +1854,52 @@
     return RP;
   }
 
-  // The swarm, for each piece of text: fly to it, draw an icon of what it says, fold into the pen at its
-  // first letter, write it out alongside the typing, then settle as a glowing underline beneath it.
+  // where a swarm particle rests once a passage is done: in its picture, or on its underline
+  function swarmRest(i, t, c, icon, fx, fy, fa) {
+    if (R7[i] < ILL_FRAC) return illPoint(i, t, icon, fx, fy, fa);
+    restPos(i, t, c);
+    QP.x = RP.x;
+    QP.y = RP.y;
+    QP.a = RP.a;
+    QP.h = 0;
+    return QP;
+  }
+
+  // The swarm, for each passage: the picture morphs from the last passage's into this one's; the pen flies
+  // to the first letter, writes the text out alongside the typing, then settles as an underline beneath it.
   function swarmPos(i, t, fx, fy, fa) {
     const c = SWARM.c, pv = SWARM.p;
     const d = SWARM.d - DEL[i] * 0.25;
-    // it sets off from the underline of the previous piece, or from its place in the hero
+    SP.s = 0.85;
+    SP.h = 0;
+    if (R7[i] < ILL_FRAC) {
+      illPoint(i, t, SWARM.icon, fx, fy, fa);
+      const tx = QP.x, ty = QP.y, ta = QP.a, th = QP.h;
+      if (d >= 0) {
+        SP.x = tx;
+        SP.y = ty;
+        SP.a = ta;
+        SP.h = th;
+        SP.s = 0.95;
+        return SP;
+      }
+      illPoint(i, t, pv ? SWARM.pIcon : null, fx, fy, fa);
+      if (d < -0.9) {
+        SP.x = QP.x;
+        SP.y = QP.y;
+        SP.a = QP.a;
+        SP.h = QP.h;
+        return SP;
+      }
+      const e = easeInOut((d + 0.9) / 0.9);
+      const sw = Math.sin(Math.PI * e) * SW[i] * 0.7;
+      SP.x = lerp(QP.x, tx, e) + Math.cos(ANG[i]) * sw;
+      SP.y = lerp(QP.y, ty, e) + Math.sin(ANG[i]) * sw;
+      SP.a = lerp(QP.a, ta, e);
+      SP.h = e < 0.5 ? QP.h : th;
+      return SP;
+    }
+    // the pen sets off from the underline of the previous passage, or from its place in the hero
     let ox, oy, oa;
     if (pv) {
       restPos(i, t, pv);
@@ -1537,50 +1909,23 @@
       oy = fy;
       oa = fa;
     }
-    const icon = SWARM.icon !== 'none';
-    let ix, iy, ia;
-    if (icon) {
-      iconPoint(SWARM.icon, i, t, IP);
-      ix = c.x + IP.x * c.s;
-      iy = c.y + IP.y * c.s;
-      ia = 0.95 * IP.a;
-    } else {
-      ix = SWARM.p0x + Math.cos(ANG[i]) * (3 + R3[i] * 10);
-      iy = SWARM.p0y + Math.sin(ANG[i]) * (3 + R3[i] * 7);
-      ia = 0.5;
-    }
     const tS = SWARM.tS, tE = SWARM.tE;
     restPos(i, t, c);
     const ux = RP.x, uy = RP.y, ua = RP.a;
-    SP.s = 0.85;
-    SP.h = 0;
     if (d < -0.8) {
       SP.x = ox;
       SP.y = oy;
       SP.a = oa;
-    } else if (d < -0.2) {
-      const e = easeInOut((d + 0.8) / 0.6);
-      const sw = Math.sin(Math.PI * e) * SW[i] * 0.9;
-      SP.x = lerp(ox, ix, e) + Math.cos(ANG[i]) * sw;
-      SP.y = lerp(oy, iy, e) + Math.sin(ANG[i]) * sw;
-      SP.a = lerp(oa, ia, e);
-      SP.h = icon && e > 0.5 ? IP.h : 0;
-    } else if (d < Math.min(0.25, tS) || (!icon && d < tS)) {
-      SP.x = ix;
-      SP.y = iy;
-      SP.a = ia;
-      SP.s = 0.95;
-      SP.h = icon ? IP.h : 0;
     } else if (d < tS) {
-      // the icon folds into the pen at the first letter
-      const e = easeInOut((d - 0.25) / Math.max(0.1, tS - 0.25));
+      // gathering at the first letter
+      const e = easeInOut(clamp((d + 0.8) / Math.max(0.5, tS + 0.8)));
+      const sw = Math.sin(Math.PI * e) * SW[i] * 0.6;
       penPoint(i, t);
-      SP.x = lerp(ix, SWARM.p0x + (PP.x - PEN.x), e);
-      SP.y = lerp(iy, SWARM.p0y + (PP.y - PEN.y), e);
-      SP.a = lerp(ia, PP.a, e);
-      SP.h = e < 0.3 ? IP.h : 0;
+      SP.x = lerp(ox, SWARM.p0x + (PP.x - PEN.x), e) + Math.cos(ANG[i]) * sw;
+      SP.y = lerp(oy, SWARM.p0y + (PP.y - PEN.y), e) + Math.sin(ANG[i]) * sw;
+      SP.a = lerp(oa, PP.a, e);
     } else if (d < tE && c.frame && R2[i] >= 0.5) {
-      // a demo: while half the swarm writes, the other half switches on a frame around it
+      // a demo: while half the pen writes, the other half switches on a frame around it
       const e = easeInOut(clamp((d - tS) / 0.8));
       penPoint(i, t);
       SP.x = lerp(PP.x, ux, e);
@@ -1673,6 +2018,128 @@
     return BZ;
   }
 
+  // ---- the visitor's pointer: a short trail of recent positions, each pushing particles aside while it fades
+  const PTR = { pts: [], live: [], n: 0, r: 110, r2: 110 * 110, px: 0, py: 0, tx: 0, ty: 0, last: null };
+  const PTR_N = 8;
+  for (let k = 0; k < PTR_N; k++) PTR.pts.push({ x: -9999, y: -9999, t: -99, w: 0 });
+  let ptrHead = 0;
+  function pointerAt(x, y) {
+    const l = PTR.last;
+    if (l && Math.hypot(x - l.x, y - l.y) < 9) return;
+    ptrHead = (ptrHead + 1) % PTR_N;
+    const q = PTR.pts[ptrHead];
+    q.x = x;
+    q.y = y;
+    q.t = tclock;
+    PTR.last = q;
+  }
+  function pointerFrame() {
+    PTR.r = isMobile ? 80 : 110;
+    PTR.r2 = PTR.r * PTR.r;
+    PTR.n = 0;
+    // a ring buffer of recent points; the live ones (still pushing) are listed in PTR.live
+    for (const q of PTR.pts) {
+      const age = tclock - q.t;
+      q.w = age < 1.4 ? (isMobile ? 26 : 34) * Math.exp(-age * 2.4) : 0;
+      if (q.w > 0.5) PTR.live[PTR.n++] = q;
+    }
+    // the stars' parallax eases towards where the pointer (or the tilt) says
+    PTR.px = lerp(PTR.px, PTR.tx, 0.05);
+    PTR.py = lerp(PTR.py, PTR.ty, 0.05);
+  }
+  // where the particles are, on average (the target of a tapped idea)
+  const FC = { x: 0, y: 0, sx: 0, sy: 0, w: 0 };
+  const PULSE = { x: 0, y: 0, R: 0, k: 0, t0: -99 };
+  // Tapping or clicking an empty part of the page releases an "idea": a spark that arcs into the particles
+  // and lights them up where it lands.
+  const SPARKS = [];
+  function addSpark(x, y) {
+    if (SPARKS.length > 5) SPARKS.shift();
+    const tx = FC.x || W / 2, ty = FC.y || H / 2;
+    SPARKS.push({ x0: x, y0: y, x1: tx, y1: ty, cx: (x + tx) / 2 + (ty - y) * 0.3, cy: (y + ty) / 2 - (tx - x) * 0.3 - 40, t0: tclock, hit: false });
+  }
+  function drawSparks() {
+    if (!SPARKS.length) {
+      pulseFrame();
+      return;
+    }
+    const spr = MOOD.sc;
+    for (let j = SPARKS.length - 1; j >= 0; j--) {
+      const sp = SPARKS[j];
+      const age = tclock - sp.t0;
+      if (age > 1.6) {
+        SPARKS.splice(j, 1);
+        continue;
+      }
+      if (age < 0.9) {
+        // the idea and its tail
+        for (let k = 0; k < 16; k++) {
+          const u = clamp(easeInOut(clamp(age / 0.9)) - k * 0.018);
+          const v = 1 - u;
+          const x = v * v * sp.x0 + 2 * v * u * sp.cx + u * u * sp.x1;
+          const y = v * v * sp.y0 + 2 * v * u * sp.cy + u * u * sp.y1;
+          const r = (k ? 4.2 : 9) * (1 - k / 18);
+          ctx.globalAlpha = (k ? 0.75 : 1) * (1 - k / 16);
+          ctx.drawImage(spr[k ? 1 : 0], x - r, y - r, r * 2, r * 2);
+        }
+      } else {
+        if (!sp.hit) {
+          sp.hit = true;
+          PULSE.x = sp.x1;
+          PULSE.y = sp.y1;
+          PULSE.t0 = tclock;
+          Sound.ping();
+        }
+        // a flash where it landed, then a ring of light opening out
+        const e = clamp((age - 0.9) / 0.7);
+        const R = 12 + easeOut(e) * (isMobile ? 120 : 170);
+        const fl = Math.max(0, 1 - e * 3) * 40;
+        if (fl > 1) {
+          ctx.globalAlpha = 0.9;
+          ctx.drawImage(spr[0], sp.x1 - fl, sp.y1 - fl, fl * 2, fl * 2);
+        }
+        for (let k = 0; k < 40; k++) {
+          const a = (k / 40) * TAU + age * 0.6;
+          const r = 4.5;
+          ctx.globalAlpha = 0.85 * (1 - e);
+          ctx.drawImage(spr[k % 2 ? 1 : 4], sp.x1 + Math.cos(a) * R - r, sp.y1 + Math.sin(a) * R * 0.9 - r, r * 2, r * 2);
+        }
+      }
+    }
+    pulseFrame();
+  }
+  function pulseFrame() {
+    const e = clamp((tclock - PULSE.t0) / 1.1);
+    PULSE.k = e < 1 ? 1 - e : 0;
+    PULSE.R = 16 + easeOut(e) * (isMobile ? 150 : 230);
+  }
+
+  // the mood of whatever is on screen: the film's chapter, or the section of the page
+  function setMood(id) {
+    const want = MOOD_OF[id] || 'night';
+    if (want !== MOOD.cur) {
+      MOOD.prev = MOOD.m < 0.5 ? MOOD.prev : MOOD.cur;
+      MOOD.cur = want;
+      MOOD.t0 = tclock;
+      Sound.mood(want);
+    }
+    MOOD.m = smooth(0, 2.2, tclock - MOOD.t0);
+    MOOD.sc = MOODS[MOOD.cur].spr;
+    MOOD.sp = MOODS[MOOD.prev].spr;
+    // the backdrop's glow and the headlines' accent follow, blended
+    const mix = (a, b) => a.split(',').map((v, k) => Math.round(lerp(+v, +b.split(',')[k], MOOD.m))).join(',');
+    const A = MOODS[MOOD.prev], B = MOODS[MOOD.cur];
+    const css = [mix(A.bg[0], B.bg[0]), mix(A.bg[1], B.bg[1]), mix(A.bg[2], B.bg[2]), mix(A.acc, B.acc)];
+    const key = css.join('|');
+    if (key !== MOOD.css) {
+      MOOD.css = key;
+      doc.style.setProperty('--g1', css[0]);
+      doc.style.setProperty('--g2', css[1]);
+      doc.style.setProperty('--g3', css[2]);
+      doc.style.setProperty('--accent', `rgb(${css[3]})`);
+    }
+  }
+
   function renderField(fc, fp, since, t, starIn, oy) {
     ctx.globalCompositeOperation = 'destination-out';
     ctx.globalAlpha = 1;
@@ -1682,6 +2149,7 @@
 
     const trans = fp && since < TDUR + MAXDEL;
     prepare();
+    FC.sx = FC.sy = FC.w = 0;
     const base = isMobile ? 2.6 : 3.1;
 
     const vel = MOT.on ? MOT.vel : 0;
@@ -1707,10 +2175,14 @@
           if (len > 2) {
             const r = 1.6 * s * SZ[i];
             ctx.globalAlpha = Math.min(1, a * fieldDim * 1.6);
-            ctx.drawImage(SPR[1], x - r, y - r - (vel > 0 ? 0 : len), r * 2, r * 2 + len);
+            ctx.drawImage((R4[i] < MOOD.m ? MOOD.sc : MOOD.sp)[1], x - r, y - r - (vel > 0 ? 0 : len), r * 2, r * 2 + len);
             continue;
           }
         }
+        // stars sit at different depths: they drift against the pointer (or the tilt of the phone)
+        const dp = 0.3 + R3[i] * 0.7;
+        x += PTR.px * dp;
+        y += PTR.py * dp;
       } else if (spark) {
         fc(i, t, A);
         const tt = since - DEL[i] * 0.35;
@@ -1741,8 +2213,9 @@
           // gathering where the last piece of the section was read
           let bx, by, ba;
           if (sp.c && R5[i] < SWARM_FRAC) {
-            restPos(i, t, sp.c);
-            (bx = RP.x), (by = RP.y), (ba = RP.a);
+            fp(i, t, B);
+            swarmRest(i, t, sp.c, sp.icon, B.x, B.y, B.a * fieldDim);
+            (bx = QP.x), (by = QP.y), (ba = QP.a);
           } else {
             fp(i, t, B);
             (bx = B.x), (by = B.y), (ba = B.a * fieldDim);
@@ -1787,20 +2260,57 @@
           dim = 1;
         } else if (rel && R5[i] < SWARM_FRAC) {
           const e = easeInOut((tclock - SWARM.rel.t0) / 0.9);
-          restPos(i, t, rel);
-          x = lerp(RP.x, x, e);
-          y = lerp(RP.y, y, e);
-          a = lerp(RP.a / Math.max(0.05, fieldDim), a, e);
+          swarmRest(i, t, rel, SWARM.rel.item.icon, x, y, a);
+          x = lerp(QP.x, x, e);
+          y = lerp(QP.y, y, e);
+          a = lerp(QP.a / Math.max(0.05, fieldDim), a, e);
         } else if (vel) {
           // dragged along by the page, then springing back
           y -= Math.max(-120, Math.min(120, vel * (0.025 + R4[i] * 0.06)));
         }
       }
       if (a < 0.01 || x < -30 || y < -30 || x > W + 30 || y > H + 30) continue;
+      if (!STAR[i]) {
+        // the pointer parts the particles as it moves through them; they close up behind it
+        for (let k = 0; k < PTR.n; k++) {
+          const q = PTR.live[k];
+          const dx = x - q.x, dy = y - q.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < PTR.r2 && d2 > 0.01) {
+            const d = Math.sqrt(d2);
+            const f = (1 - d / PTR.r) * (1 - d / PTR.r) * q.w;
+            x += (dx / d) * f;
+            y += (dy / d) * f;
+          }
+        }
+        if (a > 0.25) {
+          FC.sx += x * a;
+          FC.sy += y * a;
+          FC.w += a;
+        }
+        // an idea that has just landed sends a ripple of light out through the particles
+        if (PULSE.k > 0) {
+          const dx = x - PULSE.x, dy = y - PULSE.y;
+          const d = Math.sqrt(dx * dx + dy * dy) || 1;
+          const off = Math.abs(d - PULSE.R);
+          if (off < 36) {
+            const f = (1 - off / 36) * PULSE.k;
+            x += (dx / d) * f * 16;
+            y += (dy / d) * f * 16;
+            a *= 1 + 1.8 * f;
+          } else if (d < PULSE.R) a *= 1 + 0.35 * PULSE.k;
+        }
+      }
       const r = base * s * SZ[i];
       ctx.globalAlpha = a * dim > 1 ? 1 : a * dim;
-      ctx.drawImage(SPR[h ? 5 : STAR[i] ? 1 : COL[i]], x - r, y - r, r * 2, r * 2);
+      ctx.drawImage((R4[i] < MOOD.m ? MOOD.sc : MOOD.sp)[h ? 5 : STAR[i] ? 1 : COL[i]], x - r, y - r, r * 2, r * 2);
     }
+    if (FC.w > 0) {
+      FC.x = FC.sx / FC.w;
+      FC.y = FC.sy / FC.w;
+    }
+    FC.sx = FC.sy = FC.w = 0;
+    drawSparks(t);
   }
 
   /* ------------------------------------------------------------------ layout measuring */
@@ -1837,6 +2347,8 @@
       });
     }
 
+    const [phone] = anchors('phone');
+    if (phone) L.phone = { x: phone.x, y: phone.y, w: phone.w, h: phone.h };
     const [intro] = anchors('intro');
     const [hero] = anchors('hero');
     const [fin] = anchors('fin');
@@ -1919,10 +2431,19 @@
     L.heroAt = isMobile
       ? { x: W * 0.5, y: L.hdr + (H - L.hdr - L.ctl) * 0.27, s: Math.min(W * 0.36, H * 0.17) }
       : { x: W * 0.74, y: mid, s: Math.min(W * 0.17, H * 0.3) };
-    // while text is read the hero steps aside, mostly past the right edge, out of the text's way
-    L.asideAt = isMobile
-      ? { x: W * 0.94, y: L.hdr + H * 0.1, s: L.heroAt.s * 0.5 }
-      : { x: W * 0.99, y: mid, s: L.heroAt.s * 0.52 };
+    // while text is read the hero becomes the section's small emblem in the top right corner, and the
+    // particles draw what is being read: beside the text column, or on phones in the space below the passage
+    // (motion.js moves it there passage by passage)
+    if (isMobile) {
+      L.asideAt = { x: W - 40, y: L.hdr + 40, s: L.heroAt.s * 0.26 };
+      L.ill = { x: W * 0.5, y: H * 0.7, s: W * 0.18 };
+    } else {
+      const col = tourEl && $('.manifesto', tourEl);
+      const right = col ? col.getBoundingClientRect().right : W * 0.6;
+      const room = Math.max(160, W - right);
+      L.asideAt = { x: W - Math.min(110, room * 0.2) - 24, y: L.hdr + 104, s: L.heroAt.s * 0.32 };
+      L.ill = { x: right + room * 0.5, y: L.hdr + (H - L.hdr - L.ctl) * 0.54, s: clamp(Math.min(room * 0.27, (H - L.hdr - L.ctl) * 0.24), 60, 190) };
+    }
     if (!TC.ready) {
       Object.assign(TC, L.heroAt);
       TC.ready = true;
@@ -2095,35 +2616,88 @@
     const sy = window.scrollY;
     tcues.forEach((c) => (c.top = c.trig.getBoundingClientRect().top + sy));
     const pad = isMobile ? 14 : Math.round(H * 0.08);
-    const avail = Math.max(200, H - L.hdr - L.ctl - pad - 16);
+    // the reading area, below the header; on phones passages sit higher, leaving room below for the picture
+    const top0 = L.hdr;
+    const line = isMobile ? 0.24 : 0.44;
+    const avail = Math.max(200, H - top0 - L.ctl - 16);
     const maxY = Math.max(0, doc.scrollHeight - H);
+    items.forEach((it) => {
+      const r = it.el.getBoundingClientRect();
+      it.l = r.left;
+      it.t = r.top + sy;
+      it.w = r.width;
+      it.h = r.height;
+      const txt = (it.el.innerText || '').trim();
+      const n = ZH ? txt.replace(/\s/g, '').length : txt.split(/\s+/).filter(Boolean).length;
+      const rate = ZH ? 10 : 5;
+      // typed text starts once the particles have begun their drawing, then lingers a moment to be finished
+      it.typeOff = it.card ? 0.3 : it.icon === 'none' ? 0.45 : 0.75;
+      it.time =
+        it.kind === 'small'
+          ? 0.6
+          : it.kind === 'form'
+            ? 3.2
+            : it.kind === 'head'
+              ? 0.8 + n * (ZH ? 0.04 : 0.06) + n / (rate * 1.6)
+              : it.ch
+                ? Math.max(1.2, it.typeOff + it.ch.length / CPS + 0.9)
+                : 1 + n / rate;
+      it.beatT = null;
+    });
+    // Units: a title card, a narrator line or a form is one unit; any other block is read one passage
+    // at a time (its headings, paragraphs, list items, the parts of a case…), like subtitles.
+    const units = [];
+    $$('[data-stop]', tourEl).forEach((block) => {
+      const sec = tsecs.find((x) => x.el.contains(block)) || tsecs[tsecs.length - 1];
+      const own = items.filter((it) => block.contains(it.el));
+      const parts = own.filter((it) => it.kind !== 'small' && !own.some((o) => o !== it && o.kind !== 'small' && o.el.contains(it.el)));
+      if (block.matches('.thead, .bridge, .site-end, .contact-grid') || parts.length < 2) {
+        units.push({ sec, els: [block], items: own, card: block.matches('.thead') });
+        return;
+      }
+      let pend = [];
+      own.forEach((it) => {
+        if (!parts.includes(it)) {
+          if (!parts.some((p) => p.el.contains(it.el))) pend.push(it); // a label waits for the next passage
+          return;
+        }
+        units.push({ sec, els: [it.el], items: [...pend, it, ...own.filter((o) => o !== it && it.el.contains(o.el))] });
+        pend = [];
+      });
+      if (pend.length) units[units.length - 1].items.push(...pend);
+    });
     const raw = [];
-    $$('[data-stop]', tourEl).forEach((el) => {
-      const r = el.getBoundingClientRect();
-      const top = r.top + sy;
-      const sec = tsecs.find((x) => x.el.contains(el)) || tsecs[tsecs.length - 1];
-      const text = el.textContent.replace(/\s+/g, ' ').trim();
+    units.forEach((u) => {
+      let top = Infinity, bot = -Infinity;
+      u.els.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        top = Math.min(top, r.top + sy);
+        bot = Math.max(bot, r.bottom + sy);
+      });
+      const h = bot - top;
+      const text = u.els.map((el) => el.textContent).join(' ').replace(/\s+/g, ' ').trim();
       const read = ZH ? text.replace(/\s/g, '').length / 11 : text.split(' ').length / 5.6;
-      let dwell = el.dataset.dwell ? parseFloat(el.dataset.dwell) : clamp(read + 0.7, 2.2, 10);
-      if (el.classList.contains('thead')) dwell = Math.max(dwell, 4.6); // time to watch the title card
-      const y0 = top - L.hdr - pad;
+      let dwell = u.els[0].dataset.dwell ? parseFloat(u.els[0].dataset.dwell) : clamp(read + 0.7, 2.2, 10);
+      if (u.card) dwell = Math.max(dwell, 4.6); // time to watch the title card
+      // a title card fills the screen from the top; a passage sits just above the middle of the reading area
+      const y0 = u.card ? top - L.hdr - pad : top - (top0 + Math.max(pad * 0.4, (avail - h) * line));
       // a block taller than the screen is panned through in pieces
-      const pieces = r.height > avail ? Math.ceil((r.height - avail) / (avail * 0.7)) + 1 : 1;
+      const pieces = h > avail ? Math.ceil((h - avail) / (avail * 0.7)) + 1 : 1;
       for (let k = 0; k < pieces; k++) {
-        const y = pieces === 1 ? y0 : y0 + ((r.height - avail) * k) / (pieces - 1);
-        raw.push({ y: clamp(Math.round(y), 0, maxY), dwell: dwell / pieces, sec, els: [el], whole: pieces === 1, bottom: top + r.height });
+        const y = pieces === 1 ? y0 : top - top0 - pad * 0.4 + ((h - avail) * k) / (pieces - 1);
+        raw.push({ y: clamp(Math.round(y), 0, maxY), dwell: dwell / pieces, sec: u.sec, els: u.els, items: k === 0 ? u.items : [], card: !!u.card });
       }
     });
-    // Like a teleprompter: the page only moves on when the next block is not already on screen.
-    // Blocks that fit below the current one are read in place; a new section always gets its own move.
+    // passages side by side (the same row) are read together
     const steps = [];
     raw.forEach((st) => {
       const prev = steps[steps.length - 1];
-      const onScreen = prev && st.whole && st.sec === prev.sec && st.bottom <= prev.y + L.hdr + pad + avail;
-      if (prev && (onScreen || Math.abs(st.y - prev.y) < 40)) {
+      if (prev && prev.sec === st.sec && Math.abs(st.y - prev.y) < 40) {
         prev.dwell += st.dwell;
-        prev.els.push(...st.els);
-      } else steps.push(st);
+        prev.els = prev.els.concat(st.els.filter((el) => !prev.els.includes(el)));
+        prev.items = prev.items.concat(st.items);
+        prev.card = prev.card || st.card;
+      } else steps.push({ ...st, els: st.els.slice(), items: st.items.slice() });
     });
     // where the reading bar goes for each step: beside its blocks, within what the screen shows
     steps.forEach((st) => {
@@ -2138,42 +2712,11 @@
       st.bb = Math.min(bot, st.y + H - L.ctl - 10);
       st.bl = left;
     });
-    // each item belongs to the first stop of its section that shows all of it; a stop lasts as long as
-    // its items take to appear and be read, one after another
-    items.forEach((it) => {
-      const r = it.el.getBoundingClientRect();
-      it.l = r.left;
-      it.t = r.top + sy;
-      it.w = r.width;
-      it.h = r.height;
-      const txt = (it.el.innerText || '').trim();
-      const n = ZH ? txt.replace(/\s/g, '').length : txt.split(/\s+/).filter(Boolean).length;
-      const rate = ZH ? 10 : 5;
-      // typed text starts once the particles have drawn their icon, then lingers a moment to be finished
-      it.typeOff = it.card ? 0.3 : it.icon === 'none' ? 0.45 : 0.75;
-      it.time =
-        it.kind === 'small'
-          ? 0.6
-          : it.kind === 'form'
-            ? 3.2
-            : it.kind === 'head'
-              ? 0.8 + n * (ZH ? 0.04 : 0.06) + n / (rate * 1.6)
-              : it.ch
-                ? Math.max(1.2, it.typeOff + it.ch.length / CPS + 0.9)
-                : 1 + n / rate;
-      it.beatT = null;
-    });
-    steps.forEach((st) => (st.items = []));
-    items.forEach((it) => {
-      const own = steps.filter((x) => x.sec === it.sec);
-      const st =
-        own.find((x) => it.t + it.h <= x.y + H - L.ctl - 6) || own.find((x) => it.t >= x.y + L.hdr) || own[own.length - 1];
-      if (st) st.items.push(it);
-    });
+    // a stop lasts as long as its passages take to appear and be read, one after another
     steps.forEach((st) => {
       if (!st.items.length) return;
       const sum = st.items.reduce((a, it) => a + it.time, 0) + 0.6;
-      st.card = st.items.some((it) => it.card);
+      st.card = st.card || st.items.some((it) => it.card);
       st.dwell = Math.max(sum, st.card ? 4.6 : 2);
     });
     let tt = 0;
@@ -2187,7 +2730,10 @@
       prevY = st.y;
     });
     tour = { steps, total: tt };
-    steps.forEach((st) => {
+    steps.forEach((st, i) => {
+      st.idx = i;
+      st.blocks = [...new Set(st.els.map((el) => el.closest('[data-stop]') || el))];
+      st.items.forEach((it) => (it.step = i));
       // a title card fills in as it arrives; elsewhere the page settles first, so the particles can draw
       let b = st.start + st.move * (st.card ? 0.7 : 1) + (st.card ? 0 : 0.25);
       st.items.forEach((it) => {
@@ -2259,6 +2805,7 @@
 
   // letters [0, lo) are shown; [lo, hi) are fading in; the rest are hidden (only while on autopilot)
   function typeTour(tau) {
+    let wrote = false;
     for (const it of typed) {
       const ch = it.ch;
       const len = ch.length;
@@ -2276,9 +2823,11 @@
         ch[j].style.opacity = o.toFixed(3);
         ch[j].style.textShadow = `0 0 ${(4 + (1 - o) * 14).toFixed(1)}px rgba(150, 200, 255, ${(0.9 * (1 - o * 0.7)).toFixed(2)})`;
       }
+      if (hi > it.hi) wrote = true;
       it.lo = lo;
       it.hi = hi;
     }
+    if (wrote) Sound.tick();
   }
 
   // which tour section is under the middle of the screen
@@ -2499,6 +3048,14 @@
   $('#prev').addEventListener('click', () => go(-1));
   $('#next').addEventListener('click', () => go(1));
 
+  const soundBtn = $('#sound');
+  if (soundBtn)
+    soundBtn.addEventListener('click', () => {
+      const on = Sound.toggle();
+      soundBtn.setAttribute('aria-pressed', String(on));
+      Sound.mood(MOOD.cur);
+    });
+
   const SPEEDS = [1, 1.5, 2];
   speedBtn.addEventListener('click', () => {
     speed = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
@@ -2570,17 +3127,101 @@
   }
   readBtn.addEventListener('click', () => setRead(!readMode));
 
-  // click / tap on the film toggles play
-  $('#stage').addEventListener('click', (e) => {
-    if (readMode || e.target.closest('a, button, summary, input, .ctl')) return;
-    toggle();
+  // picking a problem: marks it, holds the film here for a while ("carry on" lets it go on), and passes
+  // the choice on to the agents and the contact form
+  const pickGo = $('.pick-go');
+  const fitTag = (el, on) => {
+    el.classList.toggle('for-you', on);
+    const h = $('h3', el);
+    let tag = h && $('.fit-tag', h);
+    if (on && h && !tag) {
+      tag = document.createElement('span');
+      tag.className = 'fit-tag';
+      tag.textContent = UI.fit;
+      h.appendChild(tag);
+    } else if (!on && tag) tag.remove();
+  };
+  function applyPicks() {
+    const fit = new Set([...PICK.set].map((k) => [0, 0, 1, 4, 5, 2][k]));
+    for (let k = 0; k < 6; k++) fx.fit[k] = fit.has(k) ? 1 : 0;
+    $$('.s-sol .node').forEach((el, k) => fitTag(el, fit.has(k)));
+    $$('#ai-solutions .spec-row').forEach((el, k) => fitTag(el, fit.has(k)));
+    $$('#demo .demo').forEach((el, k) => fitTag(el, fit.has(k)));
+    const titles = [...PICK.set].sort().map((k) => $('h3', pains[k]).textContent.trim());
+    const msg = titles.length ? UI.wish + titles.join(ZH ? '、' : ', ') + (ZH ? '。' : '.') : '';
+    const ta = $('#contact textarea');
+    if (ta && (ta.value === '' || ta.value === PICK.msg)) ta.value = msg; // never over what the visitor wrote
+    PICK.msg = msg;
+  }
+  function togglePick(el) {
+    const k = +el.dataset.pick;
+    if (PICK.set.has(k)) PICK.set.delete(k);
+    else PICK.set.add(k);
+    el.classList.toggle('picked', PICK.set.has(k));
+    el.setAttribute('aria-pressed', String(PICK.set.has(k)));
+    applyPicks();
+    if (pickGo) pickGo.hidden = PICK.set.size === 0;
+    if (playing || resumeAt != null) {
+      playing = false;
+      resumeAt = tclock + IDLE + 3;
+      syncButtons();
+    }
+    Sound.ping(PICK.set.has(k) ? 1 : 0.6);
+  }
+  pains.forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      togglePick(el);
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      togglePick(el);
+    });
   });
+  if (pickGo) pickGo.addEventListener('click', () => setPlaying(true));
+
+  // A click or tap on an empty part of the page releases an idea into the particles (pausing is the
+  // play button's job, or the space bar's). The pointer itself parts the particles as it moves.
+  const INTERACTIVE = 'a, button, summary, input, textarea, select, label, [role="button"], [data-pick], .ctl, .hdr, #nav, .ask, .demo-modal, .contact-form';
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || !e.target.closest || e.target.closest(INTERACTIVE)) return;
+    if (!e.target.closest('#stage, #tour, body')) return;
+    const sel = window.getSelection && String(window.getSelection());
+    if (sel && sel.length > 1) return; // selecting text, not tapping
+    addSpark(e.clientX, e.clientY);
+  });
+  addEventListener(
+    'pointermove',
+    (e) => {
+      pointerAt(e.clientX, e.clientY);
+      if (e.pointerType === 'mouse') {
+        PTR.tx = (e.clientX / W - 0.5) * -18;
+        PTR.ty = (e.clientY / H - 0.5) * -12;
+      }
+    },
+    { passive: true }
+  );
+  addEventListener('pointerdown', (e) => pointerAt(e.clientX, e.clientY), { passive: true });
+  // on phones that allow it without asking, tilting the phone moves the stars
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission !== 'function') {
+    addEventListener(
+      'deviceorientation',
+      (e) => {
+        if (e.gamma == null || e.beta == null) return;
+        PTR.tx = clamp(e.gamma / 30, -1, 1) * -14;
+        PTR.ty = clamp((e.beta - 45) / 30, -1, 1) * -10;
+      },
+      { passive: true }
+    );
+  }
 
   const typing = (el) => el && el.closest && el.closest('input, textarea, select, [contenteditable="true"]');
   const modalOpen = () => !!$('.demo-modal.is-open');
 
   // keyboard
   addEventListener('keydown', (e) => {
+    if (e.defaultPrevented) return;
     if (menuOpen && e.key === 'Escape') {
       closeAsk();
       return;
@@ -2971,7 +3612,7 @@
     }
     if (fill) {
       const ta = $('#contact textarea');
-      if (ta) ta.value = q;
+      if (ta) ta.value = PICK.msg && ta.value === PICK.msg ? PICK.msg + '\n' + q : q;
       acts.append(button('ask-go', SAY.fill, () => leave($('#contact .contact-panel'))));
     }
     if (target && !fill) acts.append(button('ask-go', SAY.go, () => leave(target)));
@@ -3098,10 +3739,11 @@
         cx: (sp.x0 + x1) / 2 + (y1 - y0) * 0.22,
         cy: (y0 + y1) / 2 - (x1 - sp.x0) * 0.22,
         c: sp.item ? onScreen(sp.item, sy, SWs) : null,
+        icon: sp.item ? sp.item.icon : null,
       });
     }
     SWARM.relC = SWARM.rel && SWARM.rel.item && tclock - SWARM.rel.t0 < 0.9 ? onScreen(SWARM.rel.item, sy, SWr) : null;
-    fieldDim = lerp(fieldDim, lerp(1, isMobile ? 0.3 : 0.4, k), 0.06);
+    fieldDim = lerp(fieldDim, lerp(1, isMobile ? 0.14 : 0.4, k), 0.06);
     renderField(F[tf.cur], tf.prev ? F[tf.prev] : null, TC.since, tclock, 1, 0);
     MOT.on = false;
   }
@@ -3126,8 +3768,13 @@
     const tau = t - FILM;
     const st = auto ? stepAt(tau) : null;
     if (st !== focusStep) {
-      if (focusStep) focusStep.els.forEach((el) => el.classList.remove('is-focus'));
-      if (st) st.els.forEach((el) => el.classList.add('is-focus'));
+      if (focusStep) focusStep.blocks.forEach((el) => el.classList.remove('is-focus'));
+      if (st) st.blocks.forEach((el) => el.classList.add('is-focus'));
+      // passages already read in the block being read step back a little
+      for (const x of items) {
+        const past = !!st && x.step != null && x.step < st.idx && st.blocks.some((b) => b.contains(x.el)) && !st.els.some((el) => el.contains(x.el));
+        if (x.el.classList.contains('is-past') !== past) x.el.classList.toggle('is-past', past);
+      }
       focusStep = st;
     }
     // the bar stands beside the piece being read and fills while it is read
@@ -3189,8 +3836,19 @@
     HERO.k = cur.heroK;
     SWARM.d = tau - cur.beatT;
     SWARM.icon = cur.icon;
+    SWARM.pIcon = prev ? prev.icon : null;
     SWARM.c = onScreen(cur, sy, SWc);
     SWARM.p = prev ? onScreen(prev, sy, SWp) : null;
+    if (isMobile) {
+      // phones: the picture goes in the space between the passage and the controls
+      const bottom = SWc.t + SWc.h;
+      const room = H - L.ctl - 14 - bottom;
+      const k = SWARM.lastT == null || tclock - SWARM.lastT > 0.5 ? 1 : 0.12;
+      L.ill.x = lerp(L.ill.x, W * 0.5, k);
+      L.ill.y = lerp(L.ill.y, bottom + room * 0.52, k);
+      L.ill.s = lerp(L.ill.s, clamp(room * 0.3, 0, W * 0.22), k);
+    }
+    SWARM.lastT = tclock;
     // the pen follows the letter being typed
     const ch = cur.ch || [];
     SWARM.tS = ch.length ? cur.typeOff : 0.4;
@@ -3240,7 +3898,9 @@
     if (filmVisible && dirty) renderDom(ft);
     if (tourEl) renderTour(tclock, sy);
 
+    pointerFrame();
     if (sy < H * 0.5) {
+      setMood(frontScene.id);
       // the film (its particles scroll away with it)
       if (fieldMode !== 'film') {
         fieldMode = 'film';
@@ -3251,6 +3911,7 @@
       drawField(ft, null, L.scroll0 - sy, filmBlend ? { from: filmBlend.from, since: tclock - filmBlend.t0 } : null);
     } else {
       const sec = sectionAt(sy);
+      setMood(sec ? sec.id : 'about');
       const want = sec ? sec.form : 'dust';
       if (fieldMode !== 'tour') {
         fieldMode = 'tour';
@@ -3261,6 +3922,7 @@
       swarmUpdate(sy);
       if (want !== tf.cur) {
         tf = { cur: want, prev: tf.cur, t0: tclock, spark: makeSpark(wasOn && !SWARM.on ? SWARM.last : null) };
+        Sound.whoosh();
       } else if (wasOn && !SWARM.on) {
         SWARM.rel = { t0: tclock, item: SWARM.last };
       }
@@ -3277,6 +3939,7 @@
   function frame(now) {
     const dt = Math.min(0.1, (now - last) / 1000);
     last = now;
+    Sound.level(document.hidden ? 0 : playing && !readMode ? 0.55 : 0.18);
     doc.classList.toggle('chrome-rest', playing && !readMode && !menuOpen && !modalOpen() && tclock - lastAct > 2.6);
     if (capturing) {
       requestAnimationFrame(frame);
@@ -3293,6 +3956,8 @@
       }
       // a calm ring beside the film's content, then each section's hero, stepped aside
       const sec = tsecs.length && sy + H * 0.45 >= tsecs[0].top ? sectionAt(sy) : null;
+      pointerFrame();
+      setMood(sec ? sec.id : 'night');
       const want = sec ? sec.form : 'calm';
       if (fieldMode !== 'read') {
         fieldMode = 'read';

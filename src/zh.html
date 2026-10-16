@@ -9,6 +9,23 @@
       content="纳想 NaxaStudio 帮助创业者和小企业老板，把想法变成行动，用实用 AI 系统提升客户回复、销售跟进、营销和日常运营效率。"
     />
     <meta name="theme-color" content="#04060d" />
+    <link rel="canonical" href="https://naxastudio.com/zh" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="纳想 NaxaStudio" />
+    <meta property="og:title" content="纳想 NaxaStudio | 把想法变成行动" />
+    <meta property="og:description" content="纳想 NaxaStudio 帮助创业者和小企业老板，把想法变成行动，用实用 AI 系统提升客户回复、销售跟进、营销和日常运营效率。" />
+    <meta property="og:url" content="https://naxastudio.com/zh" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:image" content="https://naxastudio.com/assets/brand/og-zh.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="纳想 NaxaStudio：把想法变成行动。没有你想象的那么难。" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://naxastudio.com/assets/brand/og-zh.jpg" />
+    <link rel="alternate" hreflang="en" href="https://naxastudio.com/" />
+    <link rel="alternate" hreflang="zh-Hans" href="https://naxastudio.com/zh" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{FAVICON}}" />
+    <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet" />
@@ -57,6 +74,21 @@
     </header>
 
     <main class="stage" id="stage">
+      <!-- 00 · 开场故事（新增的旁白，不是原页面的文字）：晚上 10 点，消息还在一条条进来 -->
+      <section class="scene s-story only-film" data-scene="story" data-label="晚上 10 点" data-dur="10.5" data-forms="phone@0">
+        <div class="wrap story">
+          <div class="story-text">
+            <p class="story-time m m-fade" data-at="0.3" data-out="8.6">22:07</p>
+            <p class="story-line m m-rise" data-at="0.6" data-out="8.6">晚上 10 点。</p>
+            <p class="story-line m m-rise" data-at="1.9" data-out="8.6">老板还在回第 <b class="story-n">37</b> 条消息……</p>
+            <p class="story-line story-ask m m-blur" data-at="5" data-out="8.6">如果有人先帮你接住它们呢？</p>
+          </div>
+          <div class="story-phone" data-anchor="phone">
+            <span class="story-badge m m-pop" id="storyBadge" data-at="0.8" data-dur="0.5" data-out="8.6" aria-hidden="true">0</span>
+          </div>
+        </div>
+      </section>
+
       <!-- 00 · 开场：一个"想法"光点拼成纳想的标志 -->
       <section class="scene s-intro only-film" data-scene="intro" data-label="开场" data-dur="7.5" data-forms="seed@0,logoIntro@2.3">
         <div class="wrap">
@@ -780,6 +812,9 @@
       <span class="chap" id="chap" aria-live="polite"></span>
       <span class="time" id="time">0:00</span>
       <button class="tbtn" id="speed" type="button" aria-label="播放速度">1×</button>
+      <button class="tbtn snd" id="sound" type="button" aria-pressed="false" aria-label="声音" title="声音">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" /><path class="wv" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /><path class="no" d="M16 9.5l5 5M21 9.5l-5 5" /></svg>
+      </button>
       <button class="tbtn" id="read" type="button">按页面阅读</button>
     </div>
 

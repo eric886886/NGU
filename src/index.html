@@ -16,6 +16,17 @@
       content="NaxaStudio helps people and small business owners move from ideas to real results with practical AI execution systems."
     />
     <meta property="og:url" content="https://naxastudio.com/" />
+    <meta property="og:site_name" content="NaxaStudio" />
+    <meta property="og:image" content="https://naxastudio.com/assets/brand/og-en.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="NaxaStudio: Turn ideas into action. It’s not as hard as you think." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://naxastudio.com/assets/brand/og-en.jpg" />
+    <link rel="alternate" hreflang="en" href="https://naxastudio.com/" />
+    <link rel="alternate" hreflang="zh-Hans" href="https://naxastudio.com/zh" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{FAVICON}}" />
+    <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png" />
     <meta name="theme-color" content="#04060d" />
     <script type="application/ld+json">
       {
@@ -103,6 +114,21 @@
     </header>
 
     <main class="stage" id="stage">
+      <!-- 00 · story (narration added for the film, not text from the original pages): 10 p.m., and the messages keep coming -->
+      <section class="scene s-story only-film" data-scene="story" data-label="10 p.m." data-dur="10.5" data-forms="phone@0">
+        <div class="wrap story">
+          <div class="story-text">
+            <p class="story-time m m-fade" data-at="0.3" data-out="8.6">22:07</p>
+            <p class="story-line m m-rise" data-at="0.6" data-out="8.6">10 p.m.</p>
+            <p class="story-line m m-rise" data-at="1.9" data-out="8.6">The owner is still answering message <b class="story-n">#37</b>…</p>
+            <p class="story-line story-ask m m-blur" data-at="5" data-out="8.6">What if someone caught them for you?</p>
+          </div>
+          <div class="story-phone" data-anchor="phone">
+            <span class="story-badge m m-pop" id="storyBadge" data-at="0.8" data-dur="0.5" data-out="8.6" aria-hidden="true">0</span>
+          </div>
+        </div>
+      </section>
+
       <!-- 00 · Intro: a single dot (an idea) becomes the NaxaStudio mark -->
       <section class="scene s-intro only-film" data-scene="intro" data-label="Intro" data-dur="7.5" data-forms="seed@0,logoIntro@2.3">
         <div class="wrap">
@@ -881,6 +907,9 @@
       <span class="chap" id="chap" aria-live="polite"></span>
       <span class="time" id="time">0:00</span>
       <button class="tbtn" id="speed" type="button" aria-label="Playback speed">1×</button>
+      <button class="tbtn snd" id="sound" type="button" aria-pressed="false" aria-label="Sound" title="Sound">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" /><path class="wv" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /><path class="no" d="M16 9.5l5 5M21 9.5l-5 5" /></svg>
+      </button>
       <button class="tbtn" id="read" type="button">Read as page</button>
     </div>
 
