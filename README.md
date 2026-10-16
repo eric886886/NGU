@@ -64,7 +64,7 @@
 | 案例 → 业务诊断 | So where do you start? With a review of your business. | 那第一步从哪里开始？先看清你的生意。 |
 | 业务诊断 → 联系 | When you are ready, tell us what is slowing you down. | 准备好了，就告诉我们哪里最卡。 |
 
-**后半段像一部片子**：自动播放时，每一段都是一个镜头。屏幕上下出现电影的宽银幕黑边，字幕的**每一句**都有自己的一幅粒子图，画的就是这一句在说的事：说"漏接电话"就是一部打不通的电话，说"客户发来的信息很短"就是一个带问号的对话框，说"团队交接更清楚"就是两个人之间递过去一份资料；一句里列了几样东西（"生意、项目、梦想、卡点"），就同时画出这几样；说的是一个过程（"从想法走向行动，再到结果"），就画成用箭头连起来的一排图。说"问题"的图是琥珀色的，解决办法是蓝色的。每一段的第一幅图用开场那一招：上一幅图先收成一个"想法"光点，再"砰"地一下炸开组成新的图；同一段里换句时，粒子直接从上一幅图流成下一幅，新图先成形，字幕再开始写。文字变成下方的电影字幕，一句一句写出来（太长的句子在逗号处分成两条），上面一行小字标出这一段的名字或编号（如"01 · AI 接待助手""问题"），选过问题的访客还会看到"适合你"。粒子像笔一样跟着字幕写，写完变成字幕下的一道光。镜头在两段之间移动时，背景的星星拉成流光。原文一个字不少，只是同一时间屏幕上只有一句。片头卡（每一节开头的大标题）和联系表单照常显示。
+**后半段像一部片子**：自动播放时，每一段都是一个镜头。屏幕上下出现电影的宽银幕黑边，字幕的**每一句**都有自己的一幕粒子画面，而且画面是**从字里长出来的**：字幕写到哪个关键词，粒子就从这个词里流出来，画出它说的东西，这个词同时亮起来（讲问题的词是琥珀色，其他是蓝色）。比如"老板经常在**现场忙**，**电话**、**表单**和**私信****不能及时回复**，客户很容易**转去找别人**"：写到"现场忙"出现一个发抖的人，写到"电话""表单""私信"它们一个个出现，写到"不能及时回复"三样一起变成琥珀色，写到"转去找别人"一个客户走掉、散开。画面还会"演"句子里的动作：电话会响，"漏掉的订单"会碎掉、落下、只剩一点灰，"增长""刚开始创业"会长大，齿轮会转，"不再……""减少……"会被打叉，"做好了""更清楚"会打勾。一句里列了几样东西就一起画出来，说的是一个过程（"从想法走向行动，再到结果"）就画成用箭头连起来的一排图，说的是一样东西变成另一样（"漏接电话正在变成漏掉订单"）就画成一幅图变成另一幅。换句时，上一幕先退暗，新一幕的图随着新的关键词一个个长出来。文字变成下方的电影字幕，一句一句写出来（太长的句子在逗号处分成两条），上面一行小字标出这一段的名字或编号（如"01 · AI 接待助手""问题"），选过问题的访客还会看到"适合你"。粒子像笔一样跟着字幕写，写完变成字幕下的一道光。镜头在两段之间移动时，背景的星星拉成流光。原文一个字不少，只是同一时间屏幕上只有一句。片头卡（每一节开头的大标题）和联系表单照常显示。
 
 一旦自己滚动、暂停或打开提问框，片子就停下，完整的文字页面马上回来：文字放大了（电脑上正文约 21 号字），全部排成左边一栏，每一段读完会稍微变暗；手机上同样是一栏。
 
@@ -184,8 +184,15 @@ node tools/build.js
 - `data-stop` 标记自动滚动的停靠点，停留时间按字数自动算；`data-dwell="12"` 可以手动指定停几秒
 - 自动播放时，带 `data-r`、`data-rs`、`data-rr` 的元素按顺序一个一个出现，时间自动按字数排；自己滚动浏览时，它们在滚进屏幕时出现（`data-r` 的数字是延迟几秒）。`data-rs` 让标题逐字出现，`data-rr` 让段落逐词点亮
 - `data-icon` 是粒子在这一项出现前画的图标，写在元素自己或它外层的元素上：chat、funnel、megaphone、magnifier、checklist、document、growth、target、shield、envelope、clock、coins、bulb、route、gear、layers、window、storm、logo、question、team、pen、wheel、phone、hourglass、stairs、flow3、shop、bank、rocket、book、map、agent、flag、calendar、papers；`none` 表示不画图标，直接写字（旁白用）
-- `data-icons` 是后半段"片子"里每一句字幕配的图，写在这一段文字的元素上，一句一个，用 `|` 隔开，例如 `data-icons="chip|row:bulb,gear,target"`（第一句画芯片，第二句画"灯泡 → 齿轮 → 靶心"）。句子比图多时，后面的句子沿用最后一幅；没写就用 `data-icon`。除了上面的图标，还有：chip（技术）、bolt（更快）、missed（漏接电话）、chatq（带问号的对话框）、chatok（带勾的对话框）、dropoff（客户走掉）、blank（空白页）、calcheck（打满勾的日历）、handoff（交接）、scatter（散落的资料）、sprout（刚发芽）、untangle（理顺）、star（梦想）、heart（有意义）、barrier（卡点）、human（人工把关）、ranked（排好优先级）、muted（营销停了）。组合写法：`row:a,b,c` 是一排用箭头连起来的图（先这个，再这个），`combo:a,b,c,d` 是同时出现的几幅图（这些都有）；前面加 `!` 整幅图变成琥珀色，表示"问题"
-- 改了文字以后，可以在浏览器控制台运行 `__naxa.tour.steps.flatMap(s => s.items).filter(i => i.cine).forEach(i => console.log(i.cine.icons, i.cine.sents))` 对一遍每句话和它的图
+- `data-icons` 是后半段"片子"里每一句字幕的粒子画面，写在这一段文字的元素上，一句一幕，用 `|` 隔开。一幕的写法：
+  - 一幅图：`phone~ring@漏接电话`：图标名，`~` 后面是动作，`@` 后面是字幕里的关键词（写到这个词时，图从这个词里长出来）。不写关键词的图按顺序均匀地出现在这一句里
+  - 一幅图变成另一幅：用 `>` 连起来，如 `phone~ring@漏接电话>!order~fade@漏掉订单`
+  - 几幅图：`set:a@词1,b@词2,c@词3`（同时都在，最多 6 个）；`row:a@词1,b@词2`（一排，用箭头连起来，表示先后）；`over:shop@生意,magnifier@看清`（第二幅叠在第一幅上）
+  - 图标前加 `!` 是琥珀色（问题），关键词也会亮成琥珀色
+  - 动作：`~ring` 响、`~shake` 发抖（压力、忙）、`~fade` 碎掉落下（丢了、没了）、`~grow` 长大、`~spin` 转、`~run` 有东西沿着它流动、`~pulse` 呼吸般发亮、`~x` 打叉、`~ok` 打勾、`~dim` 变暗（还没有的、不重要的）
+  - 图标：chat、funnel、megaphone、magnifier、checklist、document、growth、target、shield、envelope、clock、coins、bulb、route、gear、layers、window、storm、logo、question、team、pen、wheel、phone、hourglass、stairs、flow3、shop、bank、rocket、book、map、agent、flag、calendar、papers、chip、bolt、missed、chatq、chatok、dropoff、blank、calcheck、handoff、scatter、sprout、untangle、star、heart、barrier、human、ranked、muted，以及 person（一个人）、snow（冷）、far（遥远）、tangle（乱成一团）、straight（理顺）、cash（现金流）、order（订单）、form（表单）、contact（联系方式）、pin（地点）、alarm（紧急）、keyboard（打字）、template（模板）、compare（比较）、eye（看到、注意力）、signed（成交、批准）、tag（价格、卖什么）、ideas（很多想法）、zigzag（不稳定）、cycle（重复）、bell（提醒）、scale（判断、决定）、post（帖子、内容）、note（笔记）、sheet（表格）
+  - 关键词必须和字幕里的字一模一样（包括空格）；找不到时浏览器控制台会提示 `naxa: "…" is not in: …`，这幅图就按顺序出现
+- 改了文字以后，可以在浏览器控制台运行 `__naxa.tour.steps.flatMap(s => s.items).filter(i => i.cine).forEach(i => console.log(i.cine.icons, i.cine.sents))` 对一遍每句话和它的画面
 - 旁白是 `<div class="bridge" data-stop><p class="bridge-line" data-r data-icon="none">…</p></div>`，想改措辞直接改这里
 - 每个 `<section data-tour>` 上的 `data-label` 是进度条上的章节名，`data-form` 是这一节的粒子形态
 

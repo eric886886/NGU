@@ -4554,6 +4554,21 @@ html.is-cine .cine.on {
   opacity: 1;
 }
 
+/* the words the pictures come out of */
+.cine .cc.kw {
+  color: #cfe3ff;
+  text-shadow: 0 0 16px rgba(120, 180, 255, 0.75);
+}
+
+.cine .cc.kw.hot {
+  color: #ffd08a;
+  text-shadow: 0 0 16px rgba(255, 170, 70, 0.7);
+}
+
+.cine-sub.is-bridge .cc.kw:not(.hot) {
+  color: #ffffff;
+}
+
 html:lang(zh) .cine-sub {
   font-weight: 500;
   line-height: 1.62;
@@ -4599,7 +4614,7 @@ html.is-cine .lbox {
 }
 
 /* the page itself steps back meanwhile; scrolling or pausing brings it all back */
-html.is-cine .tour [data-stop]:not(.thead):not(.contact-grid):not(.site-end) {
+html.is-cine .tour [data-stop]:not(.contact-grid):not(.site-end) {
   opacity: 0 !important;
   transition: opacity 0.6s ease;
 }

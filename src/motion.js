@@ -1762,40 +1762,345 @@
     ['a', 0.2, 0, 0.42, 0.42, -0.75, 0.75],
   ]);
 
-  // Several pictures at once. 'row:a,b,c' is a sequence (this, then this) with arrows between them;
-  // 'combo:a,b,c,d' is a set (all of these). A '!' in front makes the whole picture amber: a problem.
-  const GROUPS = {};
-  function groupOf(name) {
-    let g = GROUPS[name];
-    if (g) return g;
-    const amber = name[0] === '!';
-    const body = amber ? name.slice(1) : name;
-    const c = body.indexOf(':');
-    if (c < 0) return (GROUPS[name] = { amber, one: body });
-    const row = body.slice(0, c) === 'row';
-    const parts = body.slice(c + 1).split(',');
-    const n = parts.length;
-    let slots;
-    if (row) {
-      const gap = n === 2 ? 1.56 : 1.16, s = n === 2 ? 0.44 : 0.36;
-      slots = parts.map((_, k) => [(k - (n - 1) / 2) * gap, 0, s]);
-    } else if (n === 2) slots = [[-0.62, 0, 0.5], [0.62, 0, 0.5]];
-    else if (n === 3) slots = [[-0.6, -0.46, 0.42], [0.6, -0.46, 0.42], [0, 0.52, 0.42]];
-    else slots = parts.map((_, k) => [(k % 2 ? 0.6 : -0.6), Math.floor(k / 2) ? 0.55 : -0.55, 0.42]);
-    return (GROUPS[name] = { amber, row, parts, slots, n });
+  // more things a subtitle names: a person, cold, far away, a knot, things running smoothly, cash, an order,
+  // a form, a contact card, a place, urgency, a keyboard, a template, a comparison, attention, a signature,
+  // a price, many ideas, ups and downs, things repeating, a reminder, a decision, a post, a note, a spreadsheet
+  defIcon('person', [...person(0, 1.15, undefined, 0.06)]);
+  defIcon('snow', [
+    ...[0, 1, 2].map((k) => {
+      const a = (k * Math.PI) / 3;
+      return ['l', -Math.cos(a) * 0.9, -Math.sin(a) * 0.9, Math.cos(a) * 0.9, Math.sin(a) * 0.9, k * 0.6];
+    }),
+    ...[0, 1, 2, 3, 4, 5].flatMap((k) => {
+      const a = (k * Math.PI) / 3, px = Math.cos(a) * 0.52, py = Math.sin(a) * 0.52;
+      return [-0.75, 0.75].map((d) => ['l', px, py, px + Math.cos(a + d) * 0.26, py + Math.sin(a + d) * 0.26]);
+    }),
+  ]);
+  defIcon('far', [
+    // a road running off to the horizon, something small and faint at its end
+    ['l', -0.98, -0.18, -0.12, -0.18],
+    ['l', 0.12, -0.18, 0.98, -0.18],
+    ['l', -0.92, 0.9, -0.07, -0.16],
+    ['l', 0.92, 0.9, 0.07, -0.16],
+    ...[[0.82, 0.56], [0.4, 0.2], [0.1, -0.04]].map(([y0, y1], k) => ['l', 0, y0, 0, y1, k * 0.5]),
+    ['a', 0, -0.32, 0.06, 0.06, 0, TAU, 0],
+    ['a', 0, -0.18, 0.5, 0.36, Math.PI * 1.08, Math.PI * 1.92],
+  ]);
+  defIcon('tangle', [
+    ['a', -0.12, -0.05, 0.52, 0.36, 0, TAU, 0],
+    ['a', 0.14, 0.08, 0.36, 0.54, 0.5, TAU + 0.5, 0.7],
+    ['a', 0, 0, 0.66, 0.26, 1, TAU + 1, 1.4],
+    ['a', 0.06, -0.12, 0.24, 0.44, 2, TAU + 2, 2.1],
+  ]);
+  defIcon('straight', [
+    ...[-0.42, 0, 0.42].flatMap((y, k) => [['l', -0.86, y, 0.7, y], ['f', -0.86, y, 0.7, y, 0.5 + k * 0.08]]),
+    ['l', 0.56, -0.14, 0.82, 0],
+    ['l', 0.56, 0.14, 0.82, 0],
+  ]);
+  defIcon('cash', [
+    ...box(-0.88, -0.48, 0.88, 0.48),
+    ['a', 0, 0, 0.22, 0.22, 0, TAU, 0],
+    ['p', -0.64, -0.26, 0.8],
+    ['p', 0.64, 0.26, 1.6],
+    ['f', -0.8, 0.74, 0.8, 0.74, 0.55],
+  ]);
+  defIcon('order', [
+    ...poly([[-0.56, 0.72], [-0.56, -0.86], [0.56, -0.86], [0.56, 0.72], [0.38, 0.88], [0.19, 0.72], [0, 0.88], [-0.19, 0.72], [-0.38, 0.88], [-0.56, 0.72]]),
+    ...[-0.56, -0.3, -0.04].map((y, k) => ['l', -0.36, y, k === 2 ? 0.1 : 0.36, y, k * 0.5]),
+    ['l', -0.36, 0.32, 0.36, 0.32, 1.5],
+  ]);
+  defIcon('form', [
+    ...box(-0.7, -0.88, 0.7, 0.88),
+    ...[-0.56, -0.16, 0.24].flatMap((y, k) => box(-0.48, y, 0.48, y + 0.2, k * 0.6)),
+    ...box(0.06, 0.58, 0.48, 0.72, 1.8),
+  ]);
+  defIcon('contact', [
+    ...box(-0.9, -0.6, 0.9, 0.6),
+    ...person(-0.46, 0.5, 0, 0.02),
+    ...[-0.2, 0.06, 0.32].map((y, k) => ['l', 0.04, y, k === 2 ? 0.44 : 0.68, y, k * 0.5]),
+  ]);
+  defIcon('pin', [
+    ['a', 0, -0.32, 0.46, 0.46, Math.PI * 0.8, Math.PI * 2.2],
+    ['l', -0.372, -0.05, 0, 0.86],
+    ['l', 0.372, -0.05, 0, 0.86],
+    ['a', 0, -0.32, 0.16, 0.16, 0, TAU, 0],
+  ]);
+  defIcon('alarm', [
+    ...poly([[0, -0.86], [0.88, 0.72], [-0.88, 0.72], [0, -0.86]]),
+    ['l', 0, -0.32, 0, 0.22, 0],
+    ['p', 0, 0.46, 0],
+  ]);
+  defIcon('keyboard', [
+    ...box(-0.95, -0.46, 0.95, 0.46),
+    ...[-0.24, 0].flatMap((y, r) => [-0.66, -0.44, -0.22, 0, 0.22, 0.44, 0.66].map((x, k) => ['p', x, y, (k + r * 3) * 0.4])),
+    ['l', -0.4, 0.24, 0.4, 0.24, 2],
+  ]);
+  defIcon('template', [
+    ...poly([[-0.62, -0.88], [0.3, -0.88], [0.62, -0.56], [0.62, 0.88], [-0.62, 0.88], [-0.62, -0.88]]),
+    ...[-0.4, -0.1, 0.2, 0.5].flatMap((y, k) => [-0.4, -0.1, 0.2].map((x) => ['l', x, y, x + 0.18, y, k * 0.6])),
+  ]);
+  defIcon('compare', [
+    ...box(-0.88, -0.78, -0.1, 0.78),
+    ...box(0.1, -0.78, 0.88, 0.78),
+    ...[-0.44, -0.12, 0.2].flatMap((y, k) => [['l', -0.7, y, -0.28, y, k * 0.5], ['l', 0.28, y, 0.7, y, k * 0.5 + 0.25]]),
+    ...tick(-0.49, 0.5, 0.14, 1.6),
+    ...tick(0.49, 0.5, 0.14, 1.9),
+  ]);
+  defIcon('eye', [
+    ['a', 0, 0.45, 0.95, 0.75, Math.PI * 1.18, Math.PI * 1.82],
+    ['a', 0, -0.45, 0.95, 0.75, Math.PI * 0.18, Math.PI * 0.82],
+    ['a', 0, 0, 0.24, 0.24, 0, TAU, 0],
+    ['p', 0, 0, 0.6],
+  ]);
+  defIcon('signed', [
+    ...box(-0.62, -0.88, 0.62, 0.88),
+    ...[-0.56, -0.3, -0.04].map((y, k) => ['l', -0.4, y, 0.4, y, k * 0.5]),
+    ...poly([[-0.42, 0.5], [-0.28, 0.3], [-0.16, 0.56], [-0.02, 0.32], [0.1, 0.52], [0.4, 0.44]], 1.5),
+    ['l', -0.44, 0.66, 0.44, 0.66],
+  ]);
+  defIcon('tag', [
+    ...poly([[-0.92, 0], [-0.42, -0.56], [0.88, -0.56], [0.88, 0.56], [-0.42, 0.56], [-0.92, 0]]),
+    ['a', -0.42, 0, 0.11, 0.11, 0, TAU, 0],
+    ['l', -0.06, -0.18, 0.62, -0.18, 0.6],
+    ['l', -0.06, 0.16, 0.42, 0.16, 1.2],
+  ]);
+  defIcon('ideas', [
+    ...[[-0.62, 0.1], [0, -0.32], [0.62, 0.1]].flatMap(([x, y], k) => [
+      ['a', x, y, 0.24, 0.24, 2.35, 0.79 + TAU, k * 0.7],
+      ['l', x - 0.12, y + 0.3, x + 0.12, y + 0.3],
+      ['l', x - 0.08, y + 0.4, x + 0.08, y + 0.4],
+      ['l', x, y - 0.34, x, y - 0.46, k * 0.7],
+    ]),
+  ]);
+  defIcon('zigzag', [
+    ['l', -0.92, 0.8, 0.92, 0.8],
+    ...poly([[-0.9, 0.2], [-0.62, -0.5], [-0.36, 0.46], [-0.1, -0.24], [0.16, 0.58], [0.42, -0.62], [0.66, 0.3], [0.9, -0.12]], 0),
+  ]);
+  const cyc = (a0, a1, ph) => {
+    const x = Math.cos(a1) * 0.7, y = Math.sin(a1) * 0.7, tx = -Math.sin(a1), ty = Math.cos(a1);
+    return [
+      ['a', 0, 0, 0.7, 0.7, a0, a1, ph],
+      ['l', x, y, x - tx * 0.22 + x * 0.22, y - ty * 0.22 + y * 0.22],
+      ['l', x, y, x - tx * 0.22 - x * 0.22, y - ty * 0.22 - y * 0.22],
+    ];
+  };
+  defIcon('cycle', [...cyc(-0.4, Math.PI - 0.7, 0), ...cyc(Math.PI - 0.4, TAU - 0.7, 1.2)], 0.5);
+  defIcon('bell', [
+    ['a', 0, -0.12, 0.48, 0.56, Math.PI, TAU],
+    ['l', -0.48, -0.12, -0.62, 0.5],
+    ['l', 0.48, -0.12, 0.62, 0.5],
+    ['l', -0.78, 0.5, 0.78, 0.5],
+    ['a', 0, 0.66, 0.11, 0.11, 0, TAU, 0],
+    ['l', 0, -0.68, 0, -0.84],
+    ['a', 0, -0.1, 0.78, 0.78, -2.6, -2.1, 0.6],
+    ['a', 0, -0.1, 0.78, 0.78, -1.04, -0.54, 0.6],
+  ]);
+  defIcon('scale', [
+    ['l', 0, -0.78, 0, 0.74],
+    ['l', -0.42, 0.78, 0.42, 0.78],
+    ['l', -0.82, -0.56, 0.82, -0.56, 0],
+    ...[-0.82, 0.82].flatMap((x, k) => [
+      ['l', x, -0.56, x - 0.24, 0.02],
+      ['l', x, -0.56, x + 0.24, 0.02],
+      ['a', x, 0.02, 0.26, 0.14, 0, Math.PI, k * 0.9],
+    ]),
+  ]);
+  defIcon('post', [
+    ...box(-0.72, -0.88, 0.72, 0.88),
+    ...box(-0.54, -0.7, 0.54, 0.08),
+    ...poly([[-0.54, 0.02], [-0.18, -0.36], [0.06, -0.12], [0.24, -0.3], [0.54, 0.02]], 0),
+    ['l', -0.54, 0.34, 0.54, 0.34],
+    ['l', -0.54, 0.56, 0.2, 0.56],
+    ['p', 0.42, 0.66, 1.2],
+  ]);
+  defIcon('note', [
+    ...poly([[-0.76, -0.76], [0.76, -0.76], [0.76, 0.38], [0.38, 0.76], [-0.76, 0.76], [-0.76, -0.76]]),
+    ...poly([[0.38, 0.76], [0.38, 0.38], [0.76, 0.38]]),
+    ...[-0.42, -0.12, 0.18].map((y, k) => ['a', -0.08, y + 0.16, 0.44, 0.12, Math.PI * 1.2, Math.PI * 1.8, k * 0.6]),
+  ]);
+  defIcon('sheet', [
+    ...box(-0.88, -0.72, 0.88, 0.72),
+    ...[-0.36, 0, 0.36].map((y, k) => ['l', -0.88, y, 0.88, y, k * 0.5]),
+    ['l', -0.36, -0.72, -0.36, 0.72],
+    ['l', 0.2, -0.72, 0.2, 0.72],
+  ]);
+  // what ~x and ~ok draw over a picture
+  defIcon('xmark', cross(0, 0, 0.72));
+  defIcon('okmark', tick(0, 0.08, 0.72));
+
+  // ---- Scenes: what the particles draw while one subtitle sentence is written (data-icons on a passage,
+  // one scene per sentence, separated by |).
+  //   'phone~ring@漏接电话>!order~fade@漏掉订单'   one picture that turns into another (>) as the sentence goes on
+  //   'row:a@…,b@…'   a sequence joined by arrows       'set:a@…,b@…,c@…'   several things at once (up to 6)
+  //   'over:a@…,b@…'   the second drawn over the first (a magnifier over a shop)
+  // Each picture: '!' makes it amber (a problem); then the icon; then actions; then '@word': the picture
+  // springs out of that word of the subtitle the moment the word is written. Actions: ~ring ~shake ~fade
+  // (falls apart and is gone) ~grow ~spin ~run (things flowing along it) ~pulse ~x (crossed out) ~ok (ticked)
+  // ~dim. A picture without a word comes in at its turn, spread over the sentence.
+  const SCENES = {};
+  function sceneOf(str) {
+    let sc = SCENES[str];
+    if (sc) return sc;
+    let body = String(str || 'target').trim(), kind = 'set';
+    const m = /^(row|set|combo|over):/.exec(body);
+    if (m) {
+      kind = m[1] === 'combo' ? 'set' : m[1];
+      body = body.slice(m[0].length);
+    }
+    const flat = [];
+    const slots = body.split(',').map((part, j) => ({
+      states: part.split('>').map((raw) => {
+        const st = { slot: j, amber: false, act: {}, kw: null, icon: 'target', q: flat.length };
+        let x = raw.trim();
+        const at = x.indexOf('@');
+        if (at >= 0) {
+          st.kw = x.slice(at + 1).trim();
+          x = x.slice(0, at);
+        }
+        if (x[0] === '!') {
+          st.amber = true;
+          x = x.slice(1);
+        }
+        const bits = x.split('~').map((b) => b.trim());
+        st.icon = ICONS[bits[0]] || bits[0] === 'logo' || bits[0] === 'storm' ? bits[0] : 'target';
+        bits.slice(1).forEach((b) => (st.act[b] = 1));
+        flat.push(st);
+        return st;
+      }),
+    }));
+    const n = slots.length;
+    let pos;
+    if (kind === 'over') pos = [[-0.14, 0.04, 0.94], [0.44, 0.34, 0.56]];
+    else if (kind === 'row' || n === 1) {
+      const gap = [0, 1.56, 1.16, 0.92][n - 1] || 0.92, sz = [1, 0.44, 0.36, 0.3][n - 1] || 0.3;
+      pos = slots.map((_, k) => [(k - (n - 1) / 2) * gap, 0, sz]);
+    } else if (n === 2) pos = [[-0.62, 0, 0.5], [0.62, 0, 0.5]];
+    else if (n === 3) pos = [[-0.6, -0.46, 0.42], [0.6, -0.46, 0.42], [0, 0.52, 0.42]];
+    else if (n === 4) pos = [[-0.6, -0.55, 0.42], [0.6, -0.55, 0.42], [-0.6, 0.55, 0.42], [0.6, 0.55, 0.42]];
+    else
+      pos = slots.map((_, k) => {
+        const r = k < 3 ? 0 : 1, m = r ? n - 3 : 3, c = r ? k - 3 : k;
+        return [(c - (m - 1) / 2) * 1.04, r ? 0.56 : -0.5, 0.36];
+      });
+    slots.forEach((sl, k) => (sl.pos = pos[k] || [0, 0, 0.4]));
+    // how far it reaches sideways (in picture sizes), so a wide row can be fitted to a narrow screen
+    const ext = Math.max(1, ...slots.map((sl) => Math.abs(sl.pos[0]) + sl.pos[2]));
+    sc = { kind, row: kind === 'row' && n > 1, slots, n, flat, ext };
+    return (SCENES[str] = sc);
+  }
+  // which part of a scene particle i draws: its picture (a slot), or in a row the arrow into picture k + 1
+  // (returned as -2 - k)
+  function roleOf(sc, i) {
+    if (sc.row && Math.floor(i / sc.n) % 9 === 0) return -2 - Math.floor(R1[i] * (sc.n - 1) * 0.9999);
+    return i % sc.n;
+  }
+  // the latest picture of that part that has come in by now (-1: none yet)
+  function stateOf(sc, role, now, trig) {
+    if (role < 0) {
+      const st = sc.slots[-role - 1].states[0];
+      return trig[st.q] <= now ? st.q : -1;
+    }
+    let q = -1;
+    for (const st of sc.slots[role].states) if (trig[st.q] <= now) q = st.q;
+    return q;
+  }
+  function finalState(sc, role) {
+    if (role < 0) return sc.slots[-role - 1].states[0].q;
+    const sts = sc.slots[role].states;
+    return sts[sts.length - 1].q;
+  }
+  let FLOW = 1; // how fast particles run along a picture's strokes (~run speeds it up)
+  const MK = { x: 0, y: 0, a: 1, h: 0 };
+  // where particle i sits in picture q of a scene (unit coordinates), tl seconds after the picture landed
+  function statePoint(sc, q, role, i, t, tl, out) {
+    if (role < 0) {
+      // the arrow from picture k to picture k + 1
+      const k = -role - 2, a = sc.slots[k].pos, b = sc.slots[k + 1].pos;
+      const x0 = a[0] + a[2] * 1.05 + 0.04, x1 = b[0] - b[2] * 1.05 - 0.04;
+      if (R3[i] < 0.34) {
+        const u = R2[i], side = R3[i] < 0.17 ? -1 : 1, hl = Math.min(0.12, (x1 - x0) * 0.4);
+        out.x = x1 - hl * u;
+        out.y = side * hl * 0.8 * u;
+        out.a = 0.85;
+      } else {
+        const u = (R2[i] + t * 0.45) % 1;
+        out.x = x0 + (x1 - x0) * u;
+        out.y = (R4[i] - 0.5) * 0.02;
+        out.a = Math.sin(Math.PI * u);
+      }
+      out.h = 0;
+      return out;
+    }
+    const st = sc.flat[q], A = st.act, sl = sc.slots[st.slot].pos;
+    FLOW = A.run ? 7 : 1;
+    iconPoint(st.icon, i, t, out);
+    FLOW = 1;
+    let x = out.x, y = out.y, a = out.a, h = out.h;
+    if (A.grow) {
+      const g = 0.16 + 0.84 * easeOut(clamp(tl / 1.4));
+      x *= g;
+      y = 0.9 - (0.9 - y) * g;
+    }
+    if (A.spin) {
+      const r = t * 0.9, c = Math.cos(r), sn = Math.sin(r);
+      const x1 = x * c - y * sn;
+      y = x * sn + y * c;
+      x = x1;
+    }
+    if (A.ring && Math.sin(t * 3.4) > 0.1) x += Math.sin(t * 46 + R1[i] * 5) * 0.05;
+    if (A.shake) {
+      x += Math.sin(t * 29 + R2[i] * 20) * 0.035;
+      y += Math.cos(t * 23 + R3[i] * 20) * 0.035;
+    }
+    if (A.pulse) {
+      const p = Math.sin(t * 3.4);
+      x *= 1 + 0.07 * p;
+      y *= 1 + 0.07 * p;
+      a *= 0.82 + 0.18 * p;
+    }
+    if (A.dim) a *= 0.4;
+    if (st.amber) h = 1;
+    if ((A.x || A.ok) && R6[i] < 0.27) {
+      // a share of the picture's particles crosses it out, or ticks it
+      const e = easeInOut(clamp((tl - 0.25) / 0.45));
+      if (e > 0) {
+        iconPoint(A.x ? 'xmark' : 'okmark', i, t, MK);
+        x = lerp(x, MK.x * 0.9, e);
+        y = lerp(y, MK.y * 0.9, e);
+        a = lerp(a, 1, e);
+        if (e > 0.5) h = A.x ? 1 : 0;
+      }
+    }
+    if (A.fade) {
+      // falls apart, turning amber on its way out: lost
+      const e = clamp((tl - 0.5) / 1.3);
+      if (e > 0) {
+        // (a little amber dust stays where it fell)
+        y += e * e * (0.35 + R3[i] * 0.7);
+        x += (R1[i] - 0.5) * 0.6 * e;
+        a *= 1 - e * (R2[i] < 0.3 ? 0.7 : 0.97);
+        h = 1;
+      }
+    }
+    // a picture flares up as it lands
+    if (tl > 0 && tl < 0.8) a *= 1 + 0.5 * (1 - tl / 0.8);
+    out.x = sl[0] + x * sl[2];
+    out.y = sl[1] + y * sl[2];
+    out.a = a;
+    out.h = h;
+    return out;
+  }
+  // a scene as it ends up, all its pictures drawn (how it stays until the next one takes over)
+  function sceneFinal(str, i, t, out) {
+    const sc = sceneOf(str), role = roleOf(sc, i);
+    return statePoint(sc, finalState(sc, role), role, i, t, 9, out);
   }
 
   // where particle i sits on an icon at time t (unit coordinates); also how bright, and whether amber
   function iconPoint(name, i, t, out) {
     out.a = 1;
     out.h = 0;
-    if (name.indexOf(':') > 0 || name[0] === '!') {
-      const g = groupOf(name);
-      if (g.one) iconPoint(g.one, i, t, out);
-      else groupPoint(g, i, t, out);
-      if (g.amber) out.h = 1;
-      return out;
-    }
+    if (!ICONS[name] && name !== 'storm' && name !== 'logo') return sceneFinal(name, i, t, out);
     if (name === 'storm') {
       // a problem: a restless knot, a third of it amber
       const ang = R1[i] * TAU + t * (1.4 + R5[i] * 1.6);
@@ -1813,7 +2118,7 @@
       return out;
     }
     const ic = ICONS[name] || ICONS.target;
-    const u = (R1[i] + t * 0.018) % 1;
+    const u = (R1[i] + t * 0.018 * FLOW) % 1;
     const d = u * ic.total;
     let g = ic.segs[ic.segs.length - 1];
     for (const x of ic.segs) {
@@ -1862,43 +2167,11 @@
     return out;
   }
 
-  // a particle's place in a group of pictures: each picture gets its share of the particles, in its slot;
-  // in a row a few of them run along arrows from one picture to the next. The pictures of a set glow in turn.
-  function groupPoint(g, i, t, out) {
-    const n = g.n;
-    if (g.row && Math.floor(i / n) % 9 === 0) {
-      const k = Math.floor(R1[i] * (n - 1) * 0.9999);
-      const a = g.slots[k], b = g.slots[k + 1];
-      const x0 = a[0] + a[2] * 1.05 + 0.04, x1 = b[0] - b[2] * 1.05 - 0.04;
-      if (R3[i] < 0.34) {
-        // the arrowhead
-        const u = R2[i], side = R3[i] < 0.17 ? -1 : 1, hl = Math.min(0.12, (x1 - x0) * 0.4);
-        out.x = x1 - hl * u;
-        out.y = side * hl * 0.8 * u;
-        out.a = 0.85;
-      } else {
-        const u = (R2[i] + t * 0.45) % 1;
-        out.x = x0 + (x1 - x0) * u;
-        out.y = (R4[i] - 0.5) * 0.02;
-        out.a = Math.sin(Math.PI * u);
-      }
-      out.h = 0;
-      return out;
-    }
-    const k = i % n;
-    const sl = g.slots[k];
-    iconPoint(g.parts[k], i, t, out);
-    out.x = sl[0] + out.x * sl[2];
-    out.y = sl[1] + out.y * sl[2];
-    if (!g.row) out.a *= 0.7 + 0.3 * Math.pow(Math.max(0, Math.sin(t * 1.3 - k * 1.1)), 2);
-    return out;
-  }
-
   // The swarm: while the autopilot reads a section, about 40% of the particles leave the hero. Most of them
   // draw a large picture of what is being read beside the text (morphing from one passage's picture to the
   // next: a problem's storm turns into the agent that solves it, then into growth); the rest become the pen
   // that writes the text out and settles as a glowing underline beneath it.
-  const SWARM = { on: false, d: 0, icon: 'target', pIcon: null, c: null, p: null, last: null, rel: null, relC: null };
+  const SWARM = { on: false, d: 0, icon: 'target', pIcon: null, c: null, p: null, last: null, rel: null, relC: null, scene: null, from: null, now: 99, trig: [], word: [] };
   // the share of particles that leaves the hero (more of them in film mode), and of those the share
   // that draws the picture (the rest is the pen)
   let SWARM_FRAC = 0.42;
@@ -1986,6 +2259,101 @@
     return QP;
   }
 
+  // Film mode: particle i of the picture. It belongs to one picture of the sentence's scene; until that
+  // picture's word is written it is still part of the last scene (which steps back as the new words come),
+  // then it streams down into the word and out of it into the new picture.
+  const CU = { x: 0, y: 0, a: 0, h: 0 }, CF = { x: 0, y: 0, a: 0, h: 0 }, CT = { x: 0, y: 0, a: 0, h: 0 };
+  function toScreen(u, o, sc) {
+    const c = L.cine, k = Math.min(1, (W * 0.5 - 16) / (c.s * sc.ext));
+    o.x = c.x + u.x * c.s * k;
+    o.y = c.y + u.y * c.s * k;
+    o.a = 0.92 * u.a * clamp((c.s - 18) / 26);
+    o.h = u.h;
+    return o;
+  }
+  // where the particle was before the scene: in the last scene as it ended, or in the hero
+  function fromPoint(i, t, fx, fy, fa) {
+    if (SWARM.from) return toScreen(sceneFinal(SWARM.from, i, t, CU), CF, sceneOf(SWARM.from));
+    CF.x = fx;
+    CF.y = fy;
+    CF.a = fa;
+    CF.h = 0;
+    return CF;
+  }
+  function cinePos(i, t, fx, fy, fa) {
+    SP.s = 0.95;
+    if (!SWARM.scene) {
+      SP.x = fx;
+      SP.y = fy;
+      SP.a = fa;
+      SP.h = 0;
+      return SP;
+    }
+    const sc = sceneOf(SWARM.scene), now = SWARM.now, role = roleOf(sc, i);
+    const done = now >= 99;
+    const q = done ? finalState(sc, role) : stateOf(sc, role, now, SWARM.trig);
+    if (q < 0) {
+      fromPoint(i, t, fx, fy, fa);
+      SP.x = CF.x;
+      SP.y = CF.y;
+      SP.a = CF.a * (1 - 0.45 * clamp(now / 0.6));
+      SP.h = CF.h;
+      return SP;
+    }
+    const tq = done ? -99 : SWARM.trig[q];
+    const fl = (now - tq - DEL[i] * 0.4) / 0.75;
+    toScreen(statePoint(sc, q, role, i, t, now - tq - FLY_T, CU), CT, sc);
+    if (fl >= 1) {
+      SP.x = CT.x;
+      SP.y = CT.y;
+      SP.a = CT.a;
+      SP.h = CT.h;
+      return SP;
+    }
+    // where it comes from: this picture's previous form (a picture that turns into another), or the last scene
+    const st = sc.flat[q];
+    const sts = role >= 0 ? sc.slots[role].states : null;
+    const k = sts ? sts.indexOf(st) : 0;
+    if (k > 0) toScreen(statePoint(sc, sts[k - 1].q, role, i, t, now - SWARM.trig[sts[k - 1].q] - FLY_T, CU), CF, sc);
+    else fromPoint(i, t, fx, fy, fa);
+    if (fl <= 0) {
+      SP.x = CF.x;
+      SP.y = CF.y;
+      SP.a = CF.a * (k > 0 ? 1 : 1 - 0.45 * clamp(now / 0.6));
+      SP.h = CF.h;
+      return SP;
+    }
+    if (k > 0 && sts[k - 1].icon === st.icon) {
+      // the same picture changing (turning amber, being crossed out) stays where it is
+      const e = easeInOut(fl);
+      SP.x = lerp(CF.x, CT.x, e);
+      SP.y = lerp(CF.y, CT.y, e);
+      SP.a = lerp(CF.a, CT.a, e);
+      SP.h = e < 0.5 ? CF.h : CT.h;
+      return SP;
+    }
+    const w = SWARM.word[q] || SWc;
+    const jx = Math.cos(ANG[i]) * (3 + R3[i] * 10), jy = Math.sin(ANG[i]) * (2 + R3[i] * 5);
+    if (fl < 0.4) {
+      // into the word…
+      const e = Math.pow(fl / 0.4, 2);
+      SP.x = lerp(CF.x, w.x + jx, e);
+      SP.y = lerp(CF.y, w.y + jy, e);
+      SP.a = lerp(CF.a, 1, e);
+      SP.h = CF.h;
+      SP.s = 0.85;
+    } else {
+      // …and out of it, into the picture
+      const u = (fl - 0.4) / 0.6, e = easeOut(u);
+      const sw = Math.sin(Math.PI * u) * SW[i] * 0.3;
+      SP.x = lerp(w.x + jx, CT.x, e) + Math.cos(ANG[i]) * sw;
+      SP.y = lerp(w.y + jy, CT.y, e) + Math.sin(ANG[i]) * sw;
+      SP.a = lerp(1, CT.a, u);
+      SP.h = u > 0.5 ? CT.h : 0;
+    }
+    return SP;
+  }
+
   // The swarm, for each passage: the picture morphs from the last passage's into this one's; the pen flies
   // to the first letter, writes the text out alongside the typing, then settles as an underline beneath it.
   function swarmPos(i, t, fx, fy, fa) {
@@ -1994,9 +2362,10 @@
     SP.s = 0.85;
     SP.h = 0;
     if (R7[i] < ILL_FRAC) {
+      if (CINE.on) return cinePos(i, t, fx, fy, fa);
       illPoint(i, t, SWARM.icon, fx, fy, fa);
       const tx = QP.x, ty = QP.y, ta = QP.a, th = QP.h;
-      if (d >= 0 && !CINE.on) {
+      if (d >= 0) {
         SP.x = tx;
         SP.y = ty;
         SP.a = ta;
@@ -2004,67 +2373,7 @@
         SP.s = 0.95;
         return SP;
       }
-      if (CINE.on && SWARM.md != null) {
-        // the next sentence's picture: the particles stream from the last picture into this one
-        const e = easeInOut(clamp((SWARM.md - DEL[i] * 0.3) / 0.85));
-        if (e >= 1) {
-          SP.x = tx;
-          SP.y = ty;
-          SP.a = ta;
-          SP.h = th;
-          SP.s = 0.95;
-          return SP;
-        }
-        illPoint(i, t, SWARM.pIcon, fx, fy, fa);
-        const sw = Math.sin(Math.PI * e) * SW[i] * 0.55;
-        SP.x = lerp(QP.x, tx, e) + Math.cos(ANG[i] + t * 0.7) * sw;
-        SP.y = lerp(QP.y, ty, e) + Math.sin(ANG[i] + t * 0.7) * sw;
-        SP.a = lerp(QP.a, ta, e) * (1 + 0.35 * Math.sin(Math.PI * e));
-        SP.h = e < 0.5 ? QP.h : th;
-        SP.s = 0.95;
-        return SP;
-      }
       illPoint(i, t, pv ? SWARM.pIcon : null, fx, fy, fa);
-      if (CINE.on) {
-        // the opening's gesture for every passage: everything gathers into one point of light, which
-        // then bursts out (a little past its mark) into the new picture
-        const c = L.cine;
-        const ja = ANG[i], jr = 1.5 + R3[i] * 7;
-        const dx = c.x + Math.cos(ja) * jr, dy = c.y + Math.sin(ja) * jr;
-        const d2 = SWARM.d - DEL[i] * 0.12;
-        if (d2 < -1.15) {
-          SP.x = QP.x;
-          SP.y = QP.y;
-          SP.a = QP.a;
-          SP.h = QP.h;
-        } else if (d2 < -0.6) {
-          const e = Math.pow((d2 + 1.15) / 0.55, 2);
-          SP.x = lerp(QP.x, dx, e);
-          SP.y = lerp(QP.y, dy, e);
-          SP.a = lerp(QP.a, 0.95, e);
-          SP.h = 0;
-        } else if (d2 < -0.4) {
-          SP.x = dx;
-          SP.y = dy;
-          SP.a = 1;
-          SP.s = 1.1;
-        } else if (d2 < 0.5) {
-          const u = (d2 + 0.4) / 0.9;
-          const e = 1 + 2.2 * Math.pow(u - 1, 3) + 1.2 * Math.pow(u - 1, 2); // ease out, overshooting
-          const sw = Math.sin(Math.PI * u) * SW[i] * 0.35;
-          SP.x = dx + (tx - dx) * e + Math.cos(ANG[i]) * sw;
-          SP.y = dy + (ty - dy) * e + Math.sin(ANG[i]) * sw;
-          SP.a = lerp(1, ta, u);
-          SP.h = u > 0.6 ? th : 0;
-        } else {
-          SP.x = tx;
-          SP.y = ty;
-          SP.a = ta;
-          SP.h = th;
-          SP.s = 0.95;
-        }
-        return SP;
-      }
       if (d < -0.9) {
         SP.x = QP.x;
         SP.y = QP.y;
@@ -2626,7 +2935,7 @@
     // film mode: the picture takes the middle of the screen, above the subtitles
     const band = H - L.hdr - L.ctl;
     L.cine = isMobile
-      ? { x: W / 2, y: L.hdr + band * 0.34, s: Math.min(W * 0.27, band * 0.18) }
+      ? { x: W / 2, y: L.hdr + band * 0.36, s: Math.min(W * 0.36, band * 0.23) }
       : { x: W / 2, y: L.hdr + band * 0.4, s: Math.min(W * 0.17, band * 0.29) };
     if (!TC.ready) {
       Object.assign(TC, L.heroAt);
@@ -2694,8 +3003,9 @@
     '.eyebrow, .btn, .btns, button, label, input, select, textarea, .tag, .tag-row, .spec-n, .layer-n, .pr-n, .ls-n, .sheet-n, .demo-bar, .demo-lock, .demo-preview, .t-bignum, [data-rs], dt, svg, form';
   const CPS = ZH ? 10 : 28; // characters per second
   const FADE = ZH ? 2.5 : 6; // characters fading in at once
-  const PIC_GAP = 0.55; // in film mode, a sentence with a new picture waits this long for it to form
-  const MORPH_LEAD = 0.75; // …which starts this long before the sentence is written
+  // film mode: a picture streams out of its word for this long; then it is given a moment to be seen
+  const FLY_T = 1.05;
+  const viewOf = (st) => (st.act.fade ? 2 : st.act.x || st.act.ok ? 1.15 : st.act.grow ? 1.4 : 0.75);
   const typed = [];
   function typeRun(el) {
     const chars = [];
@@ -2842,6 +3152,36 @@
     if (!list.length) list.push(it.icon);
     return Array.from({ length: Math.max(1, n) }, (_, k) => list[Math.min(k, list.length - 1)]);
   }
+  // When each picture of a sentence's scene comes in: as its word is written (counted in the subtitle's
+  // letters, which leave out spaces). Also which letters are those words, to light them up.
+  function sceneTimes(c) {
+    const cps = c.title ? CPS * 1.8 : CPS;
+    const ns = (str) => str.replace(/ /g, '').length;
+    c.trig = [];
+    c.span = [];
+    c.kws = [];
+    c.sents.forEach((sent, k) => {
+      const sc = sceneOf(c.icons[k]), len = ns(sent);
+      const trig = [], span = [], kws = [];
+      sc.flat.forEach((st, q) => {
+        let c0 = -1, c1 = -1;
+        if (st.kw) {
+          const p = sent.indexOf(st.kw);
+          if (p >= 0) {
+            c0 = ns(sent.slice(0, p));
+            c1 = c0 + ns(st.kw) - 1;
+            kws.push([c0, c1, st.amber]);
+          } else if (window.console) console.warn('naxa: "' + st.kw + '" is not in: ' + sent);
+        }
+        if (c0 < 0) c0 = c1 = Math.round(((len - 1) * q) / sc.flat.length);
+        trig.push((c1 + 1) / cps);
+        span.push([c0, c1]);
+      });
+      c.trig.push(trig);
+      c.span.push(span);
+      c.kws.push(kws);
+    });
+  }
   // the picture a passage ends on
   function lastIcon(it) {
     return it.cine ? it.cine.icons[it.cine.icons.length - 1] : it.icon;
@@ -2903,7 +3243,7 @@
       const n = ZH ? txt.replace(/\s/g, '').length : txt.split(/\s+/).filter(Boolean).length;
       const rate = ZH ? 10 : 5;
       // typed text starts once the particles have begun their drawing, then lingers a moment to be finished
-      it.typeOff = it.card ? 0.3 : (it.cine ? it.cine.icons[0] : it.icon) === 'none' ? 0.45 : 0.75;
+      it.typeOff = it.card ? 0.3 : it.cine ? 0.4 : it.icon === 'none' ? 0.45 : 0.75;
       it.time =
         it.kind === 'small'
           ? 0.6
@@ -2916,12 +3256,15 @@
                 : 1 + n / rate;
       // as film subtitles: each sentence is written out, then held a moment
       if (it.cine) {
+        if (!it.cine.trig) sceneTimes(it.cine);
         let off = 0;
         const ic = it.cine.icons;
         it.cineOff = it.cine.sents.map((x, k) => {
-          if (k && ic[k] !== ic[k - 1]) off += PIC_GAP;
           const o = off;
-          off += x.length / (it.cine.title ? CPS * 1.8 : CPS) + (ZH ? 0.85 : 0.6);
+          // a sentence stays up until it is written and read, and until its last picture has come in
+          let need = x.length / (it.cine.title ? CPS * 1.8 : CPS) + (ZH ? 0.85 : 0.6);
+          if (!k || ic[k] !== ic[k - 1]) sceneOf(ic[k]).flat.forEach((st) => (need = Math.max(need, it.cine.trig[k][st.q] + FLY_T + viewOf(st))));
+          off += need;
           return o;
         });
         it.cineEnd = off;
@@ -4124,7 +4467,6 @@
     SWARM.d = tau - cur.beatT;
     SWARM.icon = cur.icon;
     SWARM.pIcon = prev ? lastIcon(prev) : null;
-    SWARM.md = null;
     SWARM.c = onScreen(cur, sy, SWc);
     SWARM.p = prev ? onScreen(prev, sy, SWp) : null;
     if (CINE.on && cur.cine) {
@@ -4133,18 +4475,39 @@
       const r = cineSub.getBoundingClientRect();
       Object.assign(SWc, { l: r.left, t: r.top, w: r.width, h: r.height, x: r.left + r.width / 2, y: r.top + r.height / 2, frame: false });
       SWARM.p = prev ? SWc : null;
-      // one picture per sentence: the picture of the sentence that is up (or about to be), flowing
-      // out of the one before
+      // one scene per sentence: the scene of the sentence being written, its pictures streaming out of
+      // their words as they are written; until then the last sentence's scene stays
       const ic = cur.cine.icons;
-      let kp = 0;
-      for (let j = 1; j < ic.length; j++) if (tau >= cur.beatT + cur.typeOff + cur.cineOff[j] - MORPH_LEAD) kp = j;
-      SWARM.icon = ic[kp];
-      SWARM.md = null;
-      if (kp > 0) {
-        SWARM.pIcon = ic[kp - 1];
-        // when the picture is the same as the last sentence's it simply stays
-        SWARM.md = ic[kp] === ic[kp - 1] ? 9 : tau - (cur.beatT + cur.typeOff + cur.cineOff[kp] - MORPH_LEAD);
-      } else SWARM.pIcon = prev ? lastIcon(prev) : null;
+      const rel = tau - cur.beatT - cur.typeOff;
+      let kp = -1;
+      for (let j = 0; j < ic.length; j++) if (rel >= cur.cineOff[j]) kp = j;
+      const before = kp > 0 ? ic[kp - 1] : prev ? lastIcon(prev) : null;
+      if (kp < 0) {
+        SWARM.scene = before;
+        SWARM.from = null;
+        SWARM.now = 99;
+      } else {
+        SWARM.scene = ic[kp];
+        SWARM.from = before;
+        SWARM.trig = cur.cine.trig[kp];
+        // the same scene as the last sentence's simply stays
+        SWARM.now = before === ic[kp] ? 99 : rel - cur.cineOff[kp];
+        // where each picture's word is on screen
+        const sps = CINE.item === cur && CINE.k === kp ? CINE.spans : null;
+        cur.cine.span[kp].forEach((r, q) => {
+          const w = SWARM.word[q] || (SWARM.word[q] = { x: 0, y: 0 });
+          if (sps && sps.length) {
+            const a = sps[clamp(r[0], 0, sps.length - 1)].getBoundingClientRect();
+            const b = sps[clamp(r[1], 0, sps.length - 1)].getBoundingClientRect();
+            w.x = (a.left + b.right) / 2;
+            w.y = (a.top + b.bottom) / 2;
+          } else {
+            w.x = SWc.x;
+            w.y = SWc.y;
+          }
+        });
+      }
+      SWARM.icon = SWARM.scene || 'none';
       const sp = CINE.item === cur ? CINE.spans : [];
       SWARM.tS = cur.typeOff;
       SWARM.tE = cur.typeOff + (cur.cineEnd || 0.4);
@@ -4231,6 +4594,12 @@
       frag.appendChild(sp);
       CINE.spans.push(sp);
     }
+    // the words the pictures come out of are lit
+    const kws = k >= 0 && it.cine.kws ? it.cine.kws[k] : null;
+    if (kws)
+      kws.forEach(([c0, c1, hot]) => {
+        for (let j = c0; j <= c1 && j < CINE.spans.length; j++) CINE.spans[j].classList.add('kw', ...(hot ? ['hot'] : []));
+      });
     cineSub.textContent = '';
     cineSub.appendChild(frag);
     CINE.lo = CINE.hi = 0;
@@ -4423,7 +4792,7 @@
       return tour;
     },
     get swarm() {
-      return { on: SWARM.on, icon: SWARM.icon, pIcon: SWARM.pIcon, d: SWARM.d, md: SWARM.md, cine: CINE.on, item: CINE.item && CINE.item.cine.sents[0] };
+      return { on: SWARM.on, scene: SWARM.scene, from: SWARM.from, now: SWARM.now, cine: CINE.on, item: CINE.item && CINE.item.cine.sents[0] };
     },
     scenes,
     setPlaying,
