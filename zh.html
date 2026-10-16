@@ -1097,111 +1097,6 @@ html.chrome-rest .hdr .brand {
   grid-area: cta;
 }
 
-/* ---------- 00 story: 10 p.m., and the messages keep coming (narration added for the film) ---------- */
-
-.s-story .wrap {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.75fr);
-  align-items: center;
-  gap: clamp(30px, 6vw, 96px);
-}
-
-.story-time {
-  margin-bottom: 18px;
-  font-family: var(--mono);
-  font-size: 13px;
-  letter-spacing: 0.32em;
-  color: #ffb36b;
-}
-
-.story-line {
-  max-width: 640px;
-  text-wrap: balance;
-  font-family: var(--display);
-  font-size: clamp(30px, 3.6vw, 56px);
-  font-weight: 640;
-  line-height: 1.14;
-  letter-spacing: -0.03em;
-}
-
-.story-line + .story-line {
-  margin-top: 14px;
-}
-
-.story-n {
-  color: #ffb36b;
-  font-weight: 700;
-}
-
-.story-ask {
-  margin-top: 34px !important;
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-  color: var(--accent);
-}
-
-.story-phone {
-  position: relative;
-  justify-self: center;
-  width: min(250px, 21vw);
-  aspect-ratio: 9 / 18;
-}
-
-/* the unread count: amber while it climbs, blue with a tick once the messages are taken care of */
-.story-badge {
-  position: absolute;
-  top: -16px;
-  right: -16px;
-  display: grid;
-  place-items: center;
-  min-width: 36px;
-  height: 36px;
-  padding: 0 10px;
-  border-radius: 18px;
-  font: 700 15px/1 var(--display);
-  color: #fff;
-  background: #ff6a3d;
-  box-shadow: 0 0 24px rgba(255, 106, 61, 0.85);
-  transition: background 0.4s, box-shadow 0.4s;
-}
-
-.story-badge.done {
-  background: var(--blue);
-  box-shadow: 0 0 24px rgba(79, 155, 255, 0.9);
-}
-
-html:lang(zh) .story-line {
-  letter-spacing: 0.01em;
-  line-height: 1.3;
-}
-
-html:lang(zh) .story-ask {
-  font-style: normal;
-  font-weight: 600;
-}
-
-@media (max-width: 759px) {
-  .s-story .wrap {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 34px;
-  }
-
-  .story-phone {
-    order: -1;
-    width: min(38vw, 160px);
-  }
-
-  .story-line {
-    font-size: clamp(24px, 7vw, 32px);
-  }
-
-  .story-ask {
-    margin-top: 22px !important;
-  }
-}
-
 /* ---------- 00 intro ---------- */
 
 .s-intro .wrap {
@@ -4845,21 +4740,6 @@ html.read #read {
     </header>
 
     <main class="stage" id="stage">
-      <!-- 00 · 开场故事（新增的旁白，不是原页面的文字）：晚上 10 点，消息还在一条条进来 -->
-      <section class="scene s-story only-film" data-scene="story" data-label="晚上 10 点" data-dur="10.5" data-forms="phone@0">
-        <div class="wrap story">
-          <div class="story-text">
-            <p class="story-time m m-fade" data-at="0.3" data-out="8.6">22:07</p>
-            <p class="story-line m m-rise" data-at="0.6" data-out="8.6">晚上 10 点。</p>
-            <p class="story-line m m-rise" data-at="1.9" data-out="8.6">老板还在回第 <b class="story-n">37</b> 条消息……</p>
-            <p class="story-line story-ask m m-blur" data-at="5" data-out="8.6">如果有人先帮你接住它们呢？</p>
-          </div>
-          <div class="story-phone" data-anchor="phone">
-            <span class="story-badge m m-pop" id="storyBadge" data-at="0.8" data-dur="0.5" data-out="8.6" aria-hidden="true">0</span>
-          </div>
-        </div>
-      </section>
-
       <!-- 00 · 开场：一个"想法"光点拼成纳想的标志 -->
       <section class="scene s-intro only-film" data-scene="intro" data-label="开场" data-dur="7.5" data-forms="seed@0,logoIntro@2.3">
         <div class="wrap">
@@ -5954,8 +5834,6 @@ html.read #read {
     roiDim: 1,
     storm: 0,
     flowActive: -1,
-    storyP: 0,
-    storyAI: 0,
     fit: [0, 0, 0, 0, 0, 0], // agents that answer the visitor's picked problems
   };
 
@@ -5988,19 +5866,7 @@ html.read #read {
 
   const cueAct = (c, lt, lead = 0, len = 1.3) => easeInOut(clamp((lt - c.at + lead) / len));
 
-  const storyBadge = $('#storyBadge');
   const hooks = {
-    // the opening: messages pour in and the unread count climbs, until the AI takes them over
-    story(lt) {
-      fx.storyP = smooth(0.4, 6.2, lt);
-      fx.storyAI = smooth(6.5, 7.9, lt);
-      if (!storyBadge) return;
-      let v;
-      if (lt < 6.5) v = lt < 0.8 ? 0 : lt < 2.2 ? Math.round(37 * easeOut((lt - 0.8) / 1.4)) : lt < 3.6 ? 37 : Math.round(lerp(37, 99, easeInOut(clamp((lt - 3.6) / 2.6))));
-      else v = Math.round(99 * (1 - easeInOut(clamp((lt - 6.5) / 1.3))));
-      setText(storyBadge, lt >= 7.8 ? '✓' : v >= 99 ? '99+' : String(v));
-      storyBadge.classList.toggle('done', lt >= 7.8);
-    },
     flow(lt, s) {
       let k = -1;
       s.ons.forEach((o, i) => {
@@ -6221,7 +6087,6 @@ html.read #read {
   };
   for (const k in MOODS) MOODS[k].spr = k === 'night' ? SPR : MOODS[k].pal.map(sprite);
   const MOOD_OF = {
-    story: 'ember',
     intro: 'night',
     hero: 'night',
     flow: 'aqua',
@@ -6264,7 +6129,6 @@ html.read #read {
     pathMs: [0, 0.25, 0.5, 0.75, 1],
     scroll0: 0,
     cube: { x: 0, y: 0, s: 1 },
-    phone: { x: 0, y: 0, w: 120, h: 240 },
     ill: { x: 0, y: 0, s: 100 },
   };
 
@@ -6338,92 +6202,7 @@ html.read #read {
     };
   }
 
-  // a little hash for per-row randomness
-  const hsh = (k, j) => hash(k, j);
-
   const F = {
-    // the opening: a phone, its messages pouring in faster and faster, then neatly taken care of
-    phone(i, t, o) {
-      const c = L.phone;
-      const P = fx.storyP, Q = fx.storyAI;
-      const g = R2[i];
-      o.h = 0;
-      o.s = 0.85;
-      if (g < 0.34) {
-        // the outline, with rounded corners
-        onRect(R1[i], -0.5, -0.5, 0.5, 0.5);
-        let x = PT.x, y = PT.y * 0.5;
-        const cr = 0.11;
-        const ax = Math.abs(x), ay = Math.abs(y);
-        if (ax > 0.5 - cr && ay > 0.25 - cr * 0.5) {
-          const cx = Math.sign(x) * (0.5 - cr), cy = Math.sign(y) * (0.25 - cr * 0.5);
-          const a = Math.atan2(y - cy, x - cx);
-          x = cx + Math.cos(a) * cr;
-          y = cy + Math.sin(a) * cr * 0.5;
-        }
-        o.x = c.x + x * c.w;
-        o.y = c.y + y * 2 * c.h;
-        o.a = 0.55 + 0.2 * Math.sin(t * 1.3 + R3[i] * 6);
-        return;
-      }
-      if (g < 0.4) {
-        // the earpiece at the top
-        o.x = c.x + (R1[i] - 0.5) * 0.22 * c.w;
-        o.y = c.y - 0.44 * c.h;
-        o.a = 0.5;
-        o.s = 0.7;
-        return;
-      }
-      if (g < 0.8) {
-        // messages: rows scrolling up as they arrive, faster under pressure; tidy and ticked off once the
-        // AI has them
-        const rows = 9;
-        const k = i % rows;
-        const phase = t * 0.12 * (1 - Q) + P * P * 3.2;
-        const yy = (((k + phase * rows) % rows) + rows) % rows / rows;
-        const y = 0.38 - yy * 0.76;
-        const side = (k + Math.floor(phase * rows)) % 2 ? 1 : -1;
-        const width = 0.28 + hsh(k, 5) * 0.36;
-        const u = R1[i];
-        let x = side < 0 ? -0.4 + u * width : 0.4 - u * width;
-        // tidy: every row the same, a tick at its end
-        let nx = -0.36 + u * 0.56, ny = y;
-        if (R3[i] < 0.16) {
-          const v = R4[i];
-          if (v < 0.4) (nx = 0.28 + v * 0.1), (ny = y + v * 0.09);
-          else (nx = 0.32 + (v - 0.4) * 0.16), (ny = y + 0.036 - (v - 0.4) * 0.12);
-        }
-        x = lerp(x, nx, Q);
-        o.x = c.x + x * c.w;
-        o.y = c.y + lerp(y, ny, Q) * c.h;
-        const edge = smooth(-0.4, -0.3, y) * (1 - smooth(0.3, 0.4, y));
-        o.a = (0.35 + 0.3 * P) * edge * (0.6 + 0.4 * Q);
-        o.h = Q < 0.5 && side < 0 && P > 0.35 && hsh(k, 2) < 0.6 ? 1 : 0;
-        return;
-      }
-      if (g < 0.92) {
-        // notifications flying in from everywhere
-        const u = (R1[i] + t * (0.22 + 0.5 * P)) % 1;
-        const d = (0.9 + R3[i]) * Math.max(c.w, c.h) * 1.3;
-        const sx = c.x + Math.cos(ANG[i]) * d, sy = c.y + Math.sin(ANG[i]) * d * 0.7;
-        const ex = c.x + (R4[i] - 0.5) * 0.5 * c.w, ey = c.y - 0.28 * c.h;
-        const e = u * u;
-        o.x = lerp(sx, ex, e);
-        o.y = lerp(sy, ey, e);
-        o.a = (0.15 + 0.7 * u) * P * (1 - Q);
-        o.h = 1;
-        o.s = 0.75;
-        return;
-      }
-      // the glow of the unread badge
-      const a = R1[i] * TAU + t * 2;
-      const r = c.w * 0.09 * Math.sqrt(R3[i]);
-      o.x = c.x + 0.5 * c.w + Math.cos(a) * r;
-      o.y = c.y - 0.5 * c.h + Math.sin(a) * r;
-      o.a = 0.5 * smooth(0.6, 1.2, t);
-      o.h = Q < 0.5 ? 1 : 0;
-    },
-
     seed(i, t, o) {
       const c = L.intro;
       const a = R1[i] * TAU + t * (0.5 + R2[i] * 0.9);
@@ -7940,8 +7719,6 @@ html.read #read {
       });
     }
 
-    const [phone] = anchors('phone');
-    if (phone) L.phone = { x: phone.x, y: phone.y, w: phone.w, h: phone.h };
     const [intro] = anchors('intro');
     const [hero] = anchors('hero');
     const [fin] = anchors('fin');

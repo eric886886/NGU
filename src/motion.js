@@ -361,8 +361,6 @@
     roiDim: 1,
     storm: 0,
     flowActive: -1,
-    storyP: 0,
-    storyAI: 0,
     fit: [0, 0, 0, 0, 0, 0], // agents that answer the visitor's picked problems
   };
 
@@ -395,19 +393,7 @@
 
   const cueAct = (c, lt, lead = 0, len = 1.3) => easeInOut(clamp((lt - c.at + lead) / len));
 
-  const storyBadge = $('#storyBadge');
   const hooks = {
-    // the opening: messages pour in and the unread count climbs, until the AI takes them over
-    story(lt) {
-      fx.storyP = smooth(0.4, 6.2, lt);
-      fx.storyAI = smooth(6.5, 7.9, lt);
-      if (!storyBadge) return;
-      let v;
-      if (lt < 6.5) v = lt < 0.8 ? 0 : lt < 2.2 ? Math.round(37 * easeOut((lt - 0.8) / 1.4)) : lt < 3.6 ? 37 : Math.round(lerp(37, 99, easeInOut(clamp((lt - 3.6) / 2.6))));
-      else v = Math.round(99 * (1 - easeInOut(clamp((lt - 6.5) / 1.3))));
-      setText(storyBadge, lt >= 7.8 ? '✓' : v >= 99 ? '99+' : String(v));
-      storyBadge.classList.toggle('done', lt >= 7.8);
-    },
     flow(lt, s) {
       let k = -1;
       s.ons.forEach((o, i) => {
@@ -628,7 +614,6 @@
   };
   for (const k in MOODS) MOODS[k].spr = k === 'night' ? SPR : MOODS[k].pal.map(sprite);
   const MOOD_OF = {
-    story: 'ember',
     intro: 'night',
     hero: 'night',
     flow: 'aqua',
@@ -671,7 +656,6 @@
     pathMs: [0, 0.25, 0.5, 0.75, 1],
     scroll0: 0,
     cube: { x: 0, y: 0, s: 1 },
-    phone: { x: 0, y: 0, w: 120, h: 240 },
     ill: { x: 0, y: 0, s: 100 },
   };
 
@@ -745,92 +729,7 @@
     };
   }
 
-  // a little hash for per-row randomness
-  const hsh = (k, j) => hash(k, j);
-
   const F = {
-    // the opening: a phone, its messages pouring in faster and faster, then neatly taken care of
-    phone(i, t, o) {
-      const c = L.phone;
-      const P = fx.storyP, Q = fx.storyAI;
-      const g = R2[i];
-      o.h = 0;
-      o.s = 0.85;
-      if (g < 0.34) {
-        // the outline, with rounded corners
-        onRect(R1[i], -0.5, -0.5, 0.5, 0.5);
-        let x = PT.x, y = PT.y * 0.5;
-        const cr = 0.11;
-        const ax = Math.abs(x), ay = Math.abs(y);
-        if (ax > 0.5 - cr && ay > 0.25 - cr * 0.5) {
-          const cx = Math.sign(x) * (0.5 - cr), cy = Math.sign(y) * (0.25 - cr * 0.5);
-          const a = Math.atan2(y - cy, x - cx);
-          x = cx + Math.cos(a) * cr;
-          y = cy + Math.sin(a) * cr * 0.5;
-        }
-        o.x = c.x + x * c.w;
-        o.y = c.y + y * 2 * c.h;
-        o.a = 0.55 + 0.2 * Math.sin(t * 1.3 + R3[i] * 6);
-        return;
-      }
-      if (g < 0.4) {
-        // the earpiece at the top
-        o.x = c.x + (R1[i] - 0.5) * 0.22 * c.w;
-        o.y = c.y - 0.44 * c.h;
-        o.a = 0.5;
-        o.s = 0.7;
-        return;
-      }
-      if (g < 0.8) {
-        // messages: rows scrolling up as they arrive, faster under pressure; tidy and ticked off once the
-        // AI has them
-        const rows = 9;
-        const k = i % rows;
-        const phase = t * 0.12 * (1 - Q) + P * P * 3.2;
-        const yy = (((k + phase * rows) % rows) + rows) % rows / rows;
-        const y = 0.38 - yy * 0.76;
-        const side = (k + Math.floor(phase * rows)) % 2 ? 1 : -1;
-        const width = 0.28 + hsh(k, 5) * 0.36;
-        const u = R1[i];
-        let x = side < 0 ? -0.4 + u * width : 0.4 - u * width;
-        // tidy: every row the same, a tick at its end
-        let nx = -0.36 + u * 0.56, ny = y;
-        if (R3[i] < 0.16) {
-          const v = R4[i];
-          if (v < 0.4) (nx = 0.28 + v * 0.1), (ny = y + v * 0.09);
-          else (nx = 0.32 + (v - 0.4) * 0.16), (ny = y + 0.036 - (v - 0.4) * 0.12);
-        }
-        x = lerp(x, nx, Q);
-        o.x = c.x + x * c.w;
-        o.y = c.y + lerp(y, ny, Q) * c.h;
-        const edge = smooth(-0.4, -0.3, y) * (1 - smooth(0.3, 0.4, y));
-        o.a = (0.35 + 0.3 * P) * edge * (0.6 + 0.4 * Q);
-        o.h = Q < 0.5 && side < 0 && P > 0.35 && hsh(k, 2) < 0.6 ? 1 : 0;
-        return;
-      }
-      if (g < 0.92) {
-        // notifications flying in from everywhere
-        const u = (R1[i] + t * (0.22 + 0.5 * P)) % 1;
-        const d = (0.9 + R3[i]) * Math.max(c.w, c.h) * 1.3;
-        const sx = c.x + Math.cos(ANG[i]) * d, sy = c.y + Math.sin(ANG[i]) * d * 0.7;
-        const ex = c.x + (R4[i] - 0.5) * 0.5 * c.w, ey = c.y - 0.28 * c.h;
-        const e = u * u;
-        o.x = lerp(sx, ex, e);
-        o.y = lerp(sy, ey, e);
-        o.a = (0.15 + 0.7 * u) * P * (1 - Q);
-        o.h = 1;
-        o.s = 0.75;
-        return;
-      }
-      // the glow of the unread badge
-      const a = R1[i] * TAU + t * 2;
-      const r = c.w * 0.09 * Math.sqrt(R3[i]);
-      o.x = c.x + 0.5 * c.w + Math.cos(a) * r;
-      o.y = c.y - 0.5 * c.h + Math.sin(a) * r;
-      o.a = 0.5 * smooth(0.6, 1.2, t);
-      o.h = Q < 0.5 ? 1 : 0;
-    },
-
     seed(i, t, o) {
       const c = L.intro;
       const a = R1[i] * TAU + t * (0.5 + R2[i] * 0.9);
@@ -2347,8 +2246,6 @@
       });
     }
 
-    const [phone] = anchors('phone');
-    if (phone) L.phone = { x: phone.x, y: phone.y, w: phone.w, h: phone.h };
     const [intro] = anchors('intro');
     const [hero] = anchors('hero');
     const [fin] = anchors('fin');
