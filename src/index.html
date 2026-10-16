@@ -3,20 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>NaxaStudio | Turn Ideas Into Action with Practical AI</title>
-    <meta
-      name="description"
-      content="NaxaStudio helps people and small business owners turn ideas into action with practical AI systems for customer response, follow-up, marketing, research, and daily operations."
-    />
+    <title>NaxaStudio | Turn ideas into action</title>
+    <meta name="description" content="NaxaStudio helps founders and small business owners turn ideas into action with practical AI systems for customer response, sales follow-up, marketing, research, and daily operations." />
+    <meta name="theme-color" content="#02050d" />
     <link rel="canonical" href="https://naxastudio.com/" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="NaxaStudio | Turn Ideas Into Action" />
-    <meta
-      property="og:description"
-      content="NaxaStudio helps people and small business owners move from ideas to real results with practical AI execution systems."
-    />
-    <meta property="og:url" content="https://naxastudio.com/" />
     <meta property="og:site_name" content="NaxaStudio" />
+    <meta property="og:title" content="NaxaStudio | Turn ideas into action" />
+    <meta property="og:description" content="NaxaStudio helps founders and small business owners turn ideas into action with practical AI systems for customer response, sales follow-up, marketing, research, and daily operations." />
+    <meta property="og:url" content="https://naxastudio.com/" />
+    <meta property="og:locale" content="en_US" />
     <meta property="og:image" content="https://naxastudio.com/assets/brand/og-en.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -27,879 +23,171 @@
     <link rel="alternate" hreflang="zh-Hans" href="https://naxastudio.com/zh" />
     <link rel="icon" type="image/png" sizes="32x32" href="{{FAVICON}}" />
     <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png" />
-    <meta name="theme-color" content="#04060d" />
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "ProfessionalService",
-        "@id": "https://naxastudio.com/#organization",
-        "name": "NaxaStudio",
-        "url": "https://naxastudio.com/",
-        "email": "contact@naxastudio.com",
-        "areaServed": ["Toronto", "Greater Toronto Area", "Canada"],
-        "description": "NaxaStudio is a Toronto-based AI execution studio helping people and small business owners turn ideas into action with practical AI systems for customer response, sales follow-up, marketing, research, and daily operations.",
-        "knowsAbout": [
-          "AI business automation",
-          "workflow automation",
-          "AI receptionist systems",
-          "AI sales follow-up",
-          "small business operations",
-          "customer intake workflows"
-        ],
-        "sameAs": ["https://naxastudio.com/"],
-        "contactPoint": {
-          "@type": "ContactPoint",
-          "email": "contact@naxastudio.com",
-          "contactType": "customer support",
-          "availableLanguage": ["English", "Chinese"]
-        }
-      }
-    </script>
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "@id": "https://naxastudio.com/#website",
-        "name": "NaxaStudio",
-        "url": "https://naxastudio.com/",
-        "publisher": { "@id": "https://naxastudio.com/#organization" },
-        "inLanguage": "en-CA"
-      }
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="motion.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <script>document.documentElement.classList.remove('no-js');</script>
+    <link rel="stylesheet" href="world.css" />
   </head>
   <body>
-    <div class="bg" aria-hidden="true"></div>
-    <canvas id="field" aria-hidden="true"></canvas>
-    <div class="grain" aria-hidden="true"></div>
+    <canvas id="world" aria-hidden="true" data-mark="{{MARK}}"></canvas>
 
     <header class="hdr">
       <a class="brand" href="index.html" aria-label="NaxaStudio home">
-        <span class="brand-tile"><img src="{{LOGO_ICON}}" alt="" width="36" height="36" /></span>
-        <span class="brand-text">NaxaStudio <small>纳想 · AI execution systems</small></span>
+        <img src="{{LOGO_ICON}}" alt="" width="34" height="34" />
+        <span>NaxaStudio<small>AI EXECUTION SYSTEMS</small></span>
       </a>
-      <div class="hdr-tools">
-        <a href="zh.html" class="lang" lang="zh">中文</a>
-        <button class="ask-btn" id="navToggle" type="button" aria-expanded="false" aria-controls="nav">
-          <span class="ask-spark" aria-hidden="true"></span><span class="ask-ph">Ask a question…</span><span class="ask-short">Ask</span>
-        </button>
+      <div class="tools">
+        <a href="zh.html" class="lang" lang="zh-Hans">中文</a>
+        <button class="ask-btn" id="askBtn" type="button" aria-expanded="false" aria-controls="ask"><i aria-hidden="true"></i><span class="long">Ask anything…</span><span class="short">Ask</span></button>
         <a href="business-review.html" class="cta">Book a Business Review</a>
-      </div>
-      <!-- ask: visitors type a question; the answer is found in this page's own text (motion.js) -->
-      <div class="ask" id="nav" role="dialog" aria-label="Ask a question">
-        <button class="ask-close" type="button" aria-label="Close"></button>
-        <p class="ask-intro">Ask whatever you want to know. The answers come from this website.</p>
-        <form class="ask-form" autocomplete="off">
-          <input class="ask-input" name="q" type="text" placeholder="Ask anything, e.g. Can you help me reply to customers faster?" enterkeyhint="send" />
-          <button class="ask-send" type="submit" aria-label="Send"></button>
-        </form>
-        <div class="ask-log" aria-live="polite"></div>
-        <div class="ask-sugg">
-          <p class="ask-h">Try asking</p>
-          <button type="button" class="ask-q">What can you help me with?</button>
-          <button type="button" class="ask-q">My team is small. Where do I start?</button>
-          <button type="button" class="ask-q">Can you help me reply to customers faster?</button>
-          <button type="button" class="ask-q">Can I see a demo first?</button>
-          <button type="button" class="ask-q">How does pricing work?</button>
-        </div>
-        <nav class="ask-links" aria-label="Or go straight to">
-          <p class="ask-h">Or go straight to</p>
-          <a href="about.html">About</a><a href="ai-agents.html">AI Solutions</a><a href="base-ai-agent.html">Startup AI Solution</a><a href="demo-center.html">Demo</a><a href="cases.html">Cases</a><a href="business-review.html">AI Business Review</a><a href="contact.html">Contact</a>
-        </nav>
-        <a href="business-review.html" class="cta ask-cta">Book a Business Review</a>
       </div>
     </header>
 
-    <main class="stage" id="stage">
-      <!-- 00 · Intro: a single dot (an idea) becomes the NaxaStudio mark -->
-      <section class="scene s-intro only-film" data-scene="intro" data-label="Intro" data-dur="7.5" data-forms="seed@0,logoIntro@2.3">
-        <div class="wrap">
-          <div class="intro-visual" data-anchor="intro">
-            <span class="seed-label m m-fade" data-at="0.5" data-dur="0.8" data-out="1.9">Idea</span>
-          </div>
-          <p class="intro-mark m m-blur" data-at="3.4" data-dur="1.2">NaxaStudio <span lang="zh">纳想</span></p>
-          <p class="eyebrow center m m-rise" data-at="4.1">AI execution systems</p>
-        </div>
-      </section>
+    <!-- ask: the answers are in #ask-data below, in the site's own words -->
+    <div class="ask" id="ask" role="dialog" aria-label="Ask a question">
+      <button class="ask-close" type="button" aria-label="Close">×</button>
+      <p class="ask-intro">Ask whatever you want to know. The answers come from this website.</p>
+      <form class="ask-form" autocomplete="off">
+        <input class="ask-input" name="q" type="text" placeholder="Ask anything, e.g. Can you help me reply to customers faster?" enterkeyhint="send" />
+        <button class="ask-send" type="submit">Ask</button>
+      </form>
+      <div class="ask-log" aria-live="polite"></div>
+      <div class="ask-sugg">
+        <p class="ask-h">TRY ASKING</p>
+        <button type="button" class="ask-q">What can you help me with?</button>
+        <button type="button" class="ask-q">My team is small. Where do I start?</button>
+        <button type="button" class="ask-q">Can you help me reply to customers faster?</button>
+        <button type="button" class="ask-q">Can I see a demo first?</button>
+        <button type="button" class="ask-q">How does pricing work?</button>
+      </div>
+      <nav class="ask-links" aria-label="Or go straight to">
+        <p class="ask-h">OR GO STRAIGHT TO</p>
+        <a href="about.html">About</a><a href="ai-agents.html">AI Solutions</a><a href="base-ai-agent.html">Startup AI Solution</a><a href="demo-center.html">Demo</a><a href="cases.html">Cases</a><a href="business-review.html">AI Business Review</a><a href="contact.html">Contact</a>
+      </nav>
+    </div>
 
-      <!-- 01 · Hero -->
-      <section class="scene s-hero" data-scene="hero" data-label="Turn ideas into action" data-dur="15" data-forms="logoHero@0" data-dim-m="0.32">
-        <div class="wrap duo">
-          <div class="col-l">
-            <div class="g-head">
-              <p class="eyebrow m m-rise" data-at="0.2" data-n="01">NaxaStudio | AI Execution Studio</p>
-              <h1 class="h-xl">
-                <span class="ln" data-split data-at="0.45" data-stagger="0.1">Turn ideas</span>
-                <span class="ln" data-split data-at="0.75" data-stagger="0.1">into action.</span>
-                <span class="ln serif grad m m-wipe" data-at="1.5" data-dur="1.3">It’s not as hard</span>
-                <span class="ln serif grad m m-wipe" data-at="1.9" data-dur="1.3">as you think.</span>
-              </h1>
-            </div>
-            <div class="g-body">
-              <p class="statement">
-                <span class="m m-rise" data-at="3">One person.</span>
-                <span class="m m-rise" data-at="3.5">Team-like execution support.</span>
-                <span class="m m-rise accent" data-at="4">Powered by AI.</span>
-              </p>
-              <p class="lead m m-fade" data-at="4.6" data-dur="0.6" data-read="4.9">
-                NaxaStudio helps small business owners and solo builders turn ideas, customer inquiries, and repeated work into
-                practical AI systems for reception, sales follow-up, marketing, research, and daily operations.
-              </p>
-            </div>
-            <div class="g-cta btns">
-              <a class="btn primary m m-pop" data-at="6.6" href="business-review.html">Book an AI Business Review</a>
-              <a class="btn ghost m m-pop" data-at="6.8" href="demo-center.html">View Demo</a>
-            </div>
-          </div>
-          <div class="col-r hero-vis" data-anchor="hero" aria-hidden="true"></div>
-        </div>
+    <!-- the words of each stage (laid over the picture, or a plain page without WebGL) -->
+    <main class="story">
+      <section class="st" data-stage="0">
+        <p class="st-k st-only">NAXASTUDIO · AI EXECUTION SYSTEMS</p>
       </section>
-
-      <!-- 02 · Live execution flow: one giant word decodes from step to step -->
-      <section class="scene s-flow" data-scene="flow" data-label="Live execution flow" data-dur="15" data-forms="flow@0">
-        <div class="wrap">
-          <div class="flow-top">
-            <p class="eyebrow live m m-rise" data-at="0.2" data-n="02"><i></i>Live execution flow</p>
-            <p class="flow-count m m-rise" data-at="0.3"><b id="flowNum">01</b> <span>/ 05</span></p>
-          </div>
-          <div class="flow-stage only-film m m-fade" data-at="1.6" aria-hidden="true">
-            <div class="flow-word" id="flowWord"></div>
-            <div class="flow-desc" id="flowDesc"></div>
-          </div>
-          <ol class="gates">
-            <li class="gate m m-rise" data-at="0.7" data-on="2.0" data-off="4.3">
-              <span class="gate-dot" data-anchor="gate"></span><span class="gate-n">01</span><strong>Capture</strong><span class="gate-d">Ideas &amp; inquiries</span>
-            </li>
-            <li class="gate m m-rise" data-at="0.85" data-on="4.3" data-off="6.6">
-              <span class="gate-dot" data-anchor="gate"></span><span class="gate-n">02</span><strong>Organize</strong><span class="gate-d">AI understanding</span>
-            </li>
-            <li class="gate m m-rise" data-at="1" data-on="6.6" data-off="8.9">
-              <span class="gate-dot" data-anchor="gate"></span><span class="gate-n">03</span><strong>Build</strong><span class="gate-d">Custom systems</span>
-            </li>
-            <li class="gate m m-rise" data-at="1.15" data-on="8.9" data-off="11.2">
-              <span class="gate-dot" data-anchor="gate"></span><span class="gate-n">04</span><strong>Execute</strong><span class="gate-d">Automate action</span>
-            </li>
-            <li class="gate m m-rise" data-at="1.3" data-on="11.2" data-off="13.9">
-              <span class="gate-dot" data-anchor="gate"></span><span class="gate-n">05</span><strong>Improve</strong><span class="gate-d">Learn &amp; evolve</span>
-            </li>
-          </ol>
-          <div class="axis m m-fade" data-at="0.6"><span>Idea</span><i class="axis-line"><b id="flowFill"></b></i><span>Action</span></div>
-        </div>
+      <section class="st" data-stage="1">
+        <p class="st-k">01 &nbsp;/&nbsp; NAXASTUDIO</p>
+        <h1>Turn ideas into action.<b>It’s not as hard as you think.</b></h1>
+        <p>One person. Team-like execution support. Powered by AI.</p>
       </section>
-
-      <!-- 03 · Owner pain points: an overload collage that shakes with the storm -->
-      <section class="scene s-pain" data-scene="pain" data-label="Owner pain points" data-dur="23" data-forms="storm@0" data-dim-m="0.45">
-        <div class="wrap duo">
-          <div class="col-l">
-            <div class="g-head">
-              <p class="eyebrow warn m m-rise" data-at="0.2" data-n="03">Owner pain points</p>
-              <h2 class="h-l" data-split data-at="0.5" data-stagger="0.045">
-                Small business owners lose time and sales when too much work depends on <em>them alone.</em>
-              </h2>
-            </div>
-            <div class="g-body">
-              <p class="body m m-fade" data-at="2.4" data-dur="0.6" data-read="2.6" data-outm="9.6">
-                Many owners are doing reception, sales follow-up, marketing, research, and admin at the same time. That creates
-                delays, missed opportunities, and pressure to hire before the business is ready.
-              </p>
-            </div>
-          </div>
-          <div class="col-r g-side collage" data-anchor="pain">
-            <article class="pain m m-note" style="--px: 2%; --py: 0%; --rot: -3deg; --size: 34px" data-at="9.8" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">01</span><h3>Too many messages</h3><p>Customer calls, emails, forms, and DMs become hard to handle manually.</p></div>
-            </article>
-            <article class="pain m m-note" style="--px: 56%; --py: 8%; --rot: 4deg; --size: 31px" data-at="11.05" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">02</span><h3>Slow replies</h3><p>Missed calls and delayed responses can send customers to a competitor.</p></div>
-            </article>
-            <article class="pain m m-note" style="--px: 9%; --py: 34%; --rot: 2deg; --size: 28px" data-at="12.3" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">03</span><h3>Weak follow-up</h3><p>Potential customers ask once, then never get a clear next step.</p></div>
-            </article>
-            <article class="pain m m-note" style="--px: 55%; --py: 41%; --rot: -5deg; --size: 32px" data-at="13.55" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">04</span><h3>Repetitive admin</h3><p>Owners spend too much time copying, summarizing, checking, and rewriting.</p></div>
-            </article>
-            <article class="pain m m-note" style="--px: 0%; --py: 68%; --rot: -2deg; --size: 28px" data-at="14.8" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">05</span><h3>Hiring is expensive</h3><p>A full support team may be too costly for an early or growing business.</p></div>
-            </article>
-            <article class="pain m m-note" style="--px: 51%; --py: 74%; --rot: 3deg; --size: 25px" data-at="16.05" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">06</span><h3>Inconsistent sales and marketing</h3><p>Important tasks get delayed because daily operations keep taking over.</p></div>
-            </article>
-          </div>
-        </div>
+      <section class="st" data-stage="2">
+        <p class="st-k">02 &nbsp;/&nbsp; WHY WE EXIST</p>
+        <h2>From thinking, to doing,<b>to real results.</b></h2>
+        <p class="st-only">Thinking → Doing → Results</p>
+        <div class="st-links"><a href="about.html">About NaxaStudio →</a></div>
       </section>
-
-      <!-- 04 · AI solutions: agents on an orbit, deployed one by one from the core -->
-      <section class="scene s-sol" data-scene="solutions" data-label="AI solutions" data-dur="24" data-forms="calm@0,hub@3" data-dim-m="0.5">
-        <div class="interlude only-film">
-          <p class="h-xl serif grad m m-blur" data-at="0.2" data-dur="1.1" data-out="2.5">It’s not as hard as you think.</p>
-        </div>
-        <div class="wrap stack">
-          <div class="g-head sol-head">
-            <div>
-              <p class="eyebrow m m-rise" data-at="3" data-n="04">AI solutions</p>
-              <h2 class="h-l narrow" data-split data-at="3.2" data-stagger="0.05">Practical systems for the work that affects <em>time, cost, and sales.</em></h2>
-            </div>
-          </div>
-          <div class="g-body">
-            <p class="body m m-fade" data-at="4.5" data-dur="0.6" data-read="4.7" data-outm="9.2">
-              Each solution is designed around a business result first, then matched with the right AI workflow.
-            </p>
-          </div>
-          <div class="g-side orbit" data-anchor="orbit">
-            <span class="orbit-core" data-anchor="core" aria-hidden="true"></span>
-            <article class="node m m-pop" style="--nx: 8%; --ny: 39%" data-at="9.5" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">01</span>
-              <h3>AI Receptionist Agent</h3>
-              <p>Respond faster and avoid missing customer inquiries when the owner or team is busy.</p>
-            </article>
-            <article class="node m m-pop" style="--nx: 24.8%; --ny: 61.5%" data-at="10.75" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">02</span>
-              <h3>AI Sales Agent</h3>
-              <p>Follow up with more potential customers and increase sales opportunities.</p>
-            </article>
-            <article class="node m m-pop" style="--nx: 41.6%; --ny: 69%" data-at="12" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">03</span>
-              <h3>AI Marketing Agent</h3>
-              <p>Create consistent marketing content without spending hours writing from scratch.</p>
-            </article>
-            <article class="node m m-pop" style="--nx: 58.4%; --ny: 69%" data-at="13.25" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">04</span>
-              <h3>AI Research Agent</h3>
-              <p>Make faster business decisions with organized research, comparisons, and summaries.</p>
-            </article>
-            <article class="node m m-pop" style="--nx: 75.2%; --ny: 61.5%" data-at="14.5" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">05</span>
-              <h3>AI Workflow Agent</h3>
-              <p>Reduce repetitive admin work with clear checklists, templates, and handoff notes.</p>
-            </article>
-            <article class="node m m-pop" style="--nx: 92%; --ny: 39%" data-at="15.75" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">06</span>
-              <h3>Startup AI Solution</h3>
-              <p>Start with one practical system that helps handle more customers before hiring a full team.</p>
-            </article>
-          </div>
-          <div class="g-cta btns sol-cta">
-            <a class="btn primary m m-pop" data-at="17.4" href="ai-agents.html">View AI Solutions</a>
-            <a class="btn ghost m m-pop" data-at="17.6" href="contact.html">Get a Custom AI Plan</a>
-          </div>
-        </div>
+      <section class="st" data-stage="3">
+        <p class="st-k">03 &nbsp;/&nbsp; BUSINESS REALITY</p>
+        <h2>We start with business reality,<b>not software hype.</b></h2>
+        <p class="st-only">Customer response, follow-up, organized workflows, useful content</p>
       </section>
-
-      <!-- 05 · Business outcomes: an annotated growth line -->
-      <section class="scene s-out" data-scene="outcomes" data-label="Business outcomes" data-dur="20" data-forms="rise@0" data-dim-m="0.5">
-        <div class="wrap stack">
-          <div class="g-head">
-            <p class="eyebrow m m-rise" data-at="0.2" data-n="05">Business outcomes</p>
-            <h2 class="h-l narrow" data-split data-at="0.5" data-stagger="0.05">What your business can run better with the <em>right AI system.</em></h2>
-          </div>
-          <div class="g-body">
-            <p class="body m m-fade" data-at="2.2" data-dur="0.6" data-read="2.4" data-outm="8.2">
-              NaxaStudio focuses on practical operating improvements: faster response, clearer customer information, stronger
-              follow-up, and less manual work.
-            </p>
-          </div>
-          <div class="g-side chart">
-            <article class="pt m m-pop" style="--cx: 3%; --cy: 64%" data-at="8.4" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">01</span><h3>Faster customer response</h3><p>Handle more inquiries quickly so customers feel seen and sales opportunities stay warm.</p></div>
-            </article>
-            <article class="pt m m-pop" style="--cx: 19.5%; --cy: 53%" data-at="9.55" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">02</span><h3>Organized customer information</h3><p>Turn scattered messages into clean summaries, missing details, and next steps.</p></div>
-            </article>
-            <article class="pt m m-pop" style="--cx: 36%; --cy: 42%" data-at="10.7" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">03</span><h3>More consistent follow-up</h3><p>Keep prospects moving with timely reminders, reply drafts, and clear handoffs.</p></div>
-            </article>
-            <article class="pt m m-pop" style="--cx: 52.5%; --cy: 31%" data-at="11.85" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">04</span><h3>Less manual admin work</h3><p>Reduce repeated writing, checking, sorting, and task tracking across the business.</p></div>
-            </article>
-            <article class="pt m m-pop" style="--cx: 69%; --cy: 20%" data-at="13" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">05</span><h3>Lower staffing pressure</h3><p>Support your first layer of operations before adding more payroll expense.</p></div>
-            </article>
-            <article class="pt m m-pop" style="--cx: 83.5%; --cy: 9%" data-at="14.15" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">06</span><h3>More revenue opportunities</h3><p>Give more customer inquiries a better chance to become booked calls, quotes, or sales.</p></div>
-            </article>
-          </div>
-        </div>
+      <section class="st st-wide" data-stage="4">
+        <p class="st-k">04 &nbsp;/&nbsp; AI SOLUTIONS</p>
+        <h2>Practical systems for the work<b>that affects time, cost, and sales.</b></h2>
+        <p class="st-only">AI Receptionist Agent · AI Sales Agent · AI Marketing Agent · AI Research Agent · AI Workflow Agent</p>
+        <div class="st-links"><a href="ai-agents.html">See the five agents →</a></div>
       </section>
-
-      <!-- 06 · ROI potential: keynote numbers count up centre stage, then take their seats -->
-      <section class="scene s-roi" data-scene="roi" data-label="ROI potential" data-dur="22" data-forms="pillars@0" data-dim-m="0.5">
-        <div class="wrap roi">
-          <div class="roi-head">
-            <p class="eyebrow m m-rise" data-at="0.2" data-n="06">ROI potential</p>
-            <h3 class="h-l" data-split data-at="0.5" data-stagger="0.045">
-              AI can pay back through <em>time saved, missed sales recovered,</em> and lower hiring pressure.
-            </h3>
-          </div>
-          <p class="roi-note m m-fade" data-at="2.4" data-dur="0.6" data-read="2.6" data-outm="6.7">
-            The strongest returns usually appear when a business has valuable customers, steady inquiries, and slow or inconsistent
-            follow-up.
-          </p>
-          <div class="roi-row" id="roiRow">
-            <article class="roi-item">
-              <strong data-anchor="roi" class="roi-num m fly" data-at="7.4" data-dur="0.8" data-land="9.8" data-key="roi"><span data-count="2" data-from="1" data-cat="7.6" data-cdur="1.2">2</span>x-<span data-count="5" data-from="2" data-cat="8.5" data-cdur="1.1">5</span>x</strong>
-              <h4 class="m m-rise" data-at="10.6">Conservative potential ROI</h4>
-              <p class="m m-rise" data-at="10.8">For small businesses using AI to save owner time, reduce repeated work, and respond faster.</p>
-            </article>
-            <article class="roi-item">
-              <strong data-anchor="roi" class="roi-num m fly" data-at="11" data-dur="0.8" data-land="13.4" data-key="roi"><span data-count="5" data-from="1" data-cat="11.2" data-cdur="1.2">5</span>x-<span data-count="10" data-from="5" data-cat="12.1" data-cdur="1.2">10</span>x</strong>
-              <h4 class="m m-rise" data-at="14.2">Higher upside scenarios</h4>
-              <p class="m m-rise" data-at="14.4">Possible when the business has high-ticket services, many inquiries, and frequent missed replies.</p>
-            </article>
-            <article class="roi-item">
-              <strong data-anchor="roi" class="roi-num m fly" data-at="14.6" data-dur="0.8" data-land="16.6" data-key="roi"><span data-count="3" data-from="1" data-cat="14.8" data-cdur="1">3</span> levers</strong>
-              <h4 class="m m-rise" data-at="17.4">Where return comes from</h4>
-              <p class="m m-rise" data-at="17.6">Faster replies, steadier follow-up, and less pressure to hire before the business is ready.</p>
-            </article>
-          </div>
-        </div>
+      <section class="st" data-stage="5">
+        <p class="st-k">05 &nbsp;/&nbsp; STARTUP AI SOLUTION</p>
+        <h2>Before hiring a full team,<b>build the first practical layer.</b></h2>
+        <p class="st-only">Intake questions · Lead summaries · Reply drafts · Workflow checklists</p>
+        <div class="st-links"><a href="base-ai-agent.html">The startup AI solution →</a></div>
       </section>
-
-      <!-- 07 · For founders: a journey map that climbs to the call to action -->
-      <section class="scene s-found" data-scene="founders" data-label="For founders" data-dur="21" data-forms="path@0" data-dim-m="0.55">
-        <div class="wrap stack">
-          <div class="g-head split-top">
-            <div>
-              <p class="eyebrow m m-rise" data-at="0.2" data-n="07">For founders and new business owners</p>
-              <h2 class="h-l" data-split data-at="0.5" data-stagger="0.05">Have a strong business idea, but <em>not sure where to start?</em></h2>
-            </div>
-            <p class="lead m m-fade" data-at="2.2" data-dur="0.6" data-read="2.4" data-outm="9.6">
-              NaxaStudio helps you turn the idea into a clear offer, customer workflow, AI-supported process, and practical launch
-              plan. If you want to start with a smaller budget before hiring a full team, talk to us first.
-            </p>
-          </div>
-          <div class="g-side journey" data-anchor="journey">
-            <h3 class="journey-title m m-blur" data-at="9.6" data-dur="1">Start lean with AI support</h3>
-            <ol class="miles">
-              <li class="mile m m-rise" style="--jx: 9%; --jy: 70%" data-at="10.4" data-on="11.3" data-key="step">
-                <span class="mile-dot" data-anchor="step"></span>
-                <span class="mile-body"><span class="mile-n">01</span><strong>Clarify the first offer</strong><span class="t">Know what to sell, who it serves, and what the first customer journey should look like.</span></span>
-              </li>
-              <li class="mile m m-rise" style="--jx: 41%; --jy: 50%" data-at="12.4" data-on="13.3" data-key="step">
-                <span class="mile-dot" data-anchor="step"></span>
-                <span class="mile-body"><span class="mile-n">02</span><strong>Reduce early cost</strong><span class="t">Use AI to support intake, follow-up, content, and admin before adding more payroll.</span></span>
-              </li>
-              <li class="mile m m-rise" style="--jx: 73%; --jy: 30%" data-at="14.4" data-on="15.3" data-key="step">
-                <span class="mile-dot" data-anchor="step"></span>
-                <span class="mile-body"><span class="mile-n">03</span><strong>Launch with a plan</strong><span class="t">Leave with a practical next step instead of a vague idea and scattered tools.</span></span>
-              </li>
-            </ol>
-            <a class="btn primary journey-cta m m-pop" data-at="16.6" data-key="cta" data-anchor="pathEnd" href="business-review.html">Plan My First AI System</a>
-          </div>
-        </div>
+      <section class="st st-wide" data-stage="6">
+        <p class="st-k">06 &nbsp;/&nbsp; CASES</p>
+        <h2>How AI solutions remove the problems<b>that cost small businesses time and sales.</b></h2>
+        <p class="st-only">Missed calls were turning into missed jobs. Good leads asked once, then disappeared. Marketing stopped whenever operations got busy. Repeated admin work was slowing every handoff.</p>
+        <div class="st-links"><a href="cases.html">See the cases →</a><a href="demo-center.html">Preview the demos →</a></div>
       </section>
-
-      <!-- 08 · Start practical: callouts drawn out of one rotating system -->
-      <section class="scene s-start" data-scene="start" data-label="Start practical" data-dur="21" data-forms="cube@0" data-dim-m="0.55">
-        <div class="wrap duo">
-          <div class="col-l">
-            <div class="g-head">
-              <p class="eyebrow m m-rise" data-at="0.2" data-n="08">Start practical</p>
-              <h2 class="h-l" data-split data-at="0.5" data-stagger="0.045">
-                Build <em>one AI system</em> that saves time, lowers cost, and helps you handle more customers.
-              </h2>
-            </div>
-            <div class="g-body">
-              <p class="lead m m-fade" data-at="2.4" data-dur="0.6" data-read="2.6" data-outm="10.2">
-                Start with the workflow that costs you the most time or creates the most missed sales opportunities. NaxaStudio will
-                help review the process, organize the information, and map a practical system your business can actually use.
-              </p>
-            </div>
-            <div class="g-cta btns">
-              <a class="btn primary m m-pop" data-at="16.4" href="business-review.html">Book an AI Business Review</a>
-              <a class="btn ghost m m-pop" data-at="16.6" href="demo-center.html">View Demo</a>
-            </div>
-          </div>
-          <div class="col-r g-side lab">
-            <div class="cube-slot" data-anchor="cube" aria-hidden="true"></div>
-            <div class="callouts">
-              <h3 class="callouts-title m m-blur" data-at="10.4" data-dur="1">Good first projects</h3>
-              <ul>
-                <li class="call m m-left" data-at="11" data-dur="1" data-key="proj">
-                  <span class="call-n">01</span><strong>Customer inquiry handling</strong><span class="t">Capture the request, collect missing details, and prepare a response.</span>
-                </li>
-                <li class="call m m-left" data-at="12.6" data-dur="1" data-key="proj">
-                  <span class="call-n">02</span><strong>Sales follow-up</strong><span class="t">Keep leads organized with next steps and reply drafts.</span>
-                </li>
-                <li class="call m m-left" data-at="14.2" data-dur="1" data-key="proj">
-                  <span class="call-n">03</span><strong>Daily workflow support</strong><span class="t">Reduce repeated admin work with templates and checklists.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
+      <section class="st" data-stage="7">
+        <p class="st-k">07 &nbsp;/&nbsp; AI BUSINESS REVIEW</p>
+        <h2>Have a strong business idea,<b>but not sure where to start?</b></h2>
+        <p>Turn a business idea into a practical first operating plan.</p>
+        <div class="st-links"><a href="business-review.html">AI Business Review →</a></div>
       </section>
-
-      <!-- 09 · Finale -->
-      <section class="scene s-fin" data-scene="finale" data-label="Get started" data-dur="10" data-forms="logoFin@0">
-        <div class="wrap fin">
-          <div class="fin-visual" data-anchor="fin" aria-hidden="true"></div>
-          <h2 class="h-xl fin-title">
-            <span class="ln" data-split data-at="1.4" data-stagger="0.09">Turn ideas into action.</span>
-            <span class="ln serif grad m m-wipe" data-at="2.2" data-dur="1.3">It’s not as hard as you think.</span>
-          </h2>
-          <div class="btns center">
-            <a class="btn primary m m-pop" data-at="3.2" href="business-review.html">Book an AI Business Review</a>
-            <a class="btn ghost m m-pop" data-at="3.4" href="demo-center.html">View Demo</a>
-          </div>
-          <footer class="foot m m-fade" data-at="4.2" data-dur="1.2">
-            <p>NaxaStudio / <span lang="zh">纳想</span>. AI execution and operations support for small businesses.</p>
-            <nav aria-label="Footer"><a href="contact.html">Contact</a><a href="privacy-responsible-ai.html">Privacy &amp; Terms</a></nav>
-          </footer>
-        </div>
+      <section class="st" data-stage="8">
+        <p class="st-k">08 &nbsp;/&nbsp; START</p>
+        <h2>When you are ready,<b>tell us what is slowing you down.</b></h2>
+        <a class="st-btn" href="business-review.html">Book a Business Review</a>
+        <p class="st-foot">NaxaStudio / 纳想. AI execution and operations support for small businesses.<a href="contact.html">Contact</a><a href="privacy-responsible-ai.html">Privacy &amp; Terms</a><a href="zh.html" lang="zh-Hans">中文</a></p>
       </section>
     </main>
 
-    <!-- After the film the page keeps going: the other pages, one after another, toured automatically -->
-    <div class="tour" id="tour">
-      <!-- 10 · About (about.html) -->
-      <section class="tsec t-about" data-icon="bulb" id="about" data-tour data-label="About" data-form="logoH">
-        <div class="twrap">
-          <div class="bridge" data-stop>
-            <p data-icons="logo@NaxaStudio>question~pulse@exists" class="bridge-line m m-fade" data-r data-icon="none">But first, why NaxaStudio exists.</p>
-          </div>
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="10">About NaxaStudio / <span lang="zh">关于纳想</span></p>
-            <h2 class="t-title" data-rs>Turn ideas into action with <em>practical AI solutions.</em></h2>
-          </header>
-          <div class="manifesto" data-stop>
-            <p data-icons="row:bulb~pulse@have ideas,route~run@a way,flag@reality" class="mf m m-fade" data-icon="bulb" data-r data-rr>NaxaStudio was created for people who have ideas but need a way to bring them into reality.</p>
-            <p data-icons="set:shop~grow@grow a business,heart~pulse@meaningful,star~pulse@a dream,!barrier@difficult business stage|bulb~dim@the idea itself>stairs~run@the first step" class="mf m m-fade" data-icon="stairs" data-r="0.2" data-rr>Whether you are trying to grow a business, build something meaningful, pursue a dream, or move through a difficult business stage, the hardest part is often not the idea itself — it is taking the first step and keeping it moving.</p>
-          </div>
-          <div class="manifesto" data-stop>
-            <p data-icons="set:chip@AI,!snow@cold,!far@distant,!tangle~shake@complicated|row:bulb@thinking,gear~spin@doing,target~pulse@real results" class="mf m m-fade" data-icon="flow3" data-r data-rr>We believe AI should not feel cold, distant, or complicated. It should become a practical solution that helps people move from thinking, to doing, to real results.</p>
-            <p data-icons="logo~pulse@NaxaStudio" class="mf mf-last m m-blur" data-icon="logo" data-r="0.4">NaxaStudio exists to help you turn ideas into action — powered by practical AI solutions.</p>
-          </div>
-          <div class="reality" data-icon="shop" data-stop>
-            <h3 data-icons="set:shop@business reality,!chip~x@software hype" class="t-sub" data-rs>We start with business reality, <em>not software hype.</em></h3>
-            <div class="reality-cols">
-              <p data-icons="set:bulb~dim@ideas only matter,chat@customer response,funnel@follow-up|set:checklist@organized workflows,post@useful content,scale@decisions,stairs~run@forward" class="lead m m-fade" data-r="0.3" data-rr data-icon="checklist">For small businesses, ideas only matter when they become customer response, follow-up, organized workflows, useful content, and decisions that actually move the business forward.</p>
-              <p data-icons="set:team@Our team,bank@banking,person@private clients,shop@small merchants|row:eye@perspective,coins@budgets|set:cash~shake@cash flow pressure,funnel~shake@customer follow-up,!barrier@bottlenecks" class="lead m m-fade" data-r="0.6" data-rr data-icon="bank">Our team brings business advisory experience, including banking experience with private clients and small merchants. That perspective shapes how NaxaStudio approaches budgets, cash flow pressure, customer follow-up, and daily operational bottlenecks.</p>
-            </div>
-          </div>
-          <div class="practice" data-icon="checklist" data-stop>
-            <h4 class="practice-title m m-blur" data-r>What that means in practice</h4>
-            <ul>
-              <li data-icons="set:map@We map,eye~pulse@actually happening,shop@the business today" class="m m-rise" data-r="0.3" data-icon="magnifier"><span class="pr-n">01</span><strong>Plain-language workflow review</strong><span class="t">We map what is actually happening in the business today.</span></li>
-              <li data-icons="set:stairs~ok@useful first steps,!layers~x@large systems,!hourglass~x@long projects" class="m m-rise" data-r="0.6" data-icon="coins"><span class="pr-n">02</span><strong>Budget-aware implementation</strong><span class="t">We focus on useful first steps before large systems or long projects.</span></li>
-              <li data-icons="row:agent@AI supports repetitive work,scale@important decisions,human~ok@human-reviewed" class="m m-rise" data-r="0.9" data-icon="wheel"><span class="pr-n">03</span><strong>Owner control</strong><span class="t">AI supports repetitive work while important decisions stay human-reviewed.</span></li>
-            </ul>
-          </div>
-          <div class="t-quote" data-icon="gear" data-stop>
-            <p class="eyebrow m m-rise" data-r>Positioning</p>
-            <h3 data-icons="set:chat@AI chatbot,funnel@company,megaphone@company,checklist@company" class="quote-big" data-rs>NaxaStudio is <em>not just an AI chatbot company.</em></h3>
-            <p data-icons="set:!gear~x@generic automation,!chat~x@one-size-fits-all receptionist|set:target@The goal,bolt@respond faster,funnel@follow up better,!papers~fade@reduce repetitive work|set:gear~spin@practical systems,person@daily customer,checklist@operations tasks" class="body m m-fade" data-r="0.6" data-rr>We are not positioning the work as generic automation or a one-size-fits-all receptionist. The goal is to help owners respond faster, follow up better, reduce repetitive work, and build practical systems around daily customer and operations tasks.</p>
-          </div>
-          <div class="bridge" data-stop>
-            <p data-icons="question@what does that look like>agent~pulse@in practice" class="bridge-line m m-fade" data-r data-icon="none">So what does that look like in practice?</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 11 · AI Solutions (ai-agents.html) -->
-      <section class="tsec t-agents" data-icon="target" id="ai-solutions" data-tour data-label="AI Solutions" data-form="orbitH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="11">AI Solutions</p>
-            <h2 class="t-title" data-rs>Focused agents for the repetitive work that <em>slows small teams down.</em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>Each agent should be grounded in the business knowledge base and reviewed by humans where judgment matters.</p>
-          </header>
-          <ol class="spec">
-            <li data-icons="set:chat@capture inquiries,form@missing information,chatok@basic questions,document@intake summaries|set:missed~ring@missed calls,!tangle@messy inquiries|set:human~ok@Human review,shield@sensitive or complex" class="spec-row m m-sweep" data-icon="chat" id="ai-receptionist" data-r data-stop>
-              <span class="spec-n">01</span>
-              <h3>AI Receptionist Agent</h3>
-              <p class="spec-d">Helps capture inquiries, collect missing information, answer basic questions, and prepare intake summaries.</p>
-              <ul class="spec-tags"><li class="fit">Best for missed calls and messy inquiries</li><li class="rev">Human review for sensitive or complex requests</li></ul>
-            </li>
-            <li data-icons="set:funnel@qualify leads,pen@draft follow-up,stairs@track next steps,snow~x@going cold|set:person~pulse@owner-led,team@sales teams|set:human~ok@Human review,tag@pricing,heart@promises,signed@closing decisions" class="spec-row m m-sweep" data-icon="funnel" id="ai-sales" data-r data-stop>
-              <span class="spec-n">02</span>
-              <h3>AI Sales Agent</h3>
-              <p class="spec-d">Helps qualify leads, draft follow-up messages, track next steps, and keep prospects from going cold.</p>
-              <ul class="spec-tags"><li class="fit">Best for owner-led sales teams</li><li class="rev">Human review for pricing, promises, and closing decisions</li></ul>
-            </li>
-            <li data-icons="set:bulb@business ideas,post@content drafts,map@campaign outlines,template@reusable messaging|set:!zigzag~shake@inconsistent,megaphone@marketing habits|set:human~ok@Human review,megaphone@brand voice,shield@claims" class="spec-row m m-sweep" data-icon="megaphone" id="ai-marketing" data-r data-stop>
-              <span class="spec-n">03</span>
-              <h3>AI Marketing Agent</h3>
-              <p class="spec-d">Helps turn business ideas into content drafts, campaign outlines, and reusable messaging.</p>
-              <ul class="spec-tags"><li class="fit">Best for inconsistent marketing habits</li><li class="rev">Human review for brand voice and claims</li></ul>
-            </li>
-            <li data-icons="set:document@research briefs,compare@compare options,magnifier@summarize findings,map@planning work|set:cycle@repeated,shop@market,magnifier@vendor research|set:human~ok@Human review,scale~pulse@final decisions" class="spec-row m m-sweep" data-icon="magnifier" id="ai-research" data-r data-stop>
-              <span class="spec-n">04</span>
-              <h3>AI Research Agent</h3>
-              <p class="spec-d">Helps prepare research briefs, compare options, summarize findings, and support planning work.</p>
-              <ul class="spec-tags"><li class="fit">Best for repeated market and vendor research</li><li class="rev">Human review for final decisions</li></ul>
-            </li>
-            <li data-icons="set:checklist@checklists,handoff@handoff notes,cycle@recurring tasks,stairs@workflow steps|set:!papers~shake@admin-heavy,team@teams|set:human~ok@Human review,alarm@exceptions,signed@approvals" class="spec-row m m-sweep" data-icon="checklist" id="ai-workflow" data-r data-stop>
-              <span class="spec-n">05</span>
-              <h3>AI Workflow Agent</h3>
-              <p class="spec-d">Helps organize checklists, handoff notes, recurring tasks, and internal workflow steps.</p>
-              <ul class="spec-tags"><li class="fit">Best for admin-heavy teams</li><li class="rev">Human review for exceptions and approvals</li></ul>
-            </li>
-          </ol>
-          <aside data-icons="magnifier~pulse@Business Review|set:agent@first agent,!hourglass~fade@losing the most time,!funnel~fade@follow-up" class="t-callout m m-rise" data-r data-stop data-icon="question">
-            <div>
-              <h3>Not sure which agent comes first?</h3>
-              <p>Start with an AI Business Review. The right first agent depends on where your business is losing the most time or follow-up.</p>
-            </div>
-            <a class="btn primary" href="business-review.html">Start with a review</a>
-          </aside>
-          <div class="bridge" data-stop>
-            <p data-icons="set:chat,funnel,megaphone,magnifier|layers~pulse@one practical layer" class="bridge-line m m-fade" data-r data-icon="none">Not ready for every agent? Start with one practical layer.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 12 · Startup AI Solution (base-ai-agent.html) -->
-      <section class="tsec t-startup" data-icon="layers" id="startup" data-tour data-label="Startup AI Solution" data-form="layersH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="12">Startup AI Solution</p>
-            <h2 class="t-title" data-rs>Before hiring a full team, build <em>the first practical layer.</em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>The Startup AI Solution helps handle repetitive intake, summary, draft, and checklist work while business owners stay in control.</p>
-            <div class="btns m m-rise" data-r="0.8">
-              <a class="btn primary" href="contact.html">Get a Custom AI Plan</a>
-              <a class="btn ghost" href="ai-agents.html">Compare solutions</a>
-            </div>
-          </header>
-          <div class="layers-wrap" data-stop>
-            <div class="layers-text" data-icon="team">
-              <h3 data-icons="set:sprout~grow@entry point,team~dim@hire every role" class="t-sub" data-rs>The entry point for small businesses that are not ready to hire every role.</h3>
-              <p data-icons="set:chat~dim@receptionist,megaphone~dim@marketing assistant,funnel~dim@sales assistant,magnifier~dim@research assistant,papers~dim@admin support|row:agent~pulse@practical AI agent,layers@repetitive first layer" class="lead m m-fade" data-r="0.4" data-rr>Before hiring a receptionist, marketing assistant, sales assistant, research assistant, or admin support, start with a practical AI agent that handles the repetitive first layer of your business.</p>
-            </div>
-            <div class="layers">
-              <h4 class="layers-title m m-blur" data-r="0.3">Useful first-layer work</h4>
-              <ol>
-                <li data-icons="row:!chatq@missing details,team@staff,funnel@follow-up" class="layer m m-lift" data-icon="chat" style="--i: 0" data-r="0.6"><span class="layer-n">01</span><strong>Intake questions</strong><span class="t">Ask for the missing details that staff need before follow-up.</span></li>
-                <li data-icons="!tangle@messy inquiries>document~ok@readable business notes" class="layer m m-lift" data-icon="document" style="--i: 1" data-r="0.9"><span class="layer-n">02</span><strong>Lead summaries</strong><span class="t">Turn messy inquiries into readable business notes.</span></li>
-                <li data-icons="row:pen@first responses,human~ok@review" class="layer m m-lift" data-icon="pen" style="--i: 2" data-r="1.2"><span class="layer-n">03</span><strong>Reply drafts</strong><span class="t">Prepare first responses for owner or staff review.</span></li>
-                <li data-icons="set:stairs@next step,!question@still needed" class="layer m m-lift" data-icon="checklist" style="--i: 3" data-r="1.5"><span class="layer-n">04</span><strong>Workflow checklists</strong><span class="t">Show the next step and the information still needed.</span></li>
-              </ol>
-            </div>
-          </div>
-          <div class="t-quote" data-icon="wheel" data-stop>
-            <p class="eyebrow m m-rise" data-r>Boundaries</p>
-            <h3 data-icons="set:human~ok@support,!wheel~x@not autopilot" class="quote-big" data-rs>The base agent is support, <em>not autopilot.</em></h3>
-            <p data-icons="set:pen@draft,document@summarize,checklist@organize,bell~ring@remind,bolt@respond faster" class="body m m-fade" data-r="0.6" data-rr>It can draft, summarize, organize, and remind so the owner or team can respond faster with better context.</p>
-          </div>
-          <div class="bridge" data-stop>
-            <p data-icons="set:window~pulse@see it,scale@decide" class="bridge-line m m-fade" data-r data-icon="none">Want to see it before you decide?</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 13 · Demo (demo-center.html) -->
-      <section class="tsec t-demo" data-icon="window" id="demo" data-tour data-label="Demo" data-form="lockH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="13">AI agent demos</p>
-            <h2 class="t-title" data-rs>Choose the agent category you want to <em>preview first.</em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>Each category starts with one focused static demo preview. Future versions can add deeper interactive demos, backend lead capture, and industry-specific workflows.</p>
-          </header>
-          <div class="demos" data-stop>
-            <article data-icons="row:chat@new inquiry,!chatq@missing details,document~ok@intake summary" class="demo locked-demo" data-icon="chat" data-r="0" data-demo-card="AI Receptionist Agent">
-              <div class="demo-head"><h3>AI Receptionist Agent</h3><button class="demo-button" type="button" data-demo-agent="AI Receptionist Agent" data-demo-url="ai-receptionist-demo/">Demo</button></div>
-              <p>Captures a new inquiry, asks for missing details, and prepares a clean intake summary.</p>
-              <div class="tag-row"><span class="tag">Intake</span><span class="tag">First response</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>Unlocked demo preview</strong>
-                <p>A visitor asks about service availability. The agent collects name, contact method, service need, urgency, preferred language, and creates a staff-ready summary.</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-            <article data-icons="row:funnel@Qualifies a lead,target@buying intent,pen@follow-up message" class="demo locked-demo" data-icon="funnel" data-r="0.15" data-demo-card="AI Sales Agent">
-              <div class="demo-head"><h3>AI Sales Agent</h3><button class="demo-button" type="button" data-demo-agent="AI Sales Agent" data-demo-url="ai-sales-demo/">Demo</button></div>
-              <p>Qualifies a lead, identifies buying intent, and drafts the next follow-up message.</p>
-              <div class="tag-row"><span class="tag">Lead follow-up</span><span class="tag">Qualification</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>Unlocked demo preview</strong>
-                <p>A prospect asks for help but gives limited context. The agent separates budget, timeline, fit, missing details, and prepares a polite follow-up draft.</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-            <article data-icons="row:bulb@business ideas,map@campaign outlines,post@post drafts,template@reusable messaging" class="demo locked-demo" data-icon="megaphone" data-r="0.3" data-demo-card="AI Marketing Agent">
-              <div class="demo-head"><h3>AI Marketing Agent</h3><button class="demo-button" type="button" data-demo-agent="AI Marketing Agent" data-demo-url="ai-marketing-demo/">Demo</button></div>
-              <p>Turns business ideas into campaign outlines, post drafts, and reusable messaging.</p>
-              <div class="tag-row"><span class="tag">Content draft</span><span class="tag">Campaign support</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>Unlocked demo preview</strong>
-                <p>An owner describes a new service. The agent creates a campaign angle, audience notes, three post drafts, and a short call-to-action plan.</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-            <article data-icons="row:papers@repeated research,compare@comparison notes,document~ok@decision-ready briefs" class="demo locked-demo" data-icon="magnifier" data-r="0.45" data-demo-card="AI Research Agent">
-              <div class="demo-head"><h3>AI Research Agent</h3><button class="demo-button" type="button" data-demo-agent="AI Research Agent">Demo</button></div>
-              <p>Organizes repeated research into comparison notes and decision-ready briefs.</p>
-              <div class="tag-row"><span class="tag">Research brief</span><span class="tag">Comparison</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>Unlocked demo preview</strong>
-                <p>A business owner needs to compare tools or competitors. The agent prepares criteria, findings, tradeoffs, and follow-up questions for human review.</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-            <article data-icons="set:checklist@checklists,handoff@handoff notes,bell~ring@reminders,cycle@recurring operations" class="demo locked-demo" data-icon="checklist" data-r="0.6" data-demo-card="AI Workflow Agent">
-              <div class="demo-head"><h3>AI Workflow Agent</h3><button class="demo-button" type="button" data-demo-agent="AI Workflow Agent">Demo</button></div>
-              <p>Creates checklists, handoff notes, and next-step reminders for recurring operations.</p>
-              <div class="tag-row"><span class="tag">Admin workflow</span><span class="tag">Checklist</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>Unlocked demo preview</strong>
-                <p>A repeated admin process is broken into intake, required information, owner approval, customer update, and completion notes.</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-            <article data-icons="set:chat@intake,document@summary,pen@draft response,stairs@next-step,person@business owner" class="demo locked-demo" data-icon="layers" data-r="0.75" data-demo-card="Startup AI Solution">
-              <div class="demo-head"><h3>Startup AI Solution</h3><button class="demo-button" type="button" data-demo-agent="Startup AI Solution">Demo</button></div>
-              <p>Combines intake, summary, draft response, and next-step support for a small business owner.</p>
-              <div class="tag-row"><span class="tag">Base layer</span><span class="tag">Owner support</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>Unlocked demo preview</strong>
-                <p>The base agent receives a customer request, checks the business knowledge base, drafts a response, and flags what needs owner review.</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-          </div>
-          <div class="bridge" data-stop>
-            <p data-icons="shop~grow@real business" class="bridge-line m m-fade" data-r data-icon="none">Now, inside a real business.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 14 · Cases (cases.html) -->
-      <section class="tsec t-cases" data-icon="growth" id="cases" data-tour data-label="Cases" data-form="casesH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="14">Use cases</p>
-            <h2 class="t-title" data-rs>How AI solutions remove the problems that <em>cost small businesses time and sales.</em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>These are case-style examples. They show the kind of customer problem, AI workflow, and business outcome NaxaStudio designs for during an AI Business Review.</p>
-          </header>
-          <article class="case" data-icon="phone" data-stop>
-            <p class="eyebrow m m-rise" data-r>Local service business</p>
-            <h3 data-icons="phone~ring@Missed calls>!order~fade@missed jobs" class="case-h" data-rs>Missed calls were turning into missed jobs.</h3>
-            <dl class="case-flow">
-              <div data-icons="set:!person~shake@busy on job sites,phone~ring@calls,chat@web inquiries,!hourglass~shake@waited hours" class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>Problem</dt><dd>The owner was busy on job sites, so calls and web inquiries often waited hours before anyone replied.</dd></div>
-              <div data-icons="set:agent~pulse@AI Receptionist,chat@service request,pin@location,alarm@urgency,contact@contact details|row:!question@missing information,document~ok@intake summary" class="cf cf-s m m-rise" data-icon="chat" data-r="0.8"><dt>AI solution</dt><dd>AI Receptionist collects the service request, location, urgency, contact details, and missing information, then prepares a staff-ready intake summary.</dd></div>
-              <div data-icons="set:chatok~run@faster first response,eye@owner sees,document~ok@cleaner request details|snow~x@go cold" class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>Outcome</dt><dd>Customers get a faster first response, the owner sees cleaner request details, and fewer inquiries go cold before follow-up.</dd></div>
-            </dl>
-          </article>
-          <article class="case" data-icon="chat" data-stop>
-            <p class="eyebrow m m-rise" data-r>Professional service</p>
-            <h3 data-icons="person@Good leads>chat@asked once>!dropoff~fade@disappeared" class="case-h" data-rs>Good leads asked once, then disappeared.</h3>
-            <dl class="case-flow">
-              <div data-icons="set:!chatq@short messages,!scale~shake@who was serious,!question~pulse@what to ask next" class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>Problem</dt><dd>Potential customers sent short messages, but the team did not always know who was serious or what to ask next.</dd></div>
-              <div data-icons="set:funnel@qualifies,target@intent,clock@timeline,coins@budget signals,question@missing context,pen@follow-up" class="cf cf-s m m-rise" data-icon="funnel" data-r="0.8"><dt>AI solution</dt><dd>AI Sales Agent qualifies intent, timeline, budget signals, missing context, and drafts a polite next-step follow-up.</dd></div>
-              <div data-icons="set:ranked@clearer lead list,calcheck@follow-up consistency|row:person@right prospects,stairs~run@forward" class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>Outcome</dt><dd>The owner gets a clearer lead list, stronger follow-up consistency, and a better chance to move the right prospects forward.</dd></div>
-            </dl>
-          </article>
-          <article class="case" data-icon="calendar" data-stop>
-            <p class="eyebrow m m-rise" data-r>Founder-led company</p>
-            <h3 data-icons="set:megaphone@Marketing>!muted@stopped,!person~shake@got busy" class="case-h" data-rs>Marketing stopped whenever operations got busy.</h3>
-            <dl class="case-flow">
-              <div data-icons="set:bulb@had ideas,book@customer stories,!hourglass~shake@no time,!blank@posts" class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>Problem</dt><dd>The owner had ideas and customer stories, but no time to turn them into posts, emails, or campaign angles.</dd></div>
-              <div data-icons="row:note@service notes,map@content themes|set:post@draft posts,megaphone@calls to action,template@reusable messaging" class="cf cf-s m m-rise" data-icon="megaphone" data-r="0.8"><dt>AI solution</dt><dd>AI Marketing Agent turns service notes into content themes, draft posts, short calls to action, and reusable messaging.</dd></div>
-              <div data-icons="set:calcheck~ok@easier to maintain,document@structured drafts|!blank~x@blank page" class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>Outcome</dt><dd>Marketing becomes easier to maintain, content starts from structured drafts, and the owner spends less time facing a blank page.</dd></div>
-            </dl>
-          </article>
-          <article class="case" data-icon="papers" data-stop>
-            <p class="eyebrow m m-rise" data-r>Growing operations</p>
-            <h3 data-icons="row:!papers~shake@Repeated admin work,!hourglass@slowing,handoff@every handoff" class="case-h" data-rs>Repeated admin work was slowing every handoff.</h3>
-            <dl class="case-flow">
-              <div data-icons="set:envelope@emails,form@forms,note@notes,sheet@spreadsheets|set:!papers~shake@repeated copying,!question~pulse@unclear next steps" class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>Problem</dt><dd>Customer details lived across emails, forms, notes, and spreadsheets, creating repeated copying and unclear next steps.</dd></div>
-              <div data-icons="!tangle@the process>checklist~ok@checklists|set:handoff@handoff notes,!question@missing-item prompts,bell~ring@reminders" class="cf cf-s m m-rise" data-icon="checklist" data-r="0.8"><dt>AI solution</dt><dd>AI Workflow Agent converts the process into checklists, handoff notes, missing-item prompts, and recurring task reminders.</dd></div>
-              <div data-icons="set:gear~spin@operating rhythm,!chat~fade@fewer repeated explanations,stairs~run@move work forward" class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>Outcome</dt><dd>The team gets a cleaner operating rhythm, fewer repeated explanations, and a more reliable way to move work forward.</dd></div>
-            </dl>
-          </article>
-          <div class="t-quote" data-icon="hourglass" data-stop>
-            <p class="eyebrow m m-rise" data-r>The pattern</p>
-            <h3 data-icons="set:magnifier~pulse@Start with the workflow,!hourglass~fade@losing time,!dropoff~fade@customers,!funnel~fade@follow-up" class="quote-big" data-rs>Start with the workflow that is <em>losing time, customers, or follow-up.</em></h3>
-            <p data-icons="set:agent@The right AI solution,!chip~x@sounds impressive|set:!storm@one repeated business problem,!eye~fade@attention,!bolt~fade@response speed,!growth~fade@sales opportunity" class="body m m-fade" data-r="0.6" data-rr>The right AI solution is not chosen because the tool sounds impressive. It is chosen because one repeated business problem is costing attention, response speed, or sales opportunity.</p>
-            <div class="btns m m-rise" data-r="1">
-              <a class="btn primary" href="business-review.html">Book a Business Review</a>
-              <a class="btn ghost" href="demo-center.html">View Demo</a>
-            </div>
-          </div>
-          <div class="bridge" data-stop>
-            <p data-icons="set:question~pulse@where,flag@start|over:shop@your business,magnifier~pulse@review" class="bridge-line m m-fade" data-r data-icon="none">So where do you start? With a review of your business.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 15 · AI Business Review (business-review.html) -->
-      <section class="tsec t-review" data-icon="magnifier" id="business-review" data-tour data-label="AI Business Review" data-form="radarH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="15">AI Business Review</p>
-            <h2 class="t-title" data-rs>Review the business <em>before building the technology.</em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>The review helps identify where AI can reduce repetitive first-layer work without overbuilding or overpromising.</p>
-            <div class="btns m m-rise" data-r="0.8">
-              <a class="btn primary" href="contact.html">Book an AI Business Review</a>
-              <a class="btn ghost" href="base-ai-agent.html">See the next step</a>
-            </div>
-          </header>
-          <div class="lean" data-icon="route" data-stop>
-            <div class="lean-text">
-              <p class="eyebrow m m-rise" data-r>Start lean before you hire</p>
-              <h3 data-icons="row:bulb@business idea,map@operating plan" class="t-sub" data-rs>Turn a business idea into a practical first operating plan.</h3>
-              <p data-icons="set:ideas@have ideas,!question@where to start,tag@shape the offer|row:route~run@customer journey,agent~pulse@AI-supported workflow" class="lead m m-fade" data-r="0.4" data-rr>If you have ideas but do not know where to start, the review helps you shape the offer, map the first customer journey, and decide which AI-supported workflow should be built first.</p>
-            </div>
-            <ol class="lean-steps">
-              <li data-icons="set:tag@what you are selling,person@who it is for,heart~pulse@would care" class="m m-rise" data-r="0.6" data-icon="bulb"><span class="ls-n">01</span><strong>Idea to offer</strong><span class="t">Clarify what you are selling, who it is for, and why customers would care.</span></li>
-              <li data-icons="set:chat@inquiries,funnel@follow-up,megaphone@content,papers@admin,team~dim@full team" class="m m-rise" data-r="0.9" data-icon="rocket"><span class="ls-n">02</span><strong>Lean launch workflow</strong><span class="t">Map how inquiries, follow-up, content, and admin should work before hiring a full team.</span></li>
-              <li data-icons="set:agent~pulse@practical AI setup,clock@save time,coins@lower cost,sprout~grow@growth" class="m m-rise" data-r="1.2" data-icon="gear"><span class="ls-n">03</span><strong>First AI system</strong><span class="t">Choose one practical AI setup that can save time, lower cost, and support the first stage of growth.</span></li>
-            </ol>
-          </div>
-          <div class="areas-wrap" data-icon="magnifier" data-stop>
-            <p class="eyebrow m m-rise" data-r>Review areas</p>
-            <h3 data-icons="over:layers@daily operating layer,magnifier~pulse@look for" class="t-sub" data-rs>We look for useful AI opportunities across the daily operating layer.</h3>
-            <div class="areas">
-              <article data-icons="set:!form~x@information is missing,person@new customers>chat@reach out" class="area m m-rise" data-r="0.3" data-icon="chat"><h4>Customer intake</h4><p>What information is missing when new customers first reach out?</p></article>
-              <article data-icons="set:!hourglass@slow down,!snow@go cold,!bell~ring@repeated reminders" class="area m m-rise" data-r="0.45" data-icon="funnel"><h4>Sales follow-up</h4><p>Where do leads slow down, go cold, or require repeated reminders?</p></article>
-              <article data-icons="set:post@content,calendar@campaign,megaphone@message,!hourglass~shake@delayed" class="area m m-rise" data-r="0.6" data-icon="megaphone"><h4>Marketing consistency</h4><p>What content, campaign, or message work keeps getting delayed?</p></article>
-              <article data-icons="set:compare@comparisons,document@summaries,magnifier@market checks,!cycle@repeated" class="area m m-rise" data-r="0.75" data-icon="magnifier"><h4>Research needs</h4><p>What comparisons, summaries, or market checks are repeated often?</p></article>
-              <article data-icons="set:!hourglass~shake@delays,!papers~shake@manual copying" class="area m m-rise" data-r="0.9" data-icon="hourglass"><h4>Workflow bottlenecks</h4><p>Which admin steps create delays or repeated manual copying?</p></article>
-              <article data-icons="row:book@document,agent@AI can help" class="area m m-rise" data-r="1.05" data-icon="book"><h4>Knowledge base gaps</h4><p>What does the business need to document before AI can help reliably?</p></article>
-            </div>
-          </div>
-          <div class="output" data-icon="map" data-stop>
-            <div class="output-text">
-              <p class="eyebrow m m-rise" data-r>Output</p>
-              <h3 data-icons="map~pulse@opportunity map" class="t-sub" data-rs>A practical <em>AI opportunity map.</em></h3>
-              <p data-icons="set:checklist@first-step plan,gear~spin@automate,book@to document|set:human~ok@human review,agent~pulse@which agent" class="lead m m-fade" data-r="0.4" data-rr>The goal is to leave with a clear first-step plan: what to automate, what to document, where human review is needed, and which agent should be built first.</p>
-            </div>
-            <ol class="sheets">
-              <li data-icons="set:ranked@Ranked,coins@business value,stairs@difficulty" class="sheet m m-deal" data-icon="checklist" style="--i: 0" data-r="0.6"><span class="sheet-n">01</span><strong>Priority workflow list</strong><span class="t">Ranked by business value and implementation difficulty.</span></li>
-              <li data-icons="set:post@content,shield@policies,question@FAQs,template@templates" class="sheet m m-deal" data-icon="book" style="--i: 1" data-r="0.9"><span class="sheet-n">02</span><strong>Knowledge base plan</strong><span class="t">What content, policies, FAQs, and templates are needed.</span></li>
-              <li data-icons="set:chat@Receptionist,funnel@sales,megaphone@marketing,magnifier@research,checklist@workflow,layers@base agent" class="sheet m m-deal" data-icon="agent" style="--i: 2" data-r="1.2"><span class="sheet-n">03</span><strong>Agent recommendation</strong><span class="t">Receptionist, sales, marketing, research, workflow, or base agent.</span></li>
-            </ol>
-          </div>
-          <div class="bridge" data-stop>
-            <p data-icons="set:envelope~pulse@tell us,!barrier@slowing you down" class="bridge-line m m-fade" data-r data-icon="none">When you are ready, tell us what is slowing you down.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 16 · Contact (contact.html) -->
-      <section class="tsec t-contact" data-icon="envelope" id="contact" data-tour data-label="Contact" data-form="planeH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="16">Contact</p>
-            <h2 class="t-title" data-rs>Request an AI Business Review <em>or custom AI plan.</em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>Share what is slowing your business down. This first local version uses email submission; a secure form backend can be connected in a later step.</p>
-          </header>
-          <div class="contact-grid" data-stop data-dwell="12">
-            <div class="starts" data-icon="flag">
-              <h3 class="t-sub m m-blur" data-r>Good starting points</h3>
-              <ul>
-                <li class="m m-rise" data-r="0.3" data-icon="chat"><strong>Customer intake is inconsistent</strong><span class="t">New inquiries arrive without enough detail to respond well.</span></li>
-                <li class="m m-rise" data-r="0.5" data-icon="clock"><strong>Follow-up is too slow</strong><span class="t">Leads wait too long or require repeated manual reminders.</span></li>
-                <li class="m m-rise" data-r="0.7" data-icon="megaphone"><strong>Marketing and research keep slipping</strong><span class="t">Important tasks are delayed because the owner is busy with daily operations.</span></li>
-              </ul>
-            </div>
-            <div class="contact-panel m m-pop" data-r="0.4">
-              <form class="contact-form" action="mailto:contact@naxastudio.com" method="post" enctype="text/plain">
-                <div class="form-grid">
-                  <label>Name<input name="name" autocomplete="name" required /></label>
-                  <label>Business name<input name="business_name" autocomplete="organization" /></label>
-                  <label>Email<input name="email" type="email" autocomplete="email" required /></label>
-                  <label>Phone<input name="phone" type="tel" autocomplete="tel" /></label>
-                  <label>Business type<input name="business_type" /></label>
-                  <label>Preferred language<select name="preferred_language"><option>English</option><option>Chinese</option><option>Both</option></select></label>
-                  <label class="full">What do you want AI to help with?<textarea name="ai_help" required></textarea></label>
-                  <label class="full">Interested in<select name="interest"><option>AI Business Review</option><option>Startup AI Solution</option><option>AI Receptionist Agent</option><option>AI Sales Agent</option><option>AI Marketing Agent</option><option>AI Research Agent</option><option>AI Workflow Agent</option></select></label>
-                </div>
-                <label class="full consent"><input name="consent" type="checkbox" required /> I agree to be contacted about my request. NaxaStudio does not sell user information.</label>
-                <button class="btn primary" type="submit">Request Consultation</button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer class="site-end" data-stop data-dwell="4">
-        <div class="twrap end-grid">
-          <a class="brand" href="index.html" aria-label="NaxaStudio home">
-            <span class="brand-tile"><img src="{{LOGO_ICON}}" alt="" width="36" height="36" /></span>
-            <span class="brand-text">NaxaStudio <small>纳想 · AI execution systems</small></span>
-          </a>
-          <p>NaxaStudio / <span lang="zh">纳想</span>. AI execution and operations support for small businesses.</p>
-          <nav aria-label="Footer links"><a href="contact.html">Contact</a><a href="privacy-responsible-ai.html">Privacy &amp; Terms</a><a href="zh.html" lang="zh">中文</a></nav>
-        </div>
-      </footer>
+    <!-- labels that follow the places they name in the picture -->
+    <div class="tags" aria-hidden="true">
+      <span class="tag t-idea" data-tag="idea">IDEA</span>
+      <span class="tag t-brand" data-tag="brand">NaxaStudio <span>纳想</span><small>AI EXECUTION SYSTEMS</small></span>
+      <span class="tag t-node" data-tag="n0">Thinking</span>
+      <span class="tag t-node" data-tag="n1">Doing</span>
+      <span class="tag t-node" data-tag="n2">Results</span>
+      <span class="tag t-pain" data-tag="p0">customer response</span>
+      <span class="tag t-pain" data-tag="p1">follow-up</span>
+      <span class="tag t-pain" data-tag="p2">organized workflows</span>
+      <span class="tag t-pain" data-tag="p3">useful content</span>
+      <a class="tag t-agent" data-tag="a0" href="ai-agents.html" tabindex="-1">AI Receptionist Agent<small>01</small></a>
+      <a class="tag t-agent" data-tag="a1" href="ai-agents.html" tabindex="-1">AI Sales Agent<small>02</small></a>
+      <a class="tag t-agent" data-tag="a2" href="ai-agents.html" tabindex="-1">AI Marketing Agent<small>03</small></a>
+      <a class="tag t-agent" data-tag="a3" href="ai-agents.html" tabindex="-1">AI Research Agent<small>04</small></a>
+      <a class="tag t-agent" data-tag="a4" href="ai-agents.html" tabindex="-1">AI Workflow Agent<small>05</small></a>
+      <span class="tag t-layer" data-tag="l0"><em>01</em>Intake questions</span>
+      <span class="tag t-layer" data-tag="l1"><em>02</em>Lead summaries</span>
+      <span class="tag t-layer" data-tag="l2"><em>03</em>Reply drafts</span>
+      <span class="tag t-layer" data-tag="l3"><em>04</em>Workflow checklists</span>
+      <span class="tag t-case" data-tag="c0">Missed calls were turning into missed jobs.</span>
+      <span class="tag t-case" data-tag="c1">Good leads asked once, then disappeared.</span>
+      <span class="tag t-case" data-tag="c2">Marketing stopped whenever operations got busy.</span>
+      <span class="tag t-case" data-tag="c3">Repeated admin work was slowing every handoff.</span>
+      <span class="tag t-map" data-tag="m0">Customer intake</span>
+      <span class="tag t-map" data-tag="m1">Sales follow-up</span>
+      <span class="tag t-map" data-tag="m2">Marketing consistency</span>
+      <span class="tag t-map" data-tag="m3">Research needs</span>
+      <span class="tag t-map" data-tag="m4">Workflow bottlenecks</span>
+      <span class="tag t-map" data-tag="m5">Knowledge base gaps</span>
     </div>
 
-    <!-- Demo access (same rules as demo-center.html: name, email or phone, demo password, agreement) -->
-    <div class="demo-modal" data-demo-modal aria-hidden="true">
-      <div class="demo-modal-backdrop" data-demo-close></div>
-      <div class="demo-modal-panel" role="dialog" aria-modal="true" aria-labelledby="demo-modal-title">
-        <div class="demo-modal-head">
-          <div>
-            <p class="eyebrow">Demo access</p>
-            <h2 id="demo-modal-title">Unlock demo preview</h2>
-          </div>
-          <button class="modal-close" type="button" data-demo-close aria-label="Close demo form">Close</button>
-        </div>
-        <form class="access-form" data-demo-access-form novalidate>
-          <div class="field-row">
-            <label class="full">Selected demo<input name="selected_demo" data-selected-demo readonly placeholder="Choose an AI solution demo" /></label>
-            <label>Name<input name="name" autocomplete="name" required /></label>
-            <label>Email <span class="field-hint">recommended</span><input name="email" type="email" autocomplete="email" /></label>
-            <label>Phone <span class="field-hint">optional</span><input name="phone" type="tel" autocomplete="tel" /></label>
-            <label>Demo password<input name="demo_password" type="password" autocomplete="off" required /></label>
-            <label>Business type<select name="business_type"><option value="">Select one</option><option>Startup</option><option>Local small business</option><option>Service team</option><option>Professional service</option><option>Other</option></select></label>
-          </div>
-          <div class="demo-consent">
-            <p>By clicking "I agree" and using this demo, you confirm that:</p>
-            <ul>
-              <li>You are over the age of 18.</li>
-              <li>You understand you are engaging with an AI-powered demo service.</li>
-              <li>You consent to demo interactions being recorded or stored to provide the service and improve the experience.</li>
-            </ul>
-            <p class="consent-fineprint">You acknowledge our <a href="privacy-responsible-ai.html">Privacy &amp; Terms</a>. Your information may be used to provide this demo service and respond to your request.</p>
-          </div>
-          <label class="checkbox-label">
-            <input name="terms" type="checkbox" />
-            <span>I agree.</span>
-          </label>
-          <p class="form-error" data-demo-error role="alert"></p>
-          <button class="btn primary" type="submit">Unlock Demo Preview</button>
-          <p class="unlock-note" data-demo-status>Choose a demo to continue.</p>
-        </form>
-      </div>
-    </div>
+    <nav class="rail" aria-label="Sections">
+      <button type="button" aria-label="Idea"></button>
+      <button type="button" aria-label="NaxaStudio"></button>
+      <button type="button" aria-label="Why we exist"></button>
+      <button type="button" aria-label="Business reality"></button>
+      <button type="button" aria-label="AI Solutions"></button>
+      <button type="button" aria-label="Startup AI Solution"></button>
+      <button type="button" aria-label="Cases"></button>
+      <button type="button" aria-label="AI Business Review"></button>
+      <button type="button" aria-label="Start"></button>
+    </nav>
+    <div class="hint" aria-hidden="true">SCROLL<b></b></div>
 
-    <div class="flash" id="flash" aria-hidden="true"></div>
-
-    <div class="ctl" id="ctl" role="group" aria-label="Playback controls">
-      <button class="cbtn" id="prev" type="button" aria-label="Previous chapter">
-        <svg viewBox="0 0 24 24"><path d="M7 5h2v14H7zM20 5v14L10 12z" /></svg>
-      </button>
-      <button class="cbtn main" id="play" type="button" aria-label="Pause">
-        <svg class="i-pause" viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></svg>
-        <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-        <svg class="i-replay" viewBox="0 0 24 24"><path d="M12 5V2L7.5 6 12 10V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" /></svg>
-      </button>
-      <button class="cbtn" id="next" type="button" aria-label="Next chapter">
-        <svg viewBox="0 0 24 24"><path d="M15 5h2v14h-2zM4 5v14l10-7z" /></svg>
-      </button>
-      <div class="rail" id="rail" role="slider" tabindex="0" aria-label="Timeline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <div class="rail-tip" id="railTip"></div>
-      </div>
-      <span class="chap" id="chap" aria-live="polite"></span>
-      <span class="time" id="time">0:00</span>
-      <button class="tbtn" id="speed" type="button" aria-label="Playback speed">1×</button>
-      <button class="tbtn snd" id="sound" type="button" aria-pressed="false" aria-label="Sound" title="Sound">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" /><path class="wv" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /><path class="no" d="M16 9.5l5 5M21 9.5l-5 5" /></svg>
-      </button>
-      <button class="tbtn" id="read" type="button">Read as page</button>
-    </div>
-
-    <script>window.__NAXA_LOGO__ = {{LOGO_POINTS}};</script>
-    <script src="motion.js"></script>
-    <script src="demo-center.js"></script>
+    <script type="application/json" id="ask-data">
+      {
+        "go": "Show me",
+        "open": "Open the page →",
+        "items": [
+          { "k": ["help me with", "what can you", "what do you", "services", "offer", "solutions"], "a": "Practical systems for the work that affects time, cost, and sales: the AI Receptionist, Sales, Marketing, Research and Workflow Agents.", "go": 4, "href": "ai-agents.html", "label": "AI Solutions →" },
+          { "k": ["small", "where do i start", "start", "startup", "begin", "hire", "hiring"], "a": "The entry point for small businesses that are not ready to hire every role. Before hiring a full team, build the first practical layer.", "go": 5, "href": "base-ai-agent.html", "label": "Startup AI Solution →" },
+          { "k": ["reply", "respond", "missed call", "calls", "inquir", "reception"], "a": "AI Receptionist Agent: helps capture inquiries, collect missing information, answer basic questions, and prepare intake summaries.", "go": 4, "href": "ai-agents.html", "label": "AI Solutions →" },
+          { "k": ["sales", "follow-up", "follow up", "leads", "prospect"], "a": "AI Sales Agent: helps qualify leads, draft follow-up messages, track next steps, and keep prospects from going cold.", "go": 4, "href": "ai-agents.html", "label": "AI Solutions →" },
+          { "k": ["marketing", "content", "posts", "campaign"], "a": "AI Marketing Agent: helps turn business ideas into content drafts, campaign outlines, and reusable messaging.", "go": 4, "href": "ai-agents.html", "label": "AI Solutions →" },
+          { "k": ["research", "compare", "market", "competitor"], "a": "AI Research Agent: helps prepare research briefs, compare options, summarize findings, and support planning work.", "go": 4, "href": "ai-agents.html", "label": "AI Solutions →" },
+          { "k": ["workflow", "admin", "checklist", "handoff", "repetitive", "template"], "a": "AI Workflow Agent: helps organize checklists, handoff notes, recurring tasks, and internal workflow steps.", "go": 4, "href": "ai-agents.html", "label": "AI Solutions →" },
+          { "k": ["demo", "see it", "try", "preview"], "a": "Want to see it before you decide?", "href": "demo-center.html", "label": "Open the demo center →" },
+          { "k": ["price", "pricing", "cost", "how much", "budget", "fee"], "a": "Not sure which agent comes first? Start with an AI Business Review.", "go": 7, "href": "business-review.html", "label": "AI Business Review →" },
+          { "k": ["case", "example", "results", "proof"], "a": "How AI solutions remove the problems that cost small businesses time and sales.", "go": 6, "href": "cases.html", "label": "See the cases →" },
+          { "k": ["about", "who are you", "why", "naxastudio", "background", "team"], "a": "NaxaStudio was created for people who have ideas but need a way to bring them into reality.", "go": 2, "href": "about.html", "label": "About →" },
+          { "k": ["contact", "book", "review", "call", "email", "talk"], "a": "When you are ready, tell us what is slowing you down.", "go": 8, "href": "contact.html", "label": "Contact →" }
+        ],
+        "fallback": { "a": "That one is easier to answer in a conversation. When you are ready, tell us what is slowing you down.", "href": "contact.html", "label": "Contact →" }
+      }
+    </script>
+    <script>
+{{WORLD_JS}}
+    </script>
   </body>
 </html>

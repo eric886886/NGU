@@ -1,0 +1,12 @@
+{
+  "name": "naxastudio-home",
+  "private": true,
+  "description": "The NaxaStudio home page: a three.js particle world you scroll through. `npm install`, then `npm run build` writes index.html and zh.html.",
+  "scripts": {
+    "build": "node tools/build.js"
+  },
+  "devDependencies": {
+    "esbuild": "0.20.2",
+    "three": "0.160.0"
+  }
+}

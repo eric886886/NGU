@@ -4,11 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>纳想 NaxaStudio | 把想法变成行动</title>
-    <meta
-      name="description"
-      content="纳想 NaxaStudio 帮助创业者和小企业老板，把想法变成行动，用实用 AI 系统提升客户回复、销售跟进、营销和日常运营效率。"
-    />
-    <meta name="theme-color" content="#04060d" />
+    <meta name="description" content="纳想 NaxaStudio 帮助创业者和小企业老板，把想法变成行动，用实用 AI 系统提升客户回复、销售跟进、营销和日常运营效率。" />
+    <meta name="theme-color" content="#02050d" />
     <link rel="canonical" href="https://naxastudio.com/zh" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="纳想 NaxaStudio" />
@@ -28,783 +25,169 @@
     <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="motion.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <script>document.documentElement.classList.remove('no-js');</script>
+    <link rel="stylesheet" href="world.css" />
   </head>
   <body>
-    <div class="bg" aria-hidden="true"></div>
-    <canvas id="field" aria-hidden="true"></canvas>
-    <div class="grain" aria-hidden="true"></div>
+    <canvas id="world" aria-hidden="true" data-mark="{{MARK}}"></canvas>
 
     <header class="hdr">
       <a class="brand" href="zh.html" aria-label="纳想 NaxaStudio 首页">
-        <span class="brand-tile"><img src="{{LOGO_ICON}}" alt="" width="36" height="36" /></span>
-        <span class="brand-text">纳想 NaxaStudio <small>AI 执行力系统</small></span>
+        <img src="{{LOGO_ICON}}" alt="" width="34" height="34" />
+        <span>纳想 NaxaStudio<small>AI 执行力系统</small></span>
       </a>
-      <div class="hdr-tools">
+      <div class="tools">
         <a href="index.html" class="lang" lang="en">EN</a>
-        <button class="ask-btn" id="navToggle" type="button" aria-expanded="false" aria-controls="nav">
-          <span class="ask-spark" aria-hidden="true"></span><span class="ask-ph">问点什么…</span><span class="ask-short">问问题</span>
-        </button>
+        <button class="ask-btn" id="askBtn" type="button" aria-expanded="false" aria-controls="ask"><i aria-hidden="true"></i><span class="long">问点什么…</span><span class="short">问问题</span></button>
         <a href="zh-business-review.html" class="cta">预约业务诊断</a>
-      </div>
-      <!-- ask: visitors type a question; the answer is found in this page's own text (motion.js) -->
-      <div class="ask" id="nav" role="dialog" aria-label="提问">
-        <button class="ask-close" type="button" aria-label="关闭"></button>
-        <p class="ask-intro">有什么想知道的，直接问。答案都来自这个网站上的内容。</p>
-        <form class="ask-form" autocomplete="off">
-          <input class="ask-input" name="q" type="text" placeholder="问点什么，比如：能帮我更快回复客户吗？" enterkeyhint="send" />
-          <button class="ask-send" type="submit" aria-label="发送"></button>
-        </form>
-        <div class="ask-log" aria-live="polite"></div>
-        <div class="ask-sugg">
-          <p class="ask-h">可以这样问</p>
-          <button type="button" class="ask-q">你们能帮我做什么？</button>
-          <button type="button" class="ask-q">我团队很小，该从哪里开始？</button>
-          <button type="button" class="ask-q">能帮我更快回复客户吗？</button>
-          <button type="button" class="ask-q">能先看看 Demo 吗？</button>
-          <button type="button" class="ask-q">收费怎么算？</button>
-        </div>
-        <nav class="ask-links" aria-label="或者直接跳到">
-          <p class="ask-h">或者直接跳到</p>
-          <a href="zh-about.html">关于</a><a href="zh-ai-agents.html">AI 方案</a><a href="zh-base-ai-agent.html">起步方案</a><a href="zh-demo-center.html">Demo</a><a href="zh-cases.html">案例</a><a href="zh-business-review.html">AI 业务诊断</a><a href="zh-contact.html">联系</a>
-        </nav>
-        <a href="zh-business-review.html" class="cta ask-cta">预约业务诊断</a>
       </div>
     </header>
 
-    <main class="stage" id="stage">
-      <!-- 00 · 开场：一个"想法"光点拼成纳想的标志 -->
-      <section class="scene s-intro only-film" data-scene="intro" data-label="开场" data-dur="7.5" data-forms="seed@0,logoIntro@2.3">
-        <div class="wrap">
-          <div class="intro-visual" data-anchor="intro">
-            <span class="seed-label m m-fade" data-at="0.5" data-dur="0.8" data-out="1.9">想法</span>
-          </div>
-          <p class="intro-mark m m-blur" data-at="3.4" data-dur="1.2">纳想 <span lang="en">NaxaStudio</span></p>
-          <p class="eyebrow center m m-rise" data-at="4.1">AI 执行力系统</p>
-        </div>
-      </section>
+    <!-- ask: the answers are in #ask-data below, in the site's own words -->
+    <div class="ask" id="ask" role="dialog" aria-label="提问">
+      <button class="ask-close" type="button" aria-label="关闭">×</button>
+      <p class="ask-intro">有什么想知道的，直接问。答案都来自这个网站上的内容。</p>
+      <form class="ask-form" autocomplete="off">
+        <input class="ask-input" name="q" type="text" placeholder="问点什么，比如：能帮我更快回复客户吗？" enterkeyhint="send" />
+        <button class="ask-send" type="submit">问</button>
+      </form>
+      <div class="ask-log" aria-live="polite"></div>
+      <div class="ask-sugg">
+        <p class="ask-h">可以这样问</p>
+        <button type="button" class="ask-q">你们能帮我做什么？</button>
+        <button type="button" class="ask-q">我团队很小，该从哪里开始？</button>
+        <button type="button" class="ask-q">能帮我更快回复客户吗？</button>
+        <button type="button" class="ask-q">能先看看 Demo 吗？</button>
+        <button type="button" class="ask-q">收费怎么算？</button>
+      </div>
+      <nav class="ask-links" aria-label="或者直接跳到">
+        <p class="ask-h">或者直接跳到</p>
+        <a href="zh-about.html">关于</a><a href="zh-ai-agents.html">AI 方案</a><a href="zh-base-ai-agent.html">起步方案</a><a href="zh-demo-center.html">Demo</a><a href="zh-cases.html">案例</a><a href="zh-business-review.html">AI 业务诊断</a><a href="zh-contact.html">联系</a>
+      </nav>
+    </div>
 
-      <!-- 01 · 首屏 -->
-      <section class="scene s-hero" data-scene="hero" data-label="把想法变成行动" data-dur="15" data-forms="logoHero@0" data-dim-m="0.32">
-        <div class="wrap duo">
-          <div class="col-l">
-            <div class="g-head">
-              <p class="eyebrow m m-rise" data-at="0.2" data-n="01">纳想 NaxaStudio | AI 执行力工作室</p>
-              <h1 class="h-xl">
-                <span class="ln" data-split data-at="0.45" data-stagger="0.07">把想法变成行动。</span>
-                <span class="ln serif grad m m-wipe" data-at="1.5" data-dur="1.3">没有你想象的</span>
-                <span class="ln serif grad m m-wipe" data-at="1.9" data-dur="1.3">那么难。</span>
-              </h1>
-            </div>
-            <div class="g-body">
-              <p class="statement lines">
-                <span class="m m-rise" data-at="3">乘着 AI 的风，</span>
-                <span class="m m-rise accent" data-at="3.6">一个人也能拥有一支团队的执行力。</span>
-              </p>
-              <p class="lead m m-fade" data-at="4.6" data-dur="0.6" data-read="4.9">纳想帮助创业者和小企业老板，把想法变成能运行的 AI 系统：AI 接待、销售跟进、营销内容、业务 dashboard 和日常流程自动化，让你用更少人力处理更多客户和机会。</p>
-            </div>
-            <div class="g-cta btns">
-              <a class="btn primary m m-pop" data-at="6.6" href="zh-business-review.html">预约 AI 业务诊断</a>
-              <a class="btn ghost m m-pop" data-at="6.8" href="zh-demo-center.html">查看 Demo</a>
-            </div>
-          </div>
-          <div class="col-r hero-vis" data-anchor="hero" aria-hidden="true"></div>
-        </div>
+    <!-- the words of each stage (laid over the picture, or a plain page without WebGL) -->
+    <main class="story">
+      <section class="st" data-stage="0">
+        <p class="st-k st-only">纳想 NaxaStudio · AI 执行力系统</p>
       </section>
-
-      <!-- 02 · 实时执行流程：一个大字在五个步骤之间"解码"切换 -->
-      <section class="scene s-flow" data-scene="flow" data-label="实时执行流程" data-dur="15" data-forms="flow@0">
-        <div class="wrap">
-          <div class="flow-top">
-            <p class="eyebrow live m m-rise" data-at="0.2" data-n="02"><i></i>实时执行流程</p>
-            <p class="flow-count m m-rise" data-at="0.3"><b id="flowNum">01</b> <span>/ 05</span></p>
-          </div>
-          <div class="flow-stage only-film m m-fade" data-at="1.6" aria-hidden="true">
-            <div class="flow-word" id="flowWord"></div>
-            <div class="flow-desc" id="flowDesc"></div>
-          </div>
-          <ol class="gates">
-            <li class="gate m m-rise" data-at="0.7" data-on="2.0" data-off="4.3">
-              <span class="gate-dot" data-anchor="gate"></span><span class="gate-n">01</span><strong>捕捉</strong><span class="gate-d">想法与咨询</span>
-            </li>
-            <li class="gate m m-rise" data-at="0.85" data-on="4.3" data-off="6.6">
-              <span class="gate-dot" data-anchor="gate"></span><span class="gate-n">02</span><strong>整理</strong><span class="gate-d">AI 理解</span>
-            </li>
-            <li class="gate m m-rise" data-at="1" data-on="6.6" data-off="8.9">
-              <span class="gate-dot" data-anchor="gate"></span><span class="gate-n">03</span><strong>构建</strong><span class="gate-d">定制系统</span>
-            </li>
-            <li class="gate m m-rise" data-at="1.15" data-on="8.9" data-off="11.2">
-              <span class="gate-dot" data-anchor="gate"></span><span class="gate-n">04</span><strong>执行</strong><span class="gate-d">自动推进</span>
-            </li>
-            <li class="gate m m-rise" data-at="1.3" data-on="11.2" data-off="13.9">
-              <span class="gate-dot" data-anchor="gate"></span><span class="gate-n">05</span><strong>优化</strong><span class="gate-d">持续学习</span>
-            </li>
-          </ol>
-          <div class="axis m m-fade" data-at="0.6"><span>想法</span><i class="axis-line"><b id="flowFill"></b></i><span>行动</span></div>
-        </div>
+      <section class="st" data-stage="1">
+        <p class="st-k">01 &nbsp;/&nbsp; 纳想</p>
+        <h1>把想法变成行动。<b>没有你想象的那么难。</b></h1>
+        <p>乘着 AI 的风。一个人也能拥有一支团队的执行力。</p>
       </section>
-
-      <!-- 03 · 小企业老板的常见压力：随风暴颤动的拼贴 -->
-      <section class="scene s-pain" data-scene="pain" data-label="小企业老板的常见压力" data-dur="23" data-forms="storm@0" data-dim-m="0.45">
-        <div class="wrap duo">
-          <div class="col-l">
-            <div class="g-head">
-              <p class="eyebrow warn m m-rise" data-at="0.2" data-n="03">小企业老板的常见压力</p>
-              <h2 class="h-l" data-split data-at="0.5" data-stagger="0.03">当接待、销售、营销和行政都靠<em>老板一个人</em>时，时间和销售机会都会流失。</h2>
-            </div>
-            <div class="g-body">
-              <p class="body m m-fade" data-at="2.4" data-dur="0.6" data-read="2.6" data-outm="9.6">很多小企业不是没有客户，而是回复慢、跟进断、资料乱、重复工作太多。纳想 NaxaStudio 帮你先把最容易影响收入的环节理顺，再用 AI 帮你更快回复、跟进和整理。</p>
-            </div>
-          </div>
-          <div class="col-r g-side collage" data-anchor="pain">
-            <article class="pain m m-note" style="--px: 2%; --py: 0%; --rot: -3deg; --size: 34px" data-at="9.8" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">01</span><h3>客户消息太多</h3><p>电话、邮件、表单、私信一起进来，老板很难全部手动处理。</p></div>
-            </article>
-            <article class="pain m m-note" style="--px: 56%; --py: 8%; --rot: 4deg; --size: 31px" data-at="11.05" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">02</span><h3>回复不够快</h3><p>错过电话或回复太慢，客户很容易转去找竞争对手。</p></div>
-            </article>
-            <article class="pain m m-note" style="--px: 9%; --py: 34%; --rot: 2deg; --size: 29px" data-at="12.3" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">03</span><h3>跟进不稳定</h3><p>潜在客户问了一次之后，没有清楚的下一步，就容易流失。</p></div>
-            </article>
-            <article class="pain m m-note" style="--px: 55%; --py: 41%; --rot: -5deg; --size: 32px" data-at="13.55" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">04</span><h3>行政工作重复</h3><p>整理资料、复制信息、写回复、做清单，占用太多时间。</p></div>
-            </article>
-            <article class="pain m m-note" style="--px: 0%; --py: 68%; --rot: -2deg; --size: 29px" data-at="14.8" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">05</span><h3>雇人压力大</h3><p>对早期或成长中的小企业来说，马上雇完整团队成本太高。</p></div>
-            </article>
-            <article class="pain m m-note" style="--px: 51%; --py: 74%; --rot: 3deg; --size: 27px" data-at="16.05" data-dur="0.9" data-key="note">
-              <div class="pain-in"><span class="pain-n">06</span><h3>销售和营销不持续</h3><p>日常运营一忙，内容、跟进、客户维护就容易被拖延。</p></div>
-            </article>
-          </div>
-        </div>
+      <section class="st" data-stage="2">
+        <p class="st-k">02 &nbsp;/&nbsp; 为什么存在</p>
+        <h2>帮助人从想法走向行动，<b>从行动走向真实的结果。</b></h2>
+        <p class="st-only">想法 → 行动 → 结果</p>
+        <div class="st-links"><a href="zh-about.html">关于纳想 →</a></div>
       </section>
-
-      <!-- 04 · AI 解决方案：排在轨道上的助手，由核心逐个派出 -->
-      <section class="scene s-sol" data-scene="solutions" data-label="AI 解决方案" data-dur="24" data-forms="calm@0,hub@3" data-dim-m="0.5">
-        <div class="interlude only-film">
-          <p class="h-xl serif grad m m-blur" data-at="0.2" data-dur="1.1" data-out="2.5"><span class="wg">没有你想象的</span><span class="wg">那么难。</span></p>
-        </div>
-        <div class="wrap stack">
-          <div class="g-head sol-head">
-            <div>
-              <p class="eyebrow m m-rise" data-at="3" data-n="04">AI 解决方案</p>
-              <h2 class="h-l narrow" data-split data-at="3.2" data-stagger="0.04">围绕<em>时间、成本和销售</em>设计的实用方案。</h2>
-            </div>
-          </div>
-          <div class="g-body">
-            <p class="body m m-fade" data-at="4.5" data-dur="0.6" data-read="4.7" data-outm="9.2">我们帮你把客户回复、销售跟进、营销内容和重复行政工作做得更快、更清楚、更稳定，让老板有更多时间服务客户和推动成交。</p>
-          </div>
-          <div class="g-side orbit" data-anchor="orbit">
-            <span class="orbit-core" data-anchor="core" aria-hidden="true"></span>
-            <article class="node m m-pop" style="--nx: 8%; --ny: 39%" data-at="9.5" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">01</span>
-              <h3>AI 接待助手</h3>
-              <p>在老板或团队忙的时候，更快回复客户，减少咨询漏掉。</p>
-            </article>
-            <article class="node m m-pop" style="--nx: 24.8%; --ny: 61.5%" data-at="10.75" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">02</span>
-              <h3>AI 销售跟进助手</h3>
-              <p>跟进更多潜在客户，提升销售机会和成交可能。</p>
-            </article>
-            <article class="node m m-pop" style="--nx: 41.6%; --ny: 69%" data-at="12" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">03</span>
-              <h3>AI 营销助手</h3>
-              <p>持续产出营销内容，不用每次都从零开始写。</p>
-            </article>
-            <article class="node m m-pop" style="--nx: 58.4%; --ny: 69%" data-at="13.25" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">04</span>
-              <h3>AI 研究助手</h3>
-              <p>整理资料、比较选项、生成摘要，让老板更快做决定。</p>
-            </article>
-            <article class="node m m-pop" style="--nx: 75.2%; --ny: 61.5%" data-at="14.5" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">05</span>
-              <h3>AI 流程助手</h3>
-              <p>用清单、模板和交接记录，减少重复行政工作。</p>
-            </article>
-            <article class="node m m-pop" style="--nx: 92%; --ny: 39%" data-at="15.75" data-key="sol">
-              <span class="node-dot" data-anchor="sol"></span><span class="node-n">06</span>
-              <h3>起步 AI 方案</h3>
-              <p>先从一个最重要的流程开始，在请人之前处理更多客户和日常工作。</p>
-            </article>
-          </div>
-          <div class="g-cta btns sol-cta">
-            <a class="btn primary m m-pop" data-at="17.4" href="zh-ai-agents.html">查看 AI 方案</a>
-            <a class="btn ghost m m-pop" data-at="17.6" href="zh-contact.html">获取定制 AI 计划</a>
-          </div>
-        </div>
+      <section class="st" data-stage="3">
+        <p class="st-k">03 &nbsp;/&nbsp; 真正的卡点</p>
+        <h2>这些问题<b>比技术本身更重要。</b></h2>
+        <p class="st-only">客户来了怎么回、线索怎么跟、资料怎么整理、内容怎么持续做</p>
       </section>
-
-      <!-- 05 · 业务结果：带标注的增长曲线 -->
-      <section class="scene s-out" data-scene="outcomes" data-label="业务结果" data-dur="20" data-forms="rise@0" data-dim-m="0.5">
-        <div class="wrap stack">
-          <div class="g-head">
-            <p class="eyebrow m m-rise" data-at="0.2" data-n="05">业务结果</p>
-            <h2 class="h-l narrow" data-split data-at="0.5" data-stagger="0.03">好的 AI 方案，应该先帮你<em>少漏客户、少浪费时间、多抓住销售机会。</em></h2>
-          </div>
-          <div class="g-body">
-            <p class="body m m-fade" data-at="2.2" data-dur="0.6" data-read="2.4" data-outm="8.2">纳想 NaxaStudio 关注的是老板真正看得到的结果：客户回复更快、资料更清楚、跟进更稳定、重复工作更少。</p>
-          </div>
-          <div class="g-side chart">
-            <article class="pt m m-pop" style="--cx: 3%; --cy: 64%" data-at="8.4" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">01</span><h3>更快回复客户</h3><p>更快处理咨询，让客户感受到回应，也让销售机会保持热度。</p></div>
-            </article>
-            <article class="pt m m-pop" style="--cx: 19.5%; --cy: 53%" data-at="9.55" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">02</span><h3>客户信息更清楚</h3><p>把零散消息整理成摘要、缺失信息和下一步。</p></div>
-            </article>
-            <article class="pt m m-pop" style="--cx: 36%; --cy: 42%" data-at="10.7" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">03</span><h3>跟进更稳定</h3><p>用提醒、回复草稿和交接信息，让潜在客户持续往前走。</p></div>
-            </article>
-            <article class="pt m m-pop" style="--cx: 52.5%; --cy: 31%" data-at="11.85" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">04</span><h3>手动行政更少</h3><p>减少重复写作、检查、分类、整理和任务追踪。</p></div>
-            </article>
-            <article class="pt m m-pop" style="--cx: 69%; --cy: 20%" data-at="13" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">05</span><h3>降低用人成本压力</h3><p>在增加工资支出之前，先让 AI 帮你处理最重复、最耗时的工作。</p></div>
-            </article>
-            <article class="pt m m-pop" style="--cx: 83.5%; --cy: 9%" data-at="14.15" data-key="out">
-              <span class="pt-dot" data-anchor="out"></span>
-              <div class="pt-txt"><span class="pt-n">06</span><h3>更多收入机会</h3><p>让更多客户咨询有机会变成预约、报价或成交。</p></div>
-            </article>
-          </div>
-        </div>
+      <section class="st" data-stage="4">
+        <p class="st-k">04 &nbsp;/&nbsp; AI 解决方案</p>
+        <h2>围绕时间、成本和销售<b>设计的实用方案。</b></h2>
+        <p class="st-only">AI 接待助手 · AI 销售跟进助手 · AI 营销助手 · AI 研究助手 · AI 流程助手</p>
+        <div class="st-links"><a href="zh-ai-agents.html">看 5 个 AI 助手 →</a></div>
       </section>
-
-      <!-- 06 · ROI 潜力：大数字在屏幕中央计数，再回到各自的位置 -->
-      <section class="scene s-roi" data-scene="roi" data-label="ROI 潜力" data-dur="22" data-forms="pillars@0" data-dim-m="0.5">
-        <div class="wrap roi">
-          <div class="roi-head">
-            <p class="eyebrow m m-rise" data-at="0.2" data-n="06">ROI 潜力</p>
-            <h3 class="h-l" data-split data-at="0.5" data-stagger="0.03">AI 的回报，来自<em>省下的时间、追回的销售机会，</em>以及更低的用人成本压力。</h3>
-          </div>
-          <p class="roi-note m m-fade" data-at="2.4" data-dur="0.6" data-read="2.6" data-outm="6.7">当业务客单价较高、咨询量稳定、又经常因为回复慢或跟进断而流失客户时，回报空间通常更明显。</p>
-          <div class="roi-row" id="roiRow">
-            <article class="roi-item">
-              <strong data-anchor="roi" class="roi-num m fly" data-at="7.4" data-dur="0.8" data-land="9.8" data-key="roi"><span data-count="2" data-from="1" data-cat="7.6" data-cdur="1.2">2</span>x-<span data-count="5" data-from="2" data-cat="8.5" data-cdur="1.1">5</span>x</strong>
-              <h4 class="m m-rise" data-at="10.6">保守 ROI 潜力</h4>
-              <p class="m m-rise" data-at="10.8">适合用 AI 节省老板时间、减少重复工作、加快客户回复的小企业。</p>
-            </article>
-            <article class="roi-item">
-              <strong data-anchor="roi" class="roi-num m fly" data-at="11" data-dur="0.8" data-land="13.4" data-key="roi"><span data-count="5" data-from="1" data-cat="11.2" data-cdur="1.2">5</span>x-<span data-count="10" data-from="5" data-cat="12.1" data-cdur="1.2">10</span>x</strong>
-              <h4 class="m m-rise" data-at="14.2">更高回报场景</h4>
-              <p class="m m-rise" data-at="14.4">当客单价高、咨询多、经常漏回复或跟进慢时，有机会看到更高回报。</p>
-            </article>
-            <article class="roi-item">
-              <strong data-anchor="roi" class="roi-num m fly" data-at="14.6" data-dur="0.8" data-land="16.6" data-key="roi"><span data-count="3" data-from="1" data-cat="14.8" data-cdur="1">3</span> 个杠杆</strong>
-              <h4 class="m m-rise" data-at="17.4">回报来自哪里</h4>
-              <p class="m m-rise" data-at="17.6">回复更快、跟进更稳、在请人前先降低重复工作的压力。</p>
-            </article>
-          </div>
-        </div>
+      <section class="st st-wide" data-stage="5">
+        <p class="st-k">05 &nbsp;/&nbsp; 起步 AI 方案</p>
+        <h2>在雇完整团队之前，<b>先让 AI 帮你处理最重复的客户和行政工作。</b></h2>
+        <p class="st-only">收集客户信息 · 生成摘要和下一步 · 准备回复草稿 · 建立流程清单</p>
+        <div class="st-links"><a href="zh-base-ai-agent.html">起步 AI 方案 →</a></div>
       </section>
-
-      <!-- 07 · 适合创业者和新老板：一张通往行动按钮的旅程地图 -->
-      <section class="scene s-found" data-scene="founders" data-label="适合创业者和新老板" data-dur="21" data-forms="path@0" data-dim-m="0.55">
-        <div class="wrap stack">
-          <div class="g-head split-top">
-            <div>
-              <p class="eyebrow m m-rise" data-at="0.2" data-n="07">适合创业者和新老板</p>
-              <h2 class="h-l" data-split data-at="0.5" data-stagger="0.04">你有好的创业想法，但<em>不知道从哪里开始？</em></h2>
-            </div>
-            <p class="lead m m-fade" data-at="2.2" data-dur="0.6" data-read="2.4" data-outm="9.6">纳想 NaxaStudio 帮你把想法整理成清楚的服务方向、目标客户、客户流程和 AI 支持方案。如果你想用更少预算先把项目启动起来，不想一开始就雇完整团队，可以先和我们聊聊。</p>
-          </div>
-          <div class="g-side journey" data-anchor="journey">
-            <h3 class="journey-title m m-blur" data-at="9.6" data-dur="1">先轻量启动，再逐步投入</h3>
-            <ol class="miles">
-              <li class="mile m m-rise" style="--jx: 9%; --jy: 70%" data-at="10.4" data-on="11.3" data-key="step">
-                <span class="mile-dot" data-anchor="step"></span>
-                <span class="mile-body"><span class="mile-n">01</span><strong>明确第一步卖什么</strong><span class="t">先想清楚服务对象、核心卖点和客户从咨询到成交的流程。</span></span>
-              </li>
-              <li class="mile m m-rise" style="--jx: 41%; --jy: 50%" data-at="12.4" data-on="13.3" data-key="step">
-                <span class="mile-dot" data-anchor="step"></span>
-                <span class="mile-body"><span class="mile-n">02</span><strong>降低前期成本</strong><span class="t">用 AI 先支持接待、跟进、内容和行政，减少一开始请人的压力。</span></span>
-              </li>
-              <li class="mile m m-rise" style="--jx: 73%; --jy: 30%" data-at="14.4" data-on="15.3" data-key="step">
-                <span class="mile-dot" data-anchor="step"></span>
-                <span class="mile-body"><span class="mile-n">03</span><strong>带着计划启动</strong><span class="t">把想法变成可以执行的下一步，而不是停留在零散想法和工具选择。</span></span>
-              </li>
-            </ol>
-            <a class="btn primary journey-cta m m-pop" data-at="16.6" data-key="cta" data-anchor="pathEnd" href="zh-business-review.html">规划我的第一个 AI 方案</a>
-          </div>
-        </div>
+      <section class="st st-wide" data-stage="6">
+        <p class="st-k">06 &nbsp;/&nbsp; 案例</p>
+        <h2>好的 AI 方案，应该先帮你<b>少漏客户、少浪费时间、多抓住销售机会。</b></h2>
+        <p class="st-only">漏接电话正在变成漏掉订单。 潜在客户问完一次，就没有后续。 一忙起来，营销内容就停了。 重复行政工作拖慢每一次交接。</p>
+        <div class="st-links"><a href="zh-cases.html">看案例 →</a><a href="zh-demo-center.html">先看 Demo →</a></div>
       </section>
-
-      <!-- 08 · 从一个实际流程开始：从一个旋转系统里引出的标注 -->
-      <section class="scene s-start" data-scene="start" data-label="从一个实际流程开始" data-dur="21" data-forms="cube@0" data-dim-m="0.55">
-        <div class="wrap duo">
-          <div class="col-l">
-            <div class="g-head">
-              <p class="eyebrow m m-rise" data-at="0.2" data-n="08">从一个实际流程开始</p>
-              <h2 class="h-l" data-split data-at="0.5" data-stagger="0.03"><em>先做一个</em>能节省时间、降低成本、帮你处理更多客户的 AI 方案。</h2>
-            </div>
-            <div class="g-body">
-              <p class="lead m m-fade" data-at="2.4" data-dur="0.6" data-read="2.6" data-outm="10.2">从最耗时间、最容易漏单、最影响销售的地方开始。纳想 NaxaStudio 会帮你把流程理清楚，再规划一个小企业真正用得起来的 AI 方案。</p>
-            </div>
-            <div class="g-cta btns">
-              <a class="btn primary m m-pop" data-at="16.4" href="zh-business-review.html">预约 AI 业务诊断</a>
-              <a class="btn ghost m m-pop" data-at="16.6" href="zh-demo-center.html">查看 Demo</a>
-            </div>
-          </div>
-          <div class="col-r g-side lab">
-            <div class="cube-slot" data-anchor="cube" aria-hidden="true"></div>
-            <div class="callouts">
-              <h3 class="callouts-title m m-blur" data-at="10.4" data-dur="1">适合先做的项目</h3>
-              <ul>
-                <li class="call m m-left" data-at="11" data-dur="1" data-key="proj">
-                  <span class="call-n">01</span><strong>客户咨询处理</strong><span class="t">及时回应客户、收集缺失信息、准备回复。</span>
-                </li>
-                <li class="call m m-left" data-at="12.6" data-dur="1" data-key="proj">
-                  <span class="call-n">02</span><strong>销售跟进</strong><span class="t">整理线索、明确下一步、生成跟进草稿。</span>
-                </li>
-                <li class="call m m-left" data-at="14.2" data-dur="1" data-key="proj">
-                  <span class="call-n">03</span><strong>日常流程支持</strong><span class="t">用模板和清单减少重复行政工作。</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
+      <section class="st" data-stage="7">
+        <p class="st-k">07 &nbsp;/&nbsp; AI 业务诊断</p>
+        <h2>你有好的创业想法，<b>但不知道从哪里开始？</b></h2>
+        <p>把创业想法整理成第一个可以执行的业务计划。</p>
+        <div class="st-links"><a href="zh-business-review.html">AI 业务诊断 →</a></div>
       </section>
-
-      <!-- 09 · 结尾 -->
-      <section class="scene s-fin" data-scene="finale" data-label="开始行动" data-dur="10" data-forms="logoFin@0">
-        <div class="wrap fin">
-          <div class="fin-visual" data-anchor="fin" aria-hidden="true"></div>
-          <h2 class="h-xl fin-title">
-            <span class="ln" data-split data-at="1.4" data-stagger="0.07">把想法变成行动。</span>
-            <span class="ln serif grad m m-wipe" data-at="2.2" data-dur="1.3"><span class="wg">没有你想象的</span><span class="wg">那么难。</span></span>
-          </h2>
-          <div class="btns center">
-            <a class="btn primary m m-pop" data-at="3.2" href="zh-business-review.html">预约 AI 业务诊断</a>
-            <a class="btn ghost m m-pop" data-at="3.4" href="zh-demo-center.html">查看 Demo</a>
-          </div>
-          <footer class="foot m m-fade" data-at="4.2" data-dur="1.2">
-            <p>纳想 NaxaStudio. 帮你借助实用 AI，把想法变成行动和结果。</p>
-            <nav aria-label="页脚"><a href="zh-contact.html">联系</a><a href="zh-privacy.html">隐私与条款</a></nav>
-          </footer>
-        </div>
+      <section class="st" data-stage="8">
+        <p class="st-k">08 &nbsp;/&nbsp; 开始</p>
+        <h2>准备好了，<b>就告诉我们哪里最卡。</b></h2>
+        <a class="st-btn" href="zh-business-review.html">预约业务诊断</a>
+        <p class="st-foot">纳想 NaxaStudio. 帮你借助实用 AI，把想法变成行动和结果。<a href="zh-contact.html">联系</a><a href="zh-privacy.html">隐私与条款</a><a href="index.html" lang="en">EN</a></p>
       </section>
     </main>
 
-    <!-- 短片放完后页面继续往下走：其他页面的内容依次自动展示 -->
-    <div class="tour" id="tour">
-      <!-- 10 · 关于 (zh-about.html) -->
-      <section class="tsec t-about" data-icon="bulb" id="about" data-tour data-label="关于" data-form="logoH">
-        <div class="twrap">
-          <div class="bridge" data-stop>
-            <p data-icons="logo@纳想>question~pulse@为什么存在" class="bridge-line m m-fade" data-r data-icon="none">先说说，纳想为什么存在。</p>
-          </div>
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="10">关于纳想 NaxaStudio</p>
-            <h2 class="t-title" data-rs>陪你借助 AI 的力量，<em>把想法变成现实。</em></h2>
-          </header>
-          <div class="manifesto" data-stop>
-            <p data-icons="row:bulb~pulse@有想法,route~run@方法,flag@变成现实" class="mf m m-fade" data-icon="bulb" data-r data-rr>NaxaStudio 是为那些有想法、但需要一个方法把想法变成现实的人而存在的。</p>
-            <p data-icons="set:shop~grow@发展一门生意,heart~pulse@有意义的项目,star~pulse@实现一个梦想,!barrier@卡点|bulb~dim@想法本身>stairs~run@踏出第一步" class="mf m m-fade" data-icon="stairs" data-r="0.2" data-rr>不管你是想发展一门生意，做一个有意义的项目，实现一个梦想，还是想走过业务里的某个卡点，最难的往往不是想法本身，而是踏出第一步，并持续推进下去。</p>
-          </div>
-          <div class="manifesto" data-stop>
-            <p data-icons="set:chip@AI,!snow@冰冷,!far@遥远,!tangle~shake@复杂|row:bulb@从想法,gear~spin@走向行动,target~pulse@真实的结果" class="mf m m-fade" data-icon="flow3" data-r data-rr>我们相信 AI 不应该是冰冷、遥远、复杂的技术。它应该成为一个实用的解决方案，帮助人从想法走向行动，从行动走向真实的结果。</p>
-            <p data-icons="logo~pulse@NaxaStudio" class="mf mf-last m m-blur" data-icon="logo" data-r="0.4">NaxaStudio 存在的原因，就是陪你借助 AI 的力量，把想法变成现实。</p>
-          </div>
-          <div class="reality" data-icon="stairs" data-stop>
-            <h3 data-icons="bulb@想法>checklist~ok@可以执行的第一步" class="t-sub" data-rs>先把想法变成<em>可以执行的<span class="wg">第一步。</span></em></h3>
-            <div class="reality-cols">
-              <p data-icons="set:chat@客户来了怎么回,funnel@线索怎么跟,papers@资料怎么整理,megaphone@内容怎么持续做|row:!tangle~shake@这些环节>straight~run@理顺,agent~run@再用 AI" class="lead m m-fade" data-r="0.3" data-rr data-icon="checklist">客户来了怎么回、线索怎么跟、资料怎么整理、内容怎么持续做，这些问题比技术本身更重要。我们帮你先把这些环节理顺，再用 AI 把行动持续推进下去。</p>
-              <p data-icons="set:team@我们的团队,person@私人客户,shop@小商户,bank@银行|set:coins~shake@预算压力,cash~shake@现金流压力,funnel~shake@客户跟进压力,!barrier@日常运营卡点" class="lead m m-fade" data-r="0.6" data-rr data-icon="bank">我们的团队有业务咨询经验，也有服务私人客户和小商户的银行相关经验。这个背景让我们更理解小企业的预算压力、现金流压力、客户跟进压力和日常运营卡点。</p>
-            </div>
-          </div>
-          <div class="practice" data-icon="checklist" data-stop>
-            <h4 class="practice-title m m-blur" data-r>我们的工作方式</h4>
-            <ul>
-              <li data-icons="set:chat@客户要回复,funnel@线索要跟进,papers@杂事要处理,!hourglass~shake@时间,!coins~shake@预算有限" class="m m-rise" data-r="0.3" data-icon="clock"><span class="pr-n">01</span><strong>理解老板的实际压力</strong><span class="t">客户要回复、线索要跟进、杂事要处理，但时间和预算有限。</span></li>
-              <li data-icons="set:dropoff@漏客户,!clock~shake@拖跟进,!papers~shake@重复耗时,flag~pulse@开始" class="m m-rise" data-r="0.6" data-icon="target"><span class="pr-n">02</span><strong>优先解决最影响收入的流程</strong><span class="t">从容易漏客户、拖跟进、重复耗时的地方开始。</span></li>
-              <li data-icons="set:checklist~ok@清楚、实用、可执行,!tangle~x@复杂昂贵的大项目" class="m m-rise" data-r="0.9" data-icon="checklist"><span class="pr-n">03</span><strong>做小企业真正用得上的方案</strong><span class="t">清楚、实用、可执行，而不是复杂昂贵的大项目。</span></li>
-            </ul>
-          </div>
-          <div class="bridge" data-stop>
-            <p data-icons="agent~pulse@我们能帮你" class="bridge-line m m-fade" data-r data-icon="none">那落到实际，我们能帮你做什么？</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 11 · AI 方案 (zh-ai-agents.html) -->
-      <section class="tsec t-agents" data-icon="target" id="ai-solutions" data-tour data-label="AI 方案" data-form="orbitH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="11">AI 方案</p>
-            <h2 class="t-title" data-rs>帮<span class="wg">小企业</span><span class="wg">更快</span>回复客户、<span class="wg">更稳</span>跟进销售、<em><span class="wg">更少做</span><span class="wg">重复杂活。</span></em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>纳想 NaxaStudio 会根据你的业务情况，帮你把客户咨询、销售跟进、营销内容和重复行政工作做得更快、更清楚、更稳定。</p>
-          </header>
-          <ol class="spec">
-            <li data-icons="set:chat~run@更快回复客户咨询,form@收集缺失信息,phone~ok@减少漏接和慢回" class="spec-row m m-sweep" data-icon="chat" id="ai-receptionist" data-r data-stop>
-              <span class="spec-n">01</span>
-              <h3>AI 接待助手</h3>
-              <p class="spec-d">更快回复客户咨询，收集缺失信息，减少漏接和慢回。</p>
-            </li>
-            <li data-icons="row:ranked@整理潜在客户,pen@准备跟进草稿,stairs~run@有下一步" class="spec-row m m-sweep" data-icon="funnel" id="ai-sales" data-r data-stop>
-              <span class="spec-n">02</span>
-              <h3>AI 销售跟进助手</h3>
-              <p class="spec-d">整理潜在客户、准备跟进草稿，让更多线索有下一步。</p>
-            </li>
-            <li data-icons="row:bulb@老板的想法,map@内容方向,pen@文案草稿,calcheck@营销任务" class="spec-row m m-sweep" data-icon="megaphone" id="ai-marketing" data-r data-stop>
-              <span class="spec-n">03</span>
-              <h3>AI 营销助手</h3>
-              <p class="spec-d">把老板的想法变成内容方向、文案草稿和营销任务。</p>
-            </li>
-            <li data-icons="set:shop@市场,gear@工具,team@竞争对手,papers@客户资料,scale~pulse@更快判断" class="spec-row m m-sweep" data-icon="magnifier" id="ai-research" data-r data-stop>
-              <span class="spec-n">04</span>
-              <h3>AI 研究助手</h3>
-              <p class="spec-d">整理市场、工具、竞争对手或客户资料，帮助老板更快判断。</p>
-            </li>
-            <li data-icons="set:!papers~shake@重复行政工作>checklist@清单,template@模板,handoff@交接记录,bell~ring@下一步提醒" class="spec-row m m-sweep" data-icon="checklist" id="ai-workflow" data-r data-stop>
-              <span class="spec-n">05</span>
-              <h3>AI 流程助手</h3>
-              <p class="spec-d">把重复行政工作变成清单、模板、交接记录和下一步提醒。</p>
-            </li>
-          </ol>
-          <aside data-icons="set:magnifier~pulse@AI 业务诊断,clock@时间,coins@成本,growth@销售机会" class="t-callout m m-rise" data-r data-stop data-icon="question">
-            <div>
-              <h3>不知道先做哪个？</h3>
-              <p>先做 AI 业务诊断，找出最影响时间、成本和销售机会的流程。</p>
-            </div>
-            <a class="btn primary" href="zh-business-review.html">先做业务诊断</a>
-          </aside>
-          <div class="bridge" data-stop>
-            <p data-icons="set:chat,funnel,megaphone,magnifier|layers~pulse@一层" class="bridge-line m m-fade" data-r data-icon="none">还没准备好用全部助手？可以先从一层开始。</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 12 · 起步 AI 方案 (zh-base-ai-agent.html) -->
-      <section class="tsec t-startup" data-icon="layers" id="startup" data-tour data-label="起步 AI 方案" data-form="layersH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="12">起步 AI 方案</p>
-            <h2 class="t-title" data-rs><span class="wg">在雇</span>完整团队之前，<em>先让 AI 帮你处理<span class="wg">最重复的</span>客户和行政工作。</em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>起步 AI 方案可以先处理客户咨询、整理信息、生成回复草稿和下一步清单，让老板更快判断和跟进。</p>
-            <div class="btns m m-rise" data-r="0.8">
-              <a class="btn primary" href="zh-contact.html">获取定制 AI 计划</a>
-              <a class="btn ghost" href="zh-ai-agents.html">比较 AI 方案</a>
-            </div>
-          </header>
-          <div class="layers-wrap" data-stop>
-            <div class="layers-text" data-icon="team">
-              <h3 data-icons="sprout~grow@刚开始创业" class="t-sub" data-rs>适合<span class="wg">刚开始</span>创业或团队<span class="wg">还很小的</span>阶段。</h3>
-              <p data-icons="set:chat~dim@前台,funnel~dim@销售助理,megaphone~dim@营销助理,papers~dim@行政人员|row:agent~pulse@实用 AI 方案,papers~ok@最耗时的工作" class="lead m m-fade" data-r="0.4" data-rr>如果你暂时还不想马上雇前台、销售助理、营销助理或行政人员，可以先用一个实用 AI 方案处理最重复、最耗时的工作。</p>
-            </div>
-            <div class="layers">
-              <h4 class="layers-title m m-blur" data-r="0.3">它可以先帮你做什么</h4>
-              <ol>
-                <li data-icons="set:chat@客户需求,contact@联系方式,shop@服务类型,alarm~pulse@紧急程度" class="layer m m-lift" data-icon="chat" style="--i: 0" data-r="0.6"><span class="layer-n">01</span><strong>收集客户信息</strong><span class="t">把客户需求、联系方式、服务类型和紧急程度整理清楚。</span></li>
-                <li data-icons="row:document@客户要什么,!question@还缺什么,stairs@下一步该做什么" class="layer m m-lift" data-icon="document" style="--i: 1" data-r="0.9"><span class="layer-n">02</span><strong>生成摘要和下一步</strong><span class="t">让老板快速知道客户要什么、还缺什么、下一步该做什么。</span></li>
-                <li data-icons="set:bolt@回复更快,star~pulse@更专业,!keyboard~x@重复打字" class="layer m m-lift" data-icon="pen" style="--i: 2" data-r="1.2"><span class="layer-n">03</span><strong>准备回复草稿</strong><span class="t">让回复更快、更专业，也减少重复打字。</span></li>
-                <li data-icons="set:!papers~shake@重复工作>checklist~ok@清楚的步骤,template@模板" class="layer m m-lift" data-icon="checklist" style="--i: 3" data-r="1.5"><span class="layer-n">04</span><strong>建立流程清单</strong><span class="t">把重复工作整理成清楚的步骤和模板。</span></li>
-              </ol>
-            </div>
-          </div>
-          <div class="bridge" data-stop>
-            <p data-icons="scale@做决定>window~pulse@实际怎么工作" class="bridge-line m m-fade" data-r data-icon="none">做决定之前，先看看它实际怎么工作。</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 13 · Demo (zh-demo-center.html) -->
-      <section class="tsec t-demo" data-icon="window" id="demo" data-tour data-label="Demo" data-form="lockH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="13">AI Demo</p>
-            <h2 class="t-title" data-rs>选择你想<em>先看的 AI Demo。</em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>点击 Demo，填写姓名和一个联系方式后解锁预览。</p>
-          </header>
-          <div class="demos" data-stop>
-            <article data-icons="row:chat~run@更快回应客户咨询,form@收集缺失信息,document@准备摘要" class="demo locked-demo" data-icon="chat" data-r="0" data-demo-card="AI 接待助手">
-              <div class="demo-head"><h3>AI 接待助手</h3><button class="demo-button" type="button" data-demo-agent="AI 接待助手" data-demo-url="ai-receptionist-demo/">Demo</button></div>
-              <p>更快回应客户咨询，收集缺失信息，准备摘要。</p>
-              <div class="tag-row"><span class="tag">客户咨询</span><span class="tag">快速回复</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>已解锁 Demo 预览</strong>
-                <p>客户询问服务后，AI 收集姓名、联系方式、需求、紧急程度和偏好语言，并生成老板可看的摘要。</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-            <article data-icons="row:ranked@潜在客户状态,stairs@下一步,pen@跟进草稿" class="demo locked-demo" data-icon="funnel" data-r="0.15" data-demo-card="AI 销售跟进助手">
-              <div class="demo-head"><h3>AI 销售跟进助手</h3><button class="demo-button" type="button" data-demo-agent="AI 销售跟进助手" data-demo-url="ai-sales-demo/">Demo</button></div>
-              <p>整理潜在客户状态，准备下一步和跟进草稿。</p>
-              <div class="tag-row"><span class="tag">销售跟进</span><span class="tag">线索整理</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>已解锁 Demo 预览</strong>
-                <p>潜在客户只提供部分信息时，系统整理预算、时间、需求匹配度、缺失信息和跟进草稿。</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-            <article data-icons="row:bulb@服务想法,map@内容方向,pen@文案草稿" class="demo locked-demo" data-icon="megaphone" data-r="0.3" data-demo-card="AI 营销助手">
-              <div class="demo-head"><h3>AI 营销助手</h3><button class="demo-button" type="button" data-demo-agent="AI 营销助手" data-demo-url="ai-marketing-demo/">Demo</button></div>
-              <p>把老板的服务想法变成内容方向和文案草稿。</p>
-              <div class="tag-row"><span class="tag">内容</span><span class="tag">营销计划</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>已解锁 Demo 预览</strong>
-                <p>老板描述一个新服务后，系统整理营销角度、目标客户、三条内容草稿和行动建议。</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-            <article data-icons="row:compare@比较,papers@研究资料,document~ok@决策的摘要" class="demo locked-demo" data-icon="magnifier" data-r="0.45" data-demo-card="AI 研究助手">
-              <div class="demo-head"><h3>AI 研究助手</h3><button class="demo-button" type="button" data-demo-agent="AI 研究助手">Demo</button></div>
-              <p>把比较和研究资料整理成更容易决策的摘要。</p>
-              <div class="tag-row"><span class="tag">研究</span><span class="tag">比较</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>已解锁 Demo 预览</strong>
-                <p>老板需要比较工具、市场或竞争对手时，系统整理标准、发现、优缺点和后续问题。</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-            <article data-icons="row:checklist@清单,template@模板,!papers~fade@重复行政工作" class="demo locked-demo" data-icon="checklist" data-r="0.6" data-demo-card="AI 流程助手">
-              <div class="demo-head"><h3>AI 流程助手</h3><button class="demo-button" type="button" data-demo-agent="AI 流程助手">Demo</button></div>
-              <p>用清单和模板减少重复行政工作。</p>
-              <div class="tag-row"><span class="tag">行政流程</span><span class="tag">清单模板</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>已解锁 Demo 预览</strong>
-                <p>重复行政流程被拆成信息收集、老板确认、客户更新、完成记录和下一步提醒。</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-            <article data-icons="set:flag@最重要的流程,chat@咨询,document@摘要,pen@草稿,stairs@下一步" class="demo locked-demo" data-icon="layers" data-r="0.75" data-demo-card="起步 AI 方案">
-              <div class="demo-head"><h3>起步 AI 方案</h3><button class="demo-button" type="button" data-demo-agent="起步 AI 方案">Demo</button></div>
-              <p>先从一个最重要的流程开始，处理咨询、摘要、草稿和下一步。</p>
-              <div class="tag-row"><span class="tag">起步方案</span><span class="tag">老板支持</span></div>
-              <div class="demo-preview" data-demo-preview>
-                <strong>已解锁 Demo 预览</strong>
-                <p>AI 接收客户请求，参考业务信息，准备回复草稿，并标记需要老板确认的地方。</p>
-              </div>
-              <div class="demo-lock" aria-hidden="true"><span class="lock-ico"></span><i></i><i></i><i></i></div>
-            </article>
-          </div>
-          <div class="bridge" data-stop>
-            <p data-icons="shop~grow@真实的生意" class="bridge-line m m-fade" data-r data-icon="none">放进真实的生意里，是这样的。</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 14 · 案例 (zh-cases.html) -->
-      <section class="tsec t-cases" data-icon="growth" id="cases" data-tour data-label="案例" data-form="casesH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="14">应用案例</p>
-            <h2 class="t-title" data-rs>看 AI 方案如何解决<span class="wg">小企业</span><em><span class="wg">最耗时间、</span><span class="wg">最容易</span><span class="wg">漏单的</span>问题。</em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>这些是案例式场景，用来说明客户遇到什么麻烦、适合用哪个 AI 方案、最后能改善什么业务结果。</p>
-          </header>
-          <article class="case" data-icon="phone" data-stop>
-            <p class="eyebrow m m-rise" data-r>本地服务行业</p>
-            <h3 data-icons="phone~ring@漏接电话>!order~fade@漏掉订单" class="case-h" data-rs>漏接电话正在变成漏掉订单。</h3>
-            <dl class="case-flow">
-              <div data-icons="set:!person~shake@现场忙,phone~ring@电话>!phone@不能及时回复,form@表单>!form@不能及时回复,chat@私信>!chat@不能及时回复,!dropoff~fade@转去找别人" class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>问题</dt><dd>老板经常在现场忙，电话、表单和私信不能及时回复，客户很容易转去找别人。</dd></div>
-              <div data-icons="set:agent~pulse@AI 接待助手,chat@服务需求,pin@地点,alarm@紧急程度|row:contact@联系方式,form@缺失信息,document~ok@清楚的客户摘要" class="cf cf-s m m-rise" data-icon="chat" data-r="0.8"><dt>AI 方案</dt><dd>AI 接待助手先收集服务需求、地点、紧急程度、联系方式和缺失信息，再整理成清楚的客户摘要。</dd></div>
-              <div data-icons="set:chatok~run@更快得到回应,document~ok@整理好的需求,snow~x@不容易冷掉" class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>改善</dt><dd>客户更快得到回应，老板看到的是整理好的需求，咨询更不容易冷掉。</dd></div>
-            </dl>
-          </article>
-          <article class="case" data-icon="chat" data-stop>
-            <p class="eyebrow m m-rise" data-r>专业服务</p>
-            <h3 data-icons="person@潜在客户>chat@问完一次>!dropoff~fade@就没有后续" class="case-h" data-rs>潜在客户<span class="wg">问完一次，</span>就没有<span class="wg">后续。</span></h3>
-            <dl class="case-flow">
-              <div data-icons="set:!chatq@信息很短,!scale~shake@判断谁比较认真,!question~pulse@下一步该问什么" class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>问题</dt><dd>客户发来的信息很短，团队很难判断谁比较认真，也不知道下一步该问什么。</dd></div>
-              <div data-icons="set:funnel@AI 销售跟进助手,target@购买意向,clock@时间,coins@预算信号,question@缺失背景,pen@跟进草稿" class="cf cf-s m m-rise" data-icon="funnel" data-r="0.8"><dt>AI 方案</dt><dd>AI 销售跟进助手整理购买意向、时间、预算信号和缺失背景，并准备跟进草稿。</dd></div>
-              <div data-icons="row:ranked@判断优先级,calcheck@跟进更稳定,stairs~run@进入下一步" class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>改善</dt><dd>老板更容易判断优先级，跟进更稳定，也更容易推动合适的客户进入下一步。</dd></div>
-            </dl>
-          </article>
-          <article class="case" data-icon="calendar" data-stop>
-            <p class="eyebrow m m-rise" data-r>创业公司</p>
-            <h3 data-icons="set:!person~shake@一忙起来,megaphone@营销内容>!muted@就停了" class="case-h" data-rs><span class="wg">一忙起来，</span><span class="wg">营销</span>内容<span class="wg">就停了。</span></h3>
-            <dl class="case-flow">
-              <div data-icons="set:bulb@服务想法,book@客户故事,!hourglass~shake@没有时间,!blank@写帖子" class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>问题</dt><dd>老板有服务想法和客户故事，但没有时间持续写帖子、邮件或活动文案。</dd></div>
-              <div data-icons="set:note@服务笔记,map@内容方向,post@帖子草稿,megaphone@行动号召,template@可重复使用的表达" class="cf cf-s m m-rise" data-icon="megaphone" data-r="0.8"><dt>AI 方案</dt><dd>AI 营销助手把服务笔记变成内容方向、帖子草稿、行动号召和可重复使用的表达。</dd></div>
-              <div data-icons="set:calcheck~ok@营销更容易持续,document@结构化草稿,!blank~x@空白页面" class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>改善</dt><dd>营销更容易持续，内容从结构化草稿开始，老板不用每次都从空白页面开始写。</dd></div>
-            </dl>
-          </article>
-          <article class="case" data-icon="papers" data-stop>
-            <p class="eyebrow m m-rise" data-r>成长型运营</p>
-            <h3 data-icons="row:!papers~shake@重复行政工作,!hourglass@拖慢,handoff@每一次交接" class="case-h" data-rs>重复行政工作<span class="wg">拖慢</span><span class="wg">每一次</span>交接。</h3>
-            <dl class="case-flow">
-              <div data-icons="set:envelope@邮件,form@表单,note@笔记,sheet@表格,!papers~shake@反复复制" class="cf cf-p m m-rise" data-icon="storm" data-r="0.4"><dt>问题</dt><dd>客户资料分散在邮件、表单、笔记和表格里，团队反复复制、整理、确认下一步。</dd></div>
-              <div data-icons="set:checklist@清单,handoff@交接记录,bell~ring@缺失资料提醒,calcheck@重复任务提示" class="cf cf-s m m-rise" data-icon="checklist" data-r="0.8"><dt>AI 方案</dt><dd>AI 流程助手把流程整理成清单、交接记录、缺失资料提醒和重复任务提示。</dd></div>
-              <div data-icons="row:handoff~ok@团队交接更清楚,!chat~fade@重复解释更少,gear~spin@稳定推进" class="cf cf-o m m-rise" data-icon="growth" data-r="1.2"><dt>改善</dt><dd>团队交接更清楚，重复解释更少，日常工作更容易稳定推进。</dd></div>
-            </dl>
-          </article>
-          <div class="t-quote" data-icon="hourglass" data-stop>
-            <p class="eyebrow m m-rise" data-r>核心逻辑</p>
-            <h3 data-icons="set:magnifier~pulse@先找出,!hourglass~fade@损失时间,!dropoff~fade@客户,!funnel~fade@跟进机会" class="quote-big" data-rs>先找出正在<em>损失时间、客户或跟进机会</em>的流程。</h3>
-            <p data-icons="set:agent@AI 方案,!chip~x@听起来高级|set:!storm@某个重复问题,!eye~fade@注意力,!bolt~fade@回复速度,!growth~fade@销售机会" class="body m m-fade" data-r="0.6" data-rr>AI 方案不是因为听起来高级才做，而是因为某个重复问题正在消耗注意力、回复速度或销售机会。</p>
-            <div class="btns m m-rise" data-r="1">
-              <a class="btn primary" href="zh-business-review.html">预约业务诊断</a>
-              <a class="btn ghost" href="zh-demo-center.html">查看 Demo</a>
-            </div>
-          </div>
-          <div class="bridge" data-stop>
-            <p data-icons="set:flag~pulse@第一步,question@从哪里开始|over:shop@你的生意,magnifier~pulse@看清" class="bridge-line m m-fade" data-r data-icon="none">那第一步从哪里开始？先看清你的生意。</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 15 · AI 业务诊断 (zh-business-review.html) -->
-      <section class="tsec t-review" data-icon="magnifier" id="business-review" data-tour data-label="AI 业务诊断" data-form="radarH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="15">AI 业务诊断</p>
-            <h2 class="t-title" data-rs>先找出<span class="wg">最耗时间、</span><span class="wg">最容易</span><span class="wg">漏单、</span><em><span class="wg">最影响</span>收入的流程。</em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>我们先看你的客户咨询、销售跟进、营销内容、资料整理和日常行政，找出最值得先改善的一个环节。</p>
-            <div class="btns m m-rise" data-r="0.8">
-              <a class="btn primary" href="zh-contact.html">预约 AI 业务诊断</a>
-              <a class="btn ghost" href="zh-demo-center.html">查看 Demo</a>
-            </div>
-          </header>
-          <div class="lean" data-icon="route" data-stop>
-            <div class="lean-text">
-              <p class="eyebrow m m-rise" data-r>先轻量启动，再决定怎么投入</p>
-              <h3 data-icons="row:bulb@创业想法,map@业务计划" class="t-sub" data-rs>把创业想法整理成<span class="wg">第一个</span>可以执行的业务计划。</h3>
-              <p data-icons="set:ideas@很多想法,!question@不知道先做什么,map@服务方向,target@目标客户|row:chat@从咨询,signed@到成交,agent~pulse@AI 支持方案" class="lead m m-fade" data-r="0.4" data-rr>如果你有很多想法，但不知道先做什么，业务诊断会帮你明确服务方向、目标客户、客户从咨询到成交的流程，以及第一个值得先做的 AI 支持方案。</p>
-            </div>
-            <ol class="lean-steps">
-              <li data-icons="set:tag@卖什么,person@卖给谁,heart~pulse@愿意买" class="m m-rise" data-r="0.6" data-icon="bulb"><span class="ls-n">01</span><strong>从想法到服务</strong><span class="t">先明确你卖什么、卖给谁、客户为什么愿意买。</span></li>
-              <li data-icons="set:team~dim@完整团队,chat@咨询,funnel@跟进,megaphone@内容,papers@行政,gear~spin@跑起来" class="m m-rise" data-r="0.9" data-icon="rocket"><span class="ls-n">02</span><strong>低成本启动流程</strong><span class="t">在请完整团队之前，先规划咨询、跟进、内容和行政怎么跑起来。</span></li>
-              <li data-icons="set:clock@节省时间,coins@降低成本,sprout~grow@早期增长,agent~pulse@实用方案" class="m m-rise" data-r="1.2" data-icon="gear"><span class="ls-n">03</span><strong>第一个 AI 方案</strong><span class="t">先做一个能节省时间、降低成本、支持早期增长的实用方案。</span></li>
-            </ol>
-          </div>
-          <div class="areas-wrap" data-icon="magnifier" data-stop>
-            <p class="eyebrow m m-rise" data-r>诊断重点</p>
-            <h3 data-icons="!tangle~shake@反复处理的事情>checklist~ok@可执行的改进方案" class="t-sub" data-rs>把老板每天反复处理的事情，整理成<em>清楚、<span class="wg">可执行的</span>改进方案。</em></h3>
-            <div class="areas">
-              <article data-icons="form@哪些信息>!form~x@经常缺失|row:chat@第一次联系,!clock~shake@及时回应" class="area m m-rise" data-r="0.3" data-icon="chat"><h4>客户咨询</h4><p>哪些信息经常缺失？客户第一次联系后有没有被及时回应？</p></article>
-              <article data-icons="person@潜在客户>!dropoff@没有下一步|set:!bell~x@容易忘记,!hourglass~shake@拖延" class="area m m-rise" data-r="0.45" data-icon="funnel"><h4>销售跟进</h4><p>哪些潜在客户没有下一步？哪些跟进容易忘记或拖延？</p></article>
-              <article data-icons="set:post@内容,calendar@活动,chat@客户沟通,!zigzag~shake@长期不稳定" class="area m m-rise" data-r="0.6" data-icon="megaphone"><h4>营销任务</h4><p>哪些内容、活动或客户沟通长期不稳定？</p></article>
-              <article data-icons="set:!papers~shake@反复复制,document@总结,magnifier@检查,layers@分类" class="area m m-rise" data-r="0.75" data-icon="papers"><h4>资料整理</h4><p>哪些信息需要反复复制、总结、检查或分类？</p></article>
-              <article data-icons="row:!hourglass~shake@最耗时间,!cycle@重复做" class="area m m-rise" data-r="0.9" data-icon="hourglass"><h4>行政流程</h4><p>哪些日常工作最耗时间，但又必须重复做？</p></article>
-              <article data-icons="set:ranked~pulse@先做,clock@时间,coins@成本,heart@客户体验,growth@收入机会" class="area m m-rise" data-r="1.05" data-icon="target"><h4>优先顺序</h4><p>先做最影响时间、成本、客户体验和收入机会的流程。</p></article>
-            </div>
-          </div>
-          <div class="bridge" data-stop>
-            <p data-icons="set:envelope~pulse@告诉我们,!barrier@哪里最卡" class="bridge-line m m-fade" data-r data-icon="none">准备好了，就告诉我们哪里最卡。</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- 16 · 联系 (zh-contact.html) -->
-      <section class="tsec t-contact" data-icon="envelope" id="contact" data-tour data-label="联系" data-form="planeH">
-        <div class="twrap">
-          <header class="thead" data-stop>
-            <p class="eyebrow m m-rise" data-r data-n="16">联系</p>
-            <h2 class="t-title" data-rs>告诉我们你想先改善<em>哪个业务环节。</em></h2>
-            <p class="lead m m-fade" data-r="0.5" data-rr>告诉我们你的业务现在最耗时间、最容易漏客户、或最影响销售的流程。</p>
-          </header>
-          <div class="contact-grid" data-stop data-dwell="12">
-            <div class="starts" data-icon="flag">
-              <h3 class="t-sub m m-blur" data-r>适合咨询的问题</h3>
-              <ul>
-                <li class="m m-rise" data-r="0.3" data-icon="clock"><strong>客户回复太慢</strong><span class="t">咨询来了，但老板或团队经常忙不过来。</span></li>
-                <li class="m m-rise" data-r="0.5" data-icon="funnel"><strong>销售跟进不稳定</strong><span class="t">潜在客户没有持续跟进，机会容易流失。</span></li>
-                <li class="m m-rise" data-r="0.7" data-icon="papers"><strong>重复工作太多</strong><span class="t">整理资料、写回复、做清单占用太多时间。</span></li>
-              </ul>
-            </div>
-            <div class="contact-panel m m-pop" data-r="0.4">
-              <form class="contact-form" action="mailto:contact@naxastudio.com" method="post" enctype="text/plain">
-                <div class="form-grid">
-                  <label>姓名<input name="name" autocomplete="name" required /></label>
-                  <label>公司 / 生意名称<input name="business_name" autocomplete="organization" /></label>
-                  <label>邮箱<input name="email" type="email" autocomplete="email" required /></label>
-                  <label>电话<input name="phone" type="tel" autocomplete="tel" /></label>
-                  <label>业务类型<input name="business_type" /></label>
-                  <label>偏好语言<select name="preferred_language"><option>中文</option><option>英文</option><option>中英文都可以</option></select></label>
-                  <label class="full">你希望 AI 先帮你处理什么问题？<textarea name="ai_help" required></textarea></label>
-                  <label class="full">感兴趣的方向<select name="interest"><option>AI 业务诊断</option><option>起步 AI 方案</option><option>AI 接待助手</option><option>AI 销售跟进助手</option><option>AI 营销助手</option><option>AI 研究助手</option><option>AI 流程助手</option></select></label>
-                </div>
-                <label class="full consent"><input name="consent" type="checkbox" required /> 我同意 纳想 NaxaStudio 就本次咨询请求联系我。</label>
-                <button class="btn primary" type="submit">提交咨询请求</button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer class="site-end" data-stop data-dwell="4">
-        <div class="twrap end-grid">
-          <a class="brand" href="zh.html" aria-label="纳想 NaxaStudio 首页">
-            <span class="brand-tile"><img src="{{LOGO_ICON}}" alt="" width="36" height="36" /></span>
-            <span class="brand-text">纳想 NaxaStudio <small>AI 执行力系统</small></span>
-          </a>
-          <p>纳想 NaxaStudio. 帮你借助实用 AI，把想法变成行动和结果。</p>
-          <nav aria-label="页脚链接"><a href="zh-contact.html">联系</a><a href="zh-privacy.html">隐私与条款</a><a href="index.html" lang="en">EN</a></nav>
-        </div>
-      </footer>
+    <!-- labels that follow the places they name in the picture -->
+    <div class="tags" aria-hidden="true">
+      <span class="tag t-idea" data-tag="idea">想法</span>
+      <span class="tag t-brand" data-tag="brand">纳想 <span>NaxaStudio</span><small>AI 执行力系统</small></span>
+      <span class="tag t-node" data-tag="n0">想法</span>
+      <span class="tag t-node" data-tag="n1">行动</span>
+      <span class="tag t-node" data-tag="n2">结果</span>
+      <span class="tag t-pain" data-tag="p0">客户来了怎么回</span>
+      <span class="tag t-pain" data-tag="p1">线索怎么跟</span>
+      <span class="tag t-pain" data-tag="p2">资料怎么整理</span>
+      <span class="tag t-pain" data-tag="p3">内容怎么持续做</span>
+      <a class="tag t-agent" data-tag="a0" href="zh-ai-agents.html" tabindex="-1">AI 接待助手<small>01</small></a>
+      <a class="tag t-agent" data-tag="a1" href="zh-ai-agents.html" tabindex="-1">AI 销售跟进助手<small>02</small></a>
+      <a class="tag t-agent" data-tag="a2" href="zh-ai-agents.html" tabindex="-1">AI 营销助手<small>03</small></a>
+      <a class="tag t-agent" data-tag="a3" href="zh-ai-agents.html" tabindex="-1">AI 研究助手<small>04</small></a>
+      <a class="tag t-agent" data-tag="a4" href="zh-ai-agents.html" tabindex="-1">AI 流程助手<small>05</small></a>
+      <span class="tag t-layer" data-tag="l0"><em>01</em>收集客户信息</span>
+      <span class="tag t-layer" data-tag="l1"><em>02</em>生成摘要和下一步</span>
+      <span class="tag t-layer" data-tag="l2"><em>03</em>准备回复草稿</span>
+      <span class="tag t-layer" data-tag="l3"><em>04</em>建立流程清单</span>
+      <span class="tag t-case" data-tag="c0">漏接电话正在变成漏掉订单。</span>
+      <span class="tag t-case" data-tag="c1">潜在客户问完一次，就没有后续。</span>
+      <span class="tag t-case" data-tag="c2">一忙起来，营销内容就停了。</span>
+      <span class="tag t-case" data-tag="c3">重复行政工作拖慢每一次交接。</span>
+      <span class="tag t-map" data-tag="m0">客户咨询</span>
+      <span class="tag t-map" data-tag="m1">销售跟进</span>
+      <span class="tag t-map" data-tag="m2">营销任务</span>
+      <span class="tag t-map" data-tag="m3">资料整理</span>
+      <span class="tag t-map" data-tag="m4">行政流程</span>
+      <span class="tag t-map" data-tag="m5">优先顺序</span>
     </div>
 
-    <!-- Demo 访问（和 zh-demo-center.html 相同的规则：姓名、邮箱或电话、Demo 密码、同意条款） -->
-    <div class="demo-modal" data-demo-modal aria-hidden="true">
-      <div class="demo-modal-backdrop" data-demo-close></div>
-      <div class="demo-modal-panel" role="dialog" aria-modal="true" aria-labelledby="demo-modal-title">
-        <div class="demo-modal-head">
-          <div>
-            <p class="eyebrow">Demo 访问</p>
-            <h2 id="demo-modal-title">解锁 Demo 预览</h2>
-          </div>
-          <button class="modal-close" type="button" data-demo-close aria-label="关闭 Demo 表单">关闭</button>
-        </div>
-        <form class="access-form" data-demo-access-form novalidate>
-          <div class="field-row">
-            <label class="full">选择的 Demo<input name="selected_demo" data-selected-demo readonly placeholder="请选择一个 AI Demo" /></label>
-            <label>姓名<input name="name" autocomplete="name" required /></label>
-            <label>邮箱 <span class="field-hint">建议填写</span><input name="email" type="email" autocomplete="email" /></label>
-            <label>电话 <span class="field-hint">可选</span><input name="phone" type="tel" autocomplete="tel" /></label>
-            <label>Demo 密码<input name="demo_password" type="password" autocomplete="off" required /></label>
-            <label>业务类型<select name="business_type"><option value="">请选择</option><option>初创公司</option><option>本地小企业</option><option>服务团队</option><option>专业服务</option><option>其他</option></select></label>
-          </div>
-          <div class="demo-consent">
-            <p>点击“我同意”并使用本 Demo，即代表你确认：</p>
-            <ul>
-              <li>你已年满 18 岁。</li>
-              <li>你了解自己正在使用 AI Demo 服务。</li>
-              <li>你同意 Demo 互动内容可被记录或保存，用于提供服务和改善体验。</li>
-            </ul>
-            <p class="consent-fineprint">你已了解我们的 <a href="zh-privacy.html">隐私与条款</a>。你提供的信息可能会用于提供本 Demo 服务，并回应你的请求。</p>
-          </div>
-          <label class="checkbox-label">
-            <input name="terms" type="checkbox" />
-            <span>我同意。</span>
-          </label>
-          <p class="form-error" data-demo-error role="alert"></p>
-          <button class="btn primary" type="submit">解锁 Demo 预览</button>
-          <p class="unlock-note" data-demo-status>请选择一个 Demo 继续。</p>
-        </form>
-      </div>
-    </div>
+    <nav class="rail" aria-label="段落">
+      <button type="button" aria-label="想法"></button>
+      <button type="button" aria-label="纳想"></button>
+      <button type="button" aria-label="为什么存在"></button>
+      <button type="button" aria-label="真正的卡点"></button>
+      <button type="button" aria-label="AI 解决方案"></button>
+      <button type="button" aria-label="起步 AI 方案"></button>
+      <button type="button" aria-label="案例"></button>
+      <button type="button" aria-label="AI 业务诊断"></button>
+      <button type="button" aria-label="开始"></button>
+    </nav>
+    <div class="hint" aria-hidden="true">向下滑动<b></b></div>
 
-    <div class="flash" id="flash" aria-hidden="true"></div>
-
-    <div class="ctl" id="ctl" role="group" aria-label="播放控制">
-      <button class="cbtn" id="prev" type="button" aria-label="上一章">
-        <svg viewBox="0 0 24 24"><path d="M7 5h2v14H7zM20 5v14L10 12z" /></svg>
-      </button>
-      <button class="cbtn main" id="play" type="button" aria-label="暂停">
-        <svg class="i-pause" viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" /></svg>
-        <svg class="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-        <svg class="i-replay" viewBox="0 0 24 24"><path d="M12 5V2L7.5 6 12 10V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" /></svg>
-      </button>
-      <button class="cbtn" id="next" type="button" aria-label="下一章">
-        <svg viewBox="0 0 24 24"><path d="M15 5h2v14h-2zM4 5v14l10-7z" /></svg>
-      </button>
-      <div class="rail" id="rail" role="slider" tabindex="0" aria-label="进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <div class="rail-tip" id="railTip"></div>
-      </div>
-      <span class="chap" id="chap" aria-live="polite"></span>
-      <span class="time" id="time">0:00</span>
-      <button class="tbtn" id="speed" type="button" aria-label="播放速度">1×</button>
-      <button class="tbtn snd" id="sound" type="button" aria-pressed="false" aria-label="声音" title="声音">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9.5h3.5L12 6v12l-4.5-3.5H4z" /><path class="wv" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" /><path class="no" d="M16 9.5l5 5M21 9.5l-5 5" /></svg>
-      </button>
-      <button class="tbtn" id="read" type="button">按页面阅读</button>
-    </div>
-
-    <script>window.__NAXA_LOGO__ = {{LOGO_POINTS}};</script>
-    <script src="motion.js"></script>
-    <script src="demo-center.js"></script>
+    <script type="application/json" id="ask-data">
+      {
+        "go": "去看看",
+        "open": "打开页面 →",
+        "items": [
+          { "k": ["做什么", "帮我", "能帮", "服务", "提供", "方案"], "a": "围绕时间、成本和销售设计的实用方案：AI 接待助手、AI 销售跟进助手、AI 营销助手、AI 研究助手、AI 流程助手。", "go": 4, "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["团队很小", "小团队", "从哪里开始", "开始", "起步", "刚创业", "创业", "雇"], "a": "适合刚开始创业或团队还很小的阶段。在雇完整团队之前，先让 AI 帮你处理最重复的客户和行政工作。", "go": 5, "href": "zh-base-ai-agent.html", "label": "看起步方案 →" },
+          { "k": ["回复", "漏接", "电话", "咨询", "接待", "慢回"], "a": "AI 接待助手：更快回复客户咨询，收集缺失信息，减少漏接和慢回。", "go": 4, "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["销售", "跟进", "线索", "潜在客户"], "a": "AI 销售跟进助手：整理潜在客户、准备跟进草稿，让更多线索有下一步。", "go": 4, "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["营销", "内容", "帖子", "文案", "推广"], "a": "AI 营销助手：把老板的想法变成内容方向、文案草稿和营销任务。", "go": 4, "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["研究", "比较", "市场", "竞争", "调研"], "a": "AI 研究助手：整理市场、工具、竞争对手或客户资料，帮助老板更快判断。", "go": 4, "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["流程", "行政", "清单", "交接", "重复", "模板"], "a": "AI 流程助手：把重复行政工作变成清单、模板、交接记录和下一步提醒。", "go": 4, "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["demo", "演示", "看看", "试试", "试用", "预览"], "a": "做决定之前，先看看它实际怎么工作。", "href": "zh-demo-center.html", "label": "打开 Demo 中心 →" },
+          { "k": ["收费", "价格", "多少钱", "费用", "预算", "怎么算"], "a": "不知道先做哪个？先做 AI 业务诊断，找出最影响时间、成本和销售机会的流程。", "go": 7, "href": "zh-business-review.html", "label": "AI 业务诊断 →" },
+          { "k": ["案例", "例子", "效果", "真实"], "a": "好的 AI 方案，应该先帮你少漏客户、少浪费时间、多抓住销售机会。", "go": 6, "href": "zh-cases.html", "label": "看案例 →" },
+          { "k": ["关于", "你们是谁", "为什么", "纳想", "naxastudio", "背景"], "a": "NaxaStudio 是为那些有想法、但需要一个方法把想法变成现实的人而存在的。", "go": 2, "href": "zh-about.html", "label": "关于纳想 →" },
+          { "k": ["联系", "预约", "诊断", "合作", "电话号码", "邮箱"], "a": "准备好了，就告诉我们哪里最卡。", "go": 8, "href": "zh-contact.html", "label": "联系我们 →" }
+        ],
+        "fallback": { "a": "这个问题我们当面聊更清楚。准备好了，就告诉我们哪里最卡。", "href": "zh-contact.html", "label": "联系我们 →" }
+      }
+    </script>
+    <script>
+{{WORLD_JS}}
+    </script>
   </body>
 </html>
