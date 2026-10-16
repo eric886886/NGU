@@ -33,12 +33,9 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-html.webgl,
-html.webgl body {
-  height: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
-  touch-action: none;
+/* (the page scrolls for real; how far is how far the story has come) */
+html.webgl {
+  overscroll-behavior-y: none;
 }
 
 a {
@@ -159,6 +156,7 @@ html.no-js #world {
 /* ---------- ask ---------- */
 
 .ask {
+  overscroll-behavior: contain;
   position: fixed;
   z-index: 30;
   top: 70px;
@@ -335,32 +333,31 @@ html.no-js #world {
   z-index: 5;
 }
 
-html:not(.static) .st {
+/* (world.js plays them in and out as the page scrolls) */
+html.webgl .st {
   position: fixed;
   left: 7vw;
   bottom: 12vh;
   max-width: min(640px, 80vw);
-  opacity: 0;
   visibility: hidden;
-  transform: translate3d(0, 16px, 0);
-  filter: blur(8px);
-  transition: opacity 0.8s ease, transform 0.8s ease, filter 0.8s ease, visibility 0s 0.8s;
 }
 
-html:not(.static) .st.on {
-  opacity: 1;
-  visibility: visible;
-  transform: none;
-  filter: none;
-  transition: opacity 0.9s ease 0.15s, transform 0.9s ease 0.15s, filter 0.9s ease 0.15s, visibility 0s;
+html.webgl .st b {
+  background: none;
+  color: inherit;
 }
 
-html:not(.static) .st[data-stage="0"] {
+html.webgl .u {
+  display: inline-block;
+  opacity: 0;
+}
+
+html.webgl .st[data-stage="0"] {
   display: none;
 }
 
 /* a soft shade behind the words, so they read over the light */
-html:not(.static) .st::before {
+html.webgl .st::before {
   content: "";
   position: absolute;
   z-index: -1;
@@ -393,11 +390,11 @@ html:lang(zh) .st h2 {
 }
 
 /* (a longer heading gets more room and a smaller size, so it stays on two lines) */
-html:not(.static) .st.st-wide {
+html.webgl .st.st-wide {
   max-width: min(820px, 66vw);
 }
 
-html:not(.static) .st.st-wide h2 {
+html.webgl .st.st-wide h2 {
   font-size: clamp(28px, 2.7vw, 42px);
 }
 
@@ -458,6 +455,40 @@ html:not(.static) .st.st-wide h2 {
   margin-left: 14px;
   white-space: nowrap;
   text-decoration: none;
+}
+
+/* ---------- the narration between two scenes, like a film's subtitles ---------- */
+
+.subs {
+  display: none;
+}
+
+html.webgl .subs {
+  display: block;
+}
+
+.sub {
+  position: fixed;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  bottom: 13vh;
+  margin: 0 auto;
+  max-width: 900px;
+  padding: 0 var(--gut);
+  text-align: center;
+  font-size: clamp(22px, 2.3vw, 34px);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  text-shadow: 0 2px 22px rgba(2, 5, 13, 0.9), 0 0 2px rgba(2, 5, 13, 0.6);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+html:lang(zh) .sub {
+  letter-spacing: 0.06em;
 }
 
 /* ---------- labels that follow the places they name ---------- */
@@ -742,7 +773,7 @@ html.no-js .st-only {
     font-size: 12px;
   }
 
-  html:not(.static) .st {
+  html.webgl .st {
     left: var(--gut);
     right: var(--gut);
     bottom: max(22px, env(safe-area-inset-bottom));
@@ -753,13 +784,18 @@ html.no-js .st-only {
 
   .st h1,
   .st h2,
-  html:not(.static) .st.st-wide h2 {
+  html.webgl .st.st-wide h2 {
     font-size: 27px;
+  }
+
+  .sub {
+    bottom: 17vh;
+    font-size: 21px;
   }
 
   html:lang(en) .st h1,
   html:lang(en) .st h2,
-  html:lang(en):not(.static) .st.st-wide h2 {
+  html.webgl:lang(en) .st.st-wide h2 {
     font-size: 25px;
   }
 

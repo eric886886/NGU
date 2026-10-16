@@ -1,13 +1,15 @@
 // The NaxaStudio home page: a world of light the visitor scrolls through.
 //
-// Everything starts from one point of light, the idea (as the old home page did). Scrolling takes it on a journey,
-// one stage at a time, and the same particles become everything on the way:
+// Everything starts from one point of light, the idea (as the old home page did). Scrolling takes it on one
+// continuous journey, like a film the visitor plays with the scroll, and the same particles become everything on
+// the way:
 //   0 the point    1 the mark (the logo, in depth)    2 a river: idea, action, result    3 the knot of daily
 //   business    4 the five assistants    5 the first layer (the startup solution)    6 the cases: tangled
 //   before, flowing after    7 a map of opportunities (the business review)    8 one again: the mark, and an invitation
 // Scrolling back plays it backwards. The words of each stage are ordinary HTML (<section data-stage>) laid over
-// the picture; small labels (<… data-tag>) follow the places they name. Without WebGL, or with reduced motion,
-// the same sections read as a plain page.
+// the picture and rise in as their scene forms; a line of narration (<p class="sub">) carries the story across
+// each flight from one scene to the next; small labels (<… data-tag>) follow the places they name. Without WebGL,
+// or with reduced motion, the same sections read as a plain page.
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -192,7 +194,8 @@ async function world() {
 
   // ---------------------------------------------------------------- the particles
   const VERT = /* glsl */ `
-  uniform float uT, uS, uFocus, uPR, uSize, uPort;
+  uniform float uT, uS, uFocus, uPR, uSize, uPort, uStream, uDof;
+  uniform vec3 uC0, uC1;
   attribute vec3 aLogo, aKnot, aCase;
   attribute vec4 aRnd, aP, aInfo; // info: x the mark's colour, y which assistant, z dust, w a node of the river
   varying vec3 vCol;
@@ -391,14 +394,27 @@ async function world() {
       vec3 p0 = posAt(k), p1 = posAt(k + 1);
       float d = min(length(p1 - p0), 8.0);
       vec3 sw = vec3(sin(aRnd.y * 31.0 + uT * 0.9), cos(aRnd.z * 27.0 + uT * 0.7), sin(aRnd.w * 23.0 + uT * 0.8));
-      p = mix(p0, p1, e) + sw * sin(PI * e) * (0.3 + d * 0.18);
+      vec3 burst = mix(p0, p1, e) + sw * sin(PI * e) * (0.3 + d * 0.18);
+      // on the way, the whole shape pours into one twisting river of light that runs from this place to the next
+      // (along the camera's own way), and opens out again into the next shape
+      vec3 dir = normalize(uC1 - uC0 + vec3(0.0, 0.0, 1e-3));
+      vec3 side = normalize(cross(dir, vec3(0.0, 1.0, 0.0)) + vec3(1e-3, 0.0, 0.0));
+      vec3 up = cross(side, dir);
+      float ang = aRnd.y * 6.2832 + e * 4.0 + uT * 0.5;
+      vec3 off = (side * cos(ang) + up * sin(ang)) * (0.25 + pow(aRnd.z, 1.3) * 1.6);
+      vec3 c1 = mix(uC0, uC1, 0.3) + off, c2 = mix(uC0, uC1, 0.7) + off;
+      float ie = 1.0 - e;
+      vec3 river = ie * ie * ie * p0 + 3.0 * ie * ie * e * c1 + 3.0 * ie * e * e * c2 + e * e * e * p1;
+      p = mix(burst, river, uStream);
       col = mix(colAt(k), colAt(k + 1), e);
+      // (a little thinner in the middle, where all of it passes close together)
       a = mix(alphaAt(k), alphaAt(k + 1), e);
+      a = mix(a, min(a, 0.11) * 0.8, sin(PI * e) * uStream);
     }
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
     float dep = -mv.z;
-    float blur = abs(dep - uFocus) / max(uFocus, 1.0);
+    float blur = abs(dep - uFocus) / max(uFocus, 1.0) * uDof;
     gl_PointSize = uPR * uSize * (1.0 + aRnd.w * 1.3) * (1.0 + blur * 7.0) * (12.0 / max(dep, 0.3));
     vA = a / (1.0 + blur * blur * 22.0) * smoothstep(0.2, 1.5, dep) * (0.72 + 0.28 * sin(uT * 2.1 + aRnd.z * 60.0));
     vCol = col;
@@ -411,7 +427,7 @@ async function world() {
     float a = smoothstep(0.5, 0.0, d);
     gl_FragColor = vec4(vCol * a * a * vA * 1.9, 1.0);
   }`;
-  const U = { uT: { value: 0 }, uS: { value: 0 }, uFocus: { value: 7.5 }, uPR: { value: PR }, uSize: { value: SMALL ? 1.25 : 1 }, uPort: { value: PORT ? 1 : 0 } };
+  const U = { uT: { value: 0 }, uS: { value: 0 }, uFocus: { value: 7.5 }, uPR: { value: PR }, uSize: { value: SMALL ? 1.25 : 1 }, uPort: { value: PORT ? 1 : 0 }, uStream: { value: 0 }, uDof: { value: 1 }, uC0: { value: new THREE.Vector3() }, uC1: { value: new THREE.Vector3() } };
   const NA = Math.round(N * 0.12), NM = N - NA;
   const markPts = await sampleMark(NM);
   const knotPts = knot(NM), casePts = tangles(NM);
@@ -497,10 +513,11 @@ async function world() {
   }
   keys();
   const smooth = (x) => x * x * (3 - 2 * x);
-  function camAt(s, t) {
+  function camAt(s, t, push) {
     const k = Math.min(Math.floor(s), LAST - 1), f = smooth(Math.min(1, Math.max(0, s - k)));
     const a = KEYS[k], b = KEYS[k + 1];
     const pos = a.pos.clone().lerp(b.pos, f), look = a.look.clone().lerp(b.look, f);
+    pos.lerp(look, 0.07 * smooth(push));
     // between two places the camera rises a little, as if it took a breath
     pos.y += Math.sin(Math.PI * f) * 0.9;
     // at the mark it turns slowly around it
@@ -529,23 +546,26 @@ async function world() {
   };
   const STAGE_OF = { idea: 0, brand: 1, n: 2, p: 3, a: 4, l: 5, c: 6, m: 7 };
   let tags = [];
-  const placeTags = () =>
-    (tags = [...document.querySelectorAll('[data-tag]')].map((el) => {
+  const placeTags = () => {
+    tags = [...document.querySelectorAll('[data-tag]')].map((el) => {
       const id = el.dataset.tag;
       // (the startup layers' labels start at their ring's edge rather than straddling it)
       const left = !PORT && el.classList.contains('t-layer');
       return { el, at: anchors[id](), stage: STAGE_OF[id] ?? STAGE_OF[id[0]], left, w: el.offsetWidth, shift: left ? 'translate(0, -50%)' : 'translate(-50%, -50%)' };
-    }));
+    });
+    // the labels of one place come one after another, in the order they are written
+    const seen = {};
+    for (const g of tags) g.i = seen[g.stage] = (seen[g.stage] ?? -1) + 1;
+    for (const g of tags) g.n = seen[g.stage] + 1;
+  };
   placeTags();
   // (their widths change once the web fonts arrive)
   if (document.fonts) document.fonts.ready.then(placeTags);
-  const rail = [...document.querySelectorAll('.rail button')];
-  const hint = document.querySelector('.hint');
   const tmp = new THREE.Vector3();
-  let shownStage = -1;
-  function words(s) {
+  function labels(s) {
     for (const g of tags) {
-      let o = Math.max(0, 1 - Math.abs(s - g.stage) * 2.4);
+      const near = 1 - Math.abs(s - g.stage) * 2.4;
+      let o = Math.min(1, Math.max(0, near * (1 + (g.n - 1) * 0.18) - g.i * 0.18));
       tmp.copy(g.at).project(camera);
       if (tmp.z > 1) o = 0;
       g.el.style.opacity = o.toFixed(3);
@@ -556,56 +576,144 @@ async function world() {
       const x = Math.min(Math.max((tmp.x * 0.5 + 0.5) * W, lo), Math.max(lo, hi));
       g.el.style.transform = `translate3d(${x.toFixed(1)}px, ${((-tmp.y * 0.5 + 0.5) * H).toFixed(1)}px, 0) ${g.shift}`;
     }
-    const near = Math.round(s);
-    const on = Math.abs(s - near) < 0.28 ? near : -1;
-    if (on !== shownStage) {
-      shownStage = on;
-      sections.forEach((el) => {
-        const me = +el.dataset.stage === on;
-        el.classList.toggle('on', me);
-        el.setAttribute('aria-hidden', me ? 'false' : 'true');
-      });
-    }
-    rail.forEach((b, i) => b.classList.toggle('on', i === near));
-    if (hint) hint.classList.toggle('gone', s > 0.25);
   }
 
-  // ---------------------------------------------------------------- moving through it: wheel, finger, keys, the rail; at rest it settles on a stage
-  let target = 0, stage = 0, t = 0, idle = 0;
-  const PTR = { x: 0, y: 0, tx: 0, ty: 0 };
-  const go = (s) => {
-    target = Math.min(LAST, Math.max(0, s));
-    idle = 0;
+  // ---------------------------------------------------------------- the words of the story, played by scrolling
+  // Each heading is cut into letters (Chinese) or words (English) that rise into place one after another as its
+  // scene forms; the kicker comes first, the line and the links after. Between two scenes a line of narration
+  // (<p class="sub" data-t="from,to">, in story time) carries the story across while the particles fly.
+  const ZH = /^zh/.test(doc.lang);
+  const GRAD = [[0xb9, 0xa4, 0xff], [0x7f, 0xb6, 0xff], [0x8e, 0xf0, 0xff]]; // as --grad in world.css
+  const gradAt = (x) => {
+    const [a, b, f] = x < 0.6 ? [GRAD[0], GRAD[1], x / 0.6] : [GRAD[1], GRAD[2], (x - 0.6) / 0.4];
+    return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(',')})`;
   };
-  const jump = (s) => {
-    go(s);
-    idle = 1; // settle straight away
+  function cut(el) {
+    const out = [];
+    const walk = (node, coloured) => {
+      for (const n of [...node.childNodes]) {
+        if (n.nodeType === 1) walk(n, coloured || n.tagName === 'B');
+        if (n.nodeType !== 3) continue;
+        const frag = document.createDocumentFragment();
+        for (const p of ZH ? [...n.textContent] : n.textContent.split(/(\s+)/)) {
+          if (!p) continue;
+          if (!p.trim()) {
+            frag.append(p);
+            continue;
+          }
+          const u = document.createElement('span');
+          u.className = 'u';
+          u.textContent = p;
+          u.coloured = coloured;
+          frag.append(u);
+          out.push(u);
+        }
+        n.replaceWith(frag);
+      }
+    };
+    walk(el, false);
+    // (the coloured line keeps its gradient, one letter at a time)
+    const c = out.filter((u) => u.coloured);
+    c.forEach((u, i) => (u.style.color = gradAt(c.length > 1 ? i / (c.length - 1) : 0)));
+    return out;
+  }
+  const lines = [
+    ...sections
+      .filter((el) => +el.dataset.stage > 0)
+      .map((el) => {
+        const k = +el.dataset.stage, head = el.querySelector('h1, h2');
+        return {
+          el,
+          from: k - 0.2,
+          rise: 0.24,
+          to: k === LAST ? Infinity : k + 0.3,
+          fall: 0.12,
+          units: head ? cut(head) : [],
+          before: [...el.querySelectorAll('.st-k')],
+          after: [...el.children].filter((c) => !c.matches('h1, h2, .st-k, .st-only')),
+          key: '',
+        };
+      }),
+    ...[...document.querySelectorAll('.sub')].map((el) => {
+      const [from, to] = el.dataset.t.split(',').map(Number);
+      return { el, from, rise: 0.12, to: to - 0.08, fall: 0.08, units: cut(el), before: [], after: [], key: '' };
+    }),
+  ];
+  const ease = (x) => 1 - (1 - x) ** 3;
+  const clamp = (x) => Math.min(1, Math.max(0, x));
+  const rise = (el, e) => {
+    el.style.opacity = e.toFixed(3);
+    el.style.transform = e < 1 ? `translate3d(0, ${((1 - e) * 0.65).toFixed(3)}em, 0)` : '';
+  };
+  function play(c, a, z) {
+    const key = `${a.toFixed(3)} ${z.toFixed(3)}`;
+    if (key === c.key) return;
+    c.key = key;
+    const on = a > 0.001 && z < 0.999;
+    c.el.style.visibility = on ? 'visible' : 'hidden';
+    c.el.setAttribute('aria-hidden', on ? 'false' : 'true');
+    if (!on) return;
+    c.el.style.pointerEvents = a > 0.85 && z < 0.15 ? 'auto' : 'none';
+    // going, the whole of it lifts away and blurs
+    c.el.style.opacity = (1 - z).toFixed(3);
+    c.el.style.transform = z > 0 ? `translate3d(0, ${(-z * 36).toFixed(1)}px, 0)` : '';
+    c.el.style.filter = z > 0.01 ? `blur(${(z * 7).toFixed(1)}px)` : '';
+    c.before.forEach((el) => rise(el, ease(clamp(a / 0.3))));
+    const n = c.units.length;
+    c.units.forEach((u, i) => rise(u, ease(clamp((a - 0.08 - 0.5 * (n > 1 ? i / (n - 1) : 0)) / 0.35))));
+    c.after.forEach((el, j) => rise(el, ease(clamp((a - 0.5 - j * 0.1) / 0.3))));
+  }
+  const rail = [...document.querySelectorAll('.rail button')];
+  const hint = document.querySelector('.hint');
+  function story(tau) {
+    for (const c of lines) {
+      // (the first line comes in by itself when the page opens)
+      const a = c.from < 0 ? clamp((t - 0.4) / 1.6) : clamp((tau - c.from) / c.rise);
+      play(c, a, clamp((tau - c.to) / c.fall));
+    }
+    const near = Math.min(LAST, Math.floor(tau + 0.2));
+    rail.forEach((b, i) => b.classList.toggle('on', i === near));
+    if (hint) hint.classList.toggle('gone', tau > 0.04);
+  }
+
+  // ---------------------------------------------------------------- the story clock: how far the page has scrolled is how far the story has come
+  // One scene for every one and a half screens. At the start of each, the scene holds while its words are read;
+  // then the particles fly to the next. Nothing snaps: stop anywhere and the picture waits, half made.
+  const HOLD = 0.4, END = LAST + 0.3;
+  const space = document.createElement('div');
+  space.className = 'space';
+  space.setAttribute('aria-hidden', 'true');
+  document.body.append(space);
+  let VW = innerWidth, VH = innerHeight, SEG = 1;
+  const sizeSpace = () => {
+    SEG = VH * 1.5;
+    space.style.height = `${Math.round(END * SEG + VH)}px`;
+  };
+  sizeSpace();
+  const stageOf = (tau) => {
+    const k = Math.floor(tau), f = tau - k;
+    return k >= LAST ? LAST : k + (f < HOLD ? 0 : (f - HOLD) / (1 - HOLD));
+  };
+  // while a scene holds the camera keeps drifting in, and lets go as the next one begins
+  const pushOf = (tau) => {
+    const k = Math.floor(tau), f = tau - k;
+    return k >= LAST ? Math.min(1, f / HOLD) : f < HOLD ? f / HOLD : 1 - (f - HOLD) / (1 - HOLD);
+  };
+  let tauT = 0, tau = -1, stage = 0, t = 0;
+  const PTR = { x: 0, y: 0, tx: 0, ty: 0 };
+  const jump = (k) => {
+    const to = k <= 0 ? 0 : Math.min(END, k + 0.12);
+    if (CAPTURE) tauT = to;
+    else scrollTo({ top: to * SEG, behavior: 'smooth' });
   };
   initAsk(jump);
   rail.forEach((b, i) => b.addEventListener('click', () => jump(i)));
   document.querySelectorAll('[data-go]').forEach((el) => el.addEventListener('click', (e) => (e.preventDefault(), jump(+el.dataset.go))));
-  const busy = (e) => e.target.closest && e.target.closest('.ask, input, textarea');
-  if (!CAPTURE) {
-    addEventListener('wheel', (e) => !busy(e) && go(target + Math.max(-60, Math.min(60, e.deltaY)) * 0.0045), { passive: true });
-    let ty = null;
-    addEventListener('touchstart', (e) => (ty = busy(e) ? null : e.touches[0].clientY), { passive: true });
-    addEventListener('touchmove', (e) => {
-      if (ty == null) return;
-      go(target + (ty - e.touches[0].clientY) * 0.0085);
-      ty = e.touches[0].clientY;
-    }, { passive: true });
-    addEventListener('keydown', (e) => {
-      if (busy(e)) return;
-      if (['ArrowDown', 'PageDown', ' '].includes(e.key)) jump(Math.round(target) + 1);
-      if (['ArrowUp', 'PageUp'].includes(e.key)) jump(Math.round(target) - 1);
-      if (e.key === 'Home') jump(0);
-      if (e.key === 'End') jump(LAST);
-    });
+  if (!CAPTURE)
     addEventListener('pointermove', (e) => {
       PTR.tx = (e.clientX / W - 0.5) * 2;
       PTR.ty = (e.clientY / H - 0.5) * 2;
     }, { passive: true });
-  }
   addEventListener('resize', () => {
     W = innerWidth;
     H = innerHeight;
@@ -619,26 +727,44 @@ async function world() {
     U.uPort.value = PORT ? 1 : 0;
     keys();
     placeTags();
+    // (a phone's address bar coming and going changes the height a little; that keeps the story where it is)
+    if (W !== VW || Math.abs(H - VH) > VH * 0.25) {
+      const keep = tauT;
+      VW = W;
+      VH = H;
+      sizeSpace();
+      if (!CAPTURE) scrollTo(0, keep * SEG);
+    }
   });
 
   // ---------------------------------------------------------------- each frame; on a slow device it draws less
   let slow = 0, frames = 0, level = 0;
   function frame(dt) {
     t += dt;
-    idle += dt;
-    if (!CAPTURE && idle > 0.22) target += (Math.round(target) - target) * Math.min(1, dt * 5);
-    stage += (target - stage) * Math.min(1, dt * 2.4);
+    if (!CAPTURE) tauT = Math.min(END, Math.max(0, scrollY / SEG));
+    // (the story follows the scroll a moment behind, so even a mouse wheel's steps become one glide)
+    tau = tau < 0 ? tauT : tau + (tauT - tau) * (1 - Math.exp(-dt * 6));
+    stage = stageOf(tau);
     PTR.x += (PTR.tx - PTR.x) * Math.min(1, dt * 2);
     PTR.y += (PTR.ty - PTR.y) * Math.min(1, dt * 2);
-    const { pos, look } = camAt(stage, t);
+    const { pos, look } = camAt(stage, t, pushOf(tau));
     camera.position.copy(pos);
     camera.lookAt(look);
     U.uT.value = t;
     U.uS.value = stage;
+    // (the river of light between two places runs from where the camera looked to where it will look; the point
+    // opening into the mark at the start is a burst instead)
+    const k = Math.min(Math.floor(stage), LAST - 1);
+    U.uC0.value.copy(KEYS[k].look);
+    U.uC1.value.copy(KEYS[k + 1].look);
+    U.uStream.value = k === 0 ? 0 : 1;
+    // (in flight the picture is everywhere at once, so less of it is out of focus)
+    U.uDof.value = 1 - 0.65 * Math.sin(Math.PI * Math.min(1, stage - k));
     U.uFocus.value = pos.distanceTo(look);
     bgMat.uniforms.uS.value = stage;
     grain.uniforms.uT.value = t;
-    words(stage);
+    labels(stage);
+    story(tau);
     composer.render(dt);
     if (CAPTURE) renderer.getContext().finish();
     else {
@@ -660,12 +786,13 @@ async function world() {
   }
   window.__w = {
     step: (dt) => frame(dt),
-    scrollTo: (s) => go(s),
+    // (story time: scene k begins at k, its words leave at k + 0.3, the flight to the next is k + 0.4 to k + 1)
+    scrollTo: (s) => (tauT = Math.min(END, Math.max(0, s))),
     get t() {
       return t;
     },
     get s() {
-      return stage;
+      return tau;
     },
   };
   if (!CAPTURE) {
