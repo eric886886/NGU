@@ -571,7 +571,7 @@
     for (let i = 0; i < N; i++) a[i] = rnd();
     return a;
   };
-  const R1 = mk(), R2 = mk(), R3 = mk(), R4 = mk(), R5 = mk(), R6 = mk(), R7 = mk();
+  const R1 = mk(), R2 = mk(), R3 = mk(), R4 = mk(), R5 = mk(), R6 = mk(), R7 = mk(), R8 = mk();
   const DEL = new Float32Array(N), SW = new Float32Array(N), ANG = new Float32Array(N), SZ = new Float32Array(N);
   const COL = new Uint8Array(N), STAR = new Uint8Array(N);
   for (let i = 0; i < N; i++) {
@@ -2361,8 +2361,9 @@
     const d = SWARM.d - DEL[i] * 0.25;
     SP.s = 0.85;
     SP.h = 0;
+    // film mode: every particle either writes the line or draws its picture
+    if (CINE.on) return R8[i] < TXT_FRAC || R7[i] >= ILL_FRAC ? textPos(i, t, fx, fy, fa) : cinePos(i, t, fx, fy, fa);
     if (R7[i] < ILL_FRAC) {
-      if (CINE.on) return cinePos(i, t, fx, fy, fa);
       illPoint(i, t, SWARM.icon, fx, fy, fa);
       const tx = QP.x, ty = QP.y, ta = QP.a, th = QP.h;
       if (d >= 0) {
@@ -2932,11 +2933,13 @@
       L.asideAt = { x: W - Math.min(110, room * 0.2) - 24, y: L.hdr + 104, s: L.heroAt.s * 0.32 };
       L.ill = { x: right + room * 0.5, y: L.hdr + (H - L.hdr - L.ctl) * 0.54, s: clamp(Math.min(room * 0.27, (H - L.hdr - L.ctl) * 0.24), 60, 190) };
     }
-    // film mode: the picture takes the middle of the screen, above the subtitles
-    const band = H - L.hdr - L.ctl;
+    // film mode: the picture and the line written beneath it share the middle of the screen
+    // (its height is set for each sentence, see cineLayout)
+    const band = H - L.hdr - L.ctl, inner = band - H * 0.08;
     L.cine = isMobile
-      ? { x: W / 2, y: L.hdr + band * 0.36, s: Math.min(W * 0.36, band * 0.23) }
-      : { x: W / 2, y: L.hdr + band * 0.4, s: Math.min(W * 0.17, band * 0.29) };
+      ? { x: W / 2, y: L.hdr + band * 0.32, s: Math.min(W * 0.31, inner * 0.19) }
+      : { x: W / 2, y: L.hdr + band * 0.34, s: Math.min(W * 0.13, inner * 0.2) };
+    CINE.placed = false;
     if (!TC.ready) {
       Object.assign(TC, L.heroAt);
       TC.ready = true;
@@ -3199,7 +3202,151 @@
   });
   const cineKick = $('.cine-kicker', cineEl);
   const cineSub = $('.cine-sub', cineEl);
-  const CINE = { on: false, item: null, k: -1, spans: [], n: 0, lo: 0, hi: 0 };
+  const CINE = { on: false, item: null, k: -1, spans: [], n: 0, lo: 0, hi: 0, picY: 0, textY: 0, placed: false };
+
+  // ---- The particles write the subtitle. They gather in a small cloud of light where the line will be (the
+  // opening's "idea"), the cloud runs along the line as it is written and drops particles onto each letter as it
+  // appears; they stay on their letters, shimmering. When the next sentence comes they lift off and go to write it.
+  // A letter's shape is sampled from the font it is set in.
+  const TXT = { cur: null, prev: null, from: 'hero', rel: 0, cps: CPS, t0: 0 };
+  const TXT_FRAC = 0.5; // of the film's particles, the share that writes (the rest draws the pictures)
+  const GLY = new Map();
+  const gCan = document.createElement('canvas');
+  const gCtx = gCan.getContext('2d', { willReadFrequently: true });
+  function glyph(ch, font, size) {
+    const key = font + '|' + ch;
+    let g = GLY.get(key);
+    if (g) return g;
+    const pad = Math.ceil(size * 0.25), w = Math.ceil(size * 1.5) + pad * 2, h = Math.ceil(size * 1.5) + pad * 2;
+    gCan.width = w;
+    gCan.height = h;
+    gCtx.font = font;
+    gCtx.textBaseline = 'alphabetic';
+    gCtx.fillStyle = '#fff';
+    const m = gCtx.measureText(ch);
+    gCtx.fillText(ch, pad, pad + (m.fontBoundingBoxAscent || size * 0.92));
+    const d = gCtx.getImageData(0, 0, w, h).data;
+    const st = Math.max(2, Math.round(size / 14));
+    const pts = [];
+    for (let y = 0; y < h; y += st) for (let x = 0; x < w; x += st) if (d[(y * w + x) * 4 + 3] > 120) pts.push(x - pad, y - pad);
+    g = new Float32Array(pts);
+    GLY.set(key, g);
+    return g;
+  }
+  // every point of every letter of the line on screen, which letter it belongs to, and each letter's middle
+  function textPoints(it, k) {
+    const sp = CINE.spans;
+    if (!sp.length) return null;
+    const cs = getComputedStyle(sp[0]);
+    const size = parseFloat(cs.fontSize) || 30;
+    const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    const kw = new Uint8Array(sp.length);
+    const kws = it.cine.kws ? it.cine.kws[k] : null;
+    if (kws) kws.forEach(([c0, c1, hot]) => {
+      for (let j = c0; j <= c1 && j < sp.length; j++) kw[j] = hot ? 2 : 1;
+    });
+    const xs = [], ys = [], cc = [];
+    const cx = new Float32Array(sp.length), cy = new Float32Array(sp.length);
+    sp.forEach((el, j) => {
+      const r = el.getBoundingClientRect();
+      cx[j] = r.left + r.width / 2;
+      cy[j] = r.top + r.height / 2;
+      const g = glyph(el.textContent, font, size);
+      for (let q = 0; q < g.length; q += 2) {
+        xs.push(r.left + g[q]);
+        ys.push(r.top + g[q + 1]);
+        cc.push(j);
+      }
+      if (!g.length) {
+        xs.push(cx[j]);
+        ys.push(cy[j]);
+        cc.push(j);
+      }
+    });
+    return { n: xs.length, x: Float32Array.from(xs), y: Float32Array.from(ys), c: Int16Array.from(cc), cx, cy, kw, w: W, h: H };
+  }
+  // the picture above, the line beneath: placed together in the middle of the space between the letterbox bars
+  function cineLayout() {
+    const top = L.hdr + H * 0.045, bot = H - L.ctl - H * 0.035;
+    const th = cineEl.offsetHeight;
+    const ph = L.cine.s * 2.1, gap = isMobile ? 14 : 24;
+    const y0 = top + Math.max(6, (bot - top - ph - gap - th) / 2);
+    CINE.picY = y0 + ph / 2;
+    CINE.textY = Math.round(y0 + ph + gap);
+    cineEl.style.top = CINE.textY + 'px';
+    if (!CINE.placed) {
+      L.cine.y = CINE.picY;
+      CINE.placed = true;
+    }
+  }
+  // the last line goes out as its particles lift off it
+  function ghostOut() {
+    const r = cineSub.getBoundingClientRect();
+    if (!r.width || !CINE.on || !CINE.spans.length) return;
+    const g = cineSub.cloneNode(true);
+    g.classList.add('cine-ghost');
+    g.setAttribute('aria-hidden', 'true');
+    Object.assign(g.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px' });
+    g.addEventListener('animationend', () => g.remove());
+    document.body.appendChild(g);
+  }
+  // particle i of the writing share, film mode
+  function textPos(i, t, fx, fy, fa) {
+    const cur = TXT.cur;
+    const ang = ANG[i] + t * (1.6 + R5[i] * 2.2);
+    let ox, oy, oa;
+    const pv = TXT.prev;
+    const q = pv && pv.n ? Math.floor(R1[i] * pv.n) : -1;
+    if (!cur) {
+      // between passages: the particles leave the last line and gather into a small point of light where the
+      // next line will be written
+      const rr = 2 + R3[i] * R3[i] * 18;
+      const px = W / 2 + Math.cos(ang) * rr, py = (CINE.textY || H * 0.6) + 24 + Math.sin(ang) * rr * 0.6;
+      if (TXT.from === 'letters' && q >= 0) (ox = pv.x[q]), (oy = pv.y[q]), (oa = 0.5);
+      else (ox = fx), (oy = fy), (oa = fa);
+      const e = easeInOut(clamp((t - TXT.t0 - DEL[i] * 0.3) / 0.75));
+      SP.x = lerp(ox, px, e);
+      SP.y = lerp(oy, py, e);
+      SP.a = lerp(oa, 0.55, e);
+      SP.s = 0.6;
+      SP.h = 0;
+      return SP;
+    }
+    const p = Math.floor(R1[i] * cur.n), c = cur.c[p];
+    const head = TXT.rel * TXT.cps;
+    // where it comes from: a letter of the last line, the point of light, or the hero
+    if (TXT.from === 'letters' && q >= 0) (ox = pv.x[q]), (oy = pv.y[q]), (oa = 0.5);
+    else if (TXT.from === 'pool') {
+      const rr = 2 + R3[i] * R3[i] * 18;
+      ox = W / 2 + Math.cos(ang) * rr;
+      oy = cur.cy[0] - 6 + Math.sin(ang) * rr * 0.6;
+      oa = 0.55;
+    } else (ox = fx), (oy = fy), (oa = fa);
+    // the cloud at the tip of the writing: it runs along the line, up to this particle's letter
+    const tip = clamp(Math.floor(head), 0, c);
+    const rr = 4 + R3[i] * R3[i] * 26;
+    const hx = cur.cx[tip] + 6 + Math.cos(ang) * rr, hy = cur.cy[tip] + Math.sin(ang) * rr * 0.5;
+    const e1 = easeInOut(clamp((TXT.rel + 0.25 - DEL[i] * 0.3) / 0.55));
+    let x = lerp(ox, hx, e1), y = lerp(oy, hy, e1), a = lerp(oa, 0.32, e1);
+    SP.s = 0.6;
+    SP.h = 0;
+    if (head >= c) {
+      // its letter is being written: it drops onto it and stays there, shimmering (brighter on the words the
+      // pictures come out of)
+      const since = (head - c) / TXT.cps;
+      const e = easeOut(clamp(since / 0.3));
+      x = lerp(x, cur.x[p] + Math.sin(t * 1.7 + R3[i] * 9) * 0.7, e);
+      y = lerp(y, cur.y[p] + Math.cos(t * 1.4 + R4[i] * 9) * 0.7, e);
+      const k = cur.kw[c];
+      a = (k ? 1 : 0.62) * (1 + 1.6 * Math.max(0, 1 - since / 0.5)) * (0.7 + 0.3 * Math.sin(t * 2.6 + R2[i] * 11));
+      SP.h = k === 2 ? 1 : 0;
+      SP.s = k ? 0.66 : 0.54;
+    }
+    SP.x = x;
+    SP.y = y;
+    SP.a = a;
+    return SP;
+  }
 
   // Autopilot: after the film the page glides from stop to stop ([data-stop] blocks) and lingers on each
   // as long as its text takes to read. Its whole path is a function of time, so it sits on the same
@@ -4578,7 +4725,8 @@
 
   // Film mode, every frame: is the autopilot on a passage (not a title card or the form)? Which passage,
   // which of its sentences, and how much of it is written?
-  function setCineSentence(it, k) {
+  function setCineSentence(it, k, ghosted) {
+    if (!ghosted) ghostOut();
     CINE.k = k;
     const txt = k >= 0 && it.cine.sents[k] ? it.cine.sents[k] : '';
     const frag = document.createDocumentFragment();
@@ -4603,6 +4751,13 @@
     cineSub.textContent = '';
     cineSub.appendChild(frag);
     CINE.lo = CINE.hi = 0;
+    // the particles that wrote the last line go to write this one (or gather, if there is none yet)
+    TXT.from = TXT.cur ? 'letters' : TXT.from === 'hero' && !TXT.prev ? 'hero' : 'pool';
+    if (TXT.cur) TXT.prev = TXT.cur;
+    TXT.t0 = t;
+    cineLayout();
+    TXT.cur = CINE.spans.length ? textPoints(it, k) : null;
+    if (!TXT.cur && TXT.from !== 'letters') TXT.from = TXT.prev ? 'pool' : 'hero';
   }
   function updateCine() {
     const tau = t - FILM;
@@ -4611,16 +4766,22 @@
     if (on !== CINE.on) {
       CINE.on = on;
       doc.classList.toggle('is-cine', on);
-      SWARM_FRAC = on ? 0.7 : 0.42;
-      ILL_FRAC = on ? 0.88 : 0.62;
+      SWARM_FRAC = on ? 0.85 : 0.42;
+      ILL_FRAC = on ? 0.92 : 0.62;
+      if (!on) {
+        TXT.cur = TXT.prev = null;
+        TXT.from = 'hero';
+      }
     }
+    if (CINE.picY) L.cine.y = lerp(L.cine.y, CINE.picY, 0.1);
     let it = null;
     if (on) for (const x of st.items) if (x.cine && x.beatT - 1.25 <= tau) it = x;
     if (it !== CINE.item) {
       CINE.item = it;
+      ghostOut(); // (in the old line's own style)
       cineKick.classList.remove('in');
       cineSub.className = 'cine-sub' + (it && it.cine.title ? ' is-title' : '') + (it && it.cine.bridge ? ' is-bridge' : '');
-      setCineSentence(it || { cine: { sents: [] } }, -1);
+      setCineSentence(it || { cine: { sents: [] } }, -1, true);
       if (it) {
         const fit = it.el.classList.contains('for-you') ? '  ·  ' + UI.fit : '';
         cineKick.textContent = it.cine.kick + fit;
@@ -4638,19 +4799,29 @@
     if (k !== CINE.k) setCineSentence(it, k);
     if (k < 0) return;
     const cps = it.cine.title ? CPS * 1.8 : CPS;
-    const n = (rel - it.cineOff[k]) * cps;
+    // a letter comes out of its particles a moment after they land, from a glow into a sharp letter
+    const n = (rel - it.cineOff[k] - 0.16) * cps, fade = cps * 0.42;
     CINE.n = n;
+    TXT.rel = rel - it.cineOff[k];
+    TXT.cps = cps;
+    // the screen changed size: the line is laid out again, and so are its letters' points
+    if (TXT.cur && (TXT.cur.w !== W || TXT.cur.h !== H)) {
+      cineLayout();
+      TXT.cur = textPoints(it, k);
+    }
     const sp = CINE.spans, len = sp.length;
-    const lo = clamp(Math.floor(n - FADE), 0, len), hi = clamp(Math.ceil(n), 0, len);
+    const lo = clamp(Math.floor(n - fade), 0, len), hi = clamp(Math.ceil(n), 0, len);
     for (let j = CINE.lo; j < lo; j++) {
       sp[j].classList.add('on');
       sp[j].style.opacity = '';
+      sp[j].style.color = '';
       sp[j].style.textShadow = '';
     }
     for (let j = lo; j < hi; j++) {
-      const o = clamp((n - j) / FADE);
-      sp[j].style.opacity = o.toFixed(3);
-      sp[j].style.textShadow = `0 0 ${(4 + (1 - o) * 16).toFixed(1)}px rgba(150, 200, 255, ${(0.9 * (1 - o * 0.7)).toFixed(2)})`;
+      const o = clamp((n - j) / fade), e = o * o;
+      sp[j].style.opacity = Math.min(1, o * 2.2).toFixed(3);
+      sp[j].style.color = `rgba(244, 248, 255, ${e.toFixed(3)})`;
+      sp[j].style.textShadow = `0 0 ${(3 + (1 - o) * 14).toFixed(1)}px rgba(170, 210, 255, ${(0.95 * (1 - o * 0.75)).toFixed(2)})`;
     }
     if (hi > CINE.hi) Sound.tick();
     CINE.lo = lo;
