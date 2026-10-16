@@ -4511,6 +4511,170 @@ html.tour-auto .tour .is-past {
   transition: filter 0.8s ease;
 }
 
+/* ---------- the tour as a film: while the autopilot plays, each passage is a shot with subtitles ---------- */
+
+.cine {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--ctl) + 3.5vh + 26px);
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 var(--gut);
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+html.is-cine .cine.on {
+  opacity: 1;
+}
+
+.cine-kicker {
+  min-height: 1.3em;
+  margin-bottom: 16px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.cine-kicker.in {
+  opacity: 1;
+  transform: none;
+}
+
+.cine-sub {
+  max-width: min(1060px, 100%);
+  min-height: 2.9em;
+  font-family: var(--display);
+  font-size: clamp(24px, 2.3vw, 36px);
+  font-weight: 560;
+  line-height: 1.42;
+  letter-spacing: -0.012em;
+  color: #f5f8ff;
+  text-shadow: 0 2px 22px rgba(2, 4, 10, 0.95), 0 0 3px rgba(2, 4, 10, 0.9);
+  text-wrap: balance;
+}
+
+.cine-sub.is-title {
+  font-size: clamp(32px, 3.7vw, 60px);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.032em;
+}
+
+.cine-sub.is-bridge {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.cine .cc {
+  opacity: 0;
+}
+
+.cine .cc.on {
+  opacity: 1;
+}
+
+html:lang(zh) .cine-sub {
+  font-weight: 500;
+  line-height: 1.62;
+  letter-spacing: 0.02em;
+}
+
+html:lang(zh) .cine-sub.is-title {
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+html:lang(zh) .cine-sub.is-bridge {
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* letterbox bars slide in while the page plays as a film */
+.lbox {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  height: calc(var(--hdr) + 4.5vh);
+  background: #000;
+  pointer-events: none;
+  transform: scaleY(0);
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.lbox.top {
+  top: 0;
+  transform-origin: top;
+}
+
+.lbox.bot {
+  bottom: 0;
+  height: calc(var(--ctl) + 3.5vh);
+  transform-origin: bottom;
+}
+
+html.is-cine .lbox {
+  transform: scaleY(1);
+}
+
+/* the page itself steps back meanwhile; scrolling or pausing brings it all back */
+html.is-cine .tour [data-stop]:not(.thead):not(.contact-grid):not(.site-end) {
+  opacity: 0 !important;
+  transition: opacity 0.6s ease;
+}
+
+html.is-cine .readbar {
+  opacity: 0 !important;
+}
+
+html.read .cine,
+html.read .lbox,
+html.no-js .cine,
+html.no-js .lbox {
+  display: none;
+}
+
+@media (max-width: 759px) {
+  .cine {
+    bottom: calc(var(--ctl) + 2.5vh + 18px);
+  }
+
+  .cine-kicker {
+    margin-bottom: 12px;
+    font-size: 11px;
+  }
+
+  .cine-sub {
+    min-height: 3.2em;
+    font-size: 21px;
+  }
+
+  .cine-sub.is-title {
+    font-size: 27px;
+  }
+
+  .lbox {
+    height: calc(var(--hdr) + 2.5vh);
+  }
+
+  .lbox.bot {
+    height: calc(var(--ctl) + 2.5vh);
+  }
+}
+
 /* ---------- measuring pass (JS reads anchor positions with every element at rest) ---------- */
 
 html.measuring .scene {
@@ -6130,6 +6294,7 @@ html.read #read {
     scroll0: 0,
     cube: { x: 0, y: 0, s: 1 },
     ill: { x: 0, y: 0, s: 100 },
+    cine: { x: 0, y: 0, s: 100 },
   };
 
   /* ---- polyline helpers (Catmull-Rom through control points) */
@@ -7162,14 +7327,27 @@ html.read #read {
   // next: a problem's storm turns into the agent that solves it, then into growth); the rest become the pen
   // that writes the text out and settles as a glowing underline beneath it.
   const SWARM = { on: false, d: 0, icon: 'target', pIcon: null, c: null, p: null, last: null, rel: null, relC: null };
-  const SWARM_FRAC = 0.42;
-  const ILL_FRAC = 0.62; // of the swarm, the share that draws the picture
+  // the share of particles that leaves the hero (more of them in film mode), and of those the share
+  // that draws the picture (the rest is the pen)
+  let SWARM_FRAC = 0.42;
+  let ILL_FRAC = 0.62;
   const IP = { x: 0, y: 0, a: 1, h: 0 };
   const SP = { x: 0, y: 0, a: 0, s: 1, h: 0 };
   const QP = { x: 0, y: 0, a: 0, h: 0 };
   // where particle i of the picture sits for an icon (or back in the hero if the passage has no picture)
   function illPoint(i, t, icon, fx, fy, fa) {
+    const c = CINE.on ? L.cine : L.ill;
     if (!icon || icon === 'none') {
+      if (CINE.on) {
+        // no picture: a single point of light waits in the middle, like the opening's idea
+        const a = R1[i] * TAU + t * (0.6 + R2[i]);
+        const r = 2 + R3[i] * R3[i] * 16 * (1 + 0.2 * Math.sin(t * 2.4 + R4[i] * 6));
+        QP.x = c.x + Math.cos(a) * r;
+        QP.y = c.y + Math.sin(a) * r;
+        QP.a = 0.5;
+        QP.h = 0;
+        return QP;
+      }
       QP.x = fx;
       QP.y = fy;
       QP.a = fa;
@@ -7177,7 +7355,6 @@ html.read #read {
       return QP;
     }
     iconPoint(icon, i, t, IP);
-    const c = L.ill;
     const k = icon === 'storm' ? 1.12 : 1;
     QP.x = c.x + IP.x * c.s * k;
     QP.y = c.y + IP.y * c.s * k;
@@ -7247,7 +7424,7 @@ html.read #read {
     if (R7[i] < ILL_FRAC) {
       illPoint(i, t, SWARM.icon, fx, fy, fa);
       const tx = QP.x, ty = QP.y, ta = QP.a, th = QP.h;
-      if (d >= 0) {
+      if (d >= 0 && !CINE.on) {
         SP.x = tx;
         SP.y = ty;
         SP.a = ta;
@@ -7256,6 +7433,46 @@ html.read #read {
         return SP;
       }
       illPoint(i, t, pv ? SWARM.pIcon : null, fx, fy, fa);
+      if (CINE.on) {
+        // the opening's gesture for every passage: everything gathers into one point of light, which
+        // then bursts out (a little past its mark) into the new picture
+        const c = L.cine;
+        const ja = ANG[i], jr = 1.5 + R3[i] * 7;
+        const dx = c.x + Math.cos(ja) * jr, dy = c.y + Math.sin(ja) * jr;
+        const d2 = SWARM.d - DEL[i] * 0.12;
+        if (d2 < -1.15) {
+          SP.x = QP.x;
+          SP.y = QP.y;
+          SP.a = QP.a;
+          SP.h = QP.h;
+        } else if (d2 < -0.6) {
+          const e = Math.pow((d2 + 1.15) / 0.55, 2);
+          SP.x = lerp(QP.x, dx, e);
+          SP.y = lerp(QP.y, dy, e);
+          SP.a = lerp(QP.a, 0.95, e);
+          SP.h = 0;
+        } else if (d2 < -0.4) {
+          SP.x = dx;
+          SP.y = dy;
+          SP.a = 1;
+          SP.s = 1.1;
+        } else if (d2 < 0.5) {
+          const u = (d2 + 0.4) / 0.9;
+          const e = 1 + 2.2 * Math.pow(u - 1, 3) + 1.2 * Math.pow(u - 1, 2); // ease out, overshooting
+          const sw = Math.sin(Math.PI * u) * SW[i] * 0.35;
+          SP.x = dx + (tx - dx) * e + Math.cos(ANG[i]) * sw;
+          SP.y = dy + (ty - dy) * e + Math.sin(ANG[i]) * sw;
+          SP.a = lerp(1, ta, u);
+          SP.h = u > 0.6 ? th : 0;
+        } else {
+          SP.x = tx;
+          SP.y = ty;
+          SP.a = ta;
+          SP.h = th;
+          SP.s = 0.95;
+        }
+        return SP;
+      }
       if (d < -0.9) {
         SP.x = QP.x;
         SP.y = QP.y;
@@ -7814,6 +8031,11 @@ html.read #read {
       L.asideAt = { x: W - Math.min(110, room * 0.2) - 24, y: L.hdr + 104, s: L.heroAt.s * 0.32 };
       L.ill = { x: right + room * 0.5, y: L.hdr + (H - L.hdr - L.ctl) * 0.54, s: clamp(Math.min(room * 0.27, (H - L.hdr - L.ctl) * 0.24), 60, 190) };
     }
+    // film mode: the picture takes the middle of the screen, above the subtitles
+    const band = H - L.hdr - L.ctl;
+    L.cine = isMobile
+      ? { x: W / 2, y: L.hdr + band * 0.34, s: Math.min(W * 0.27, band * 0.18) }
+      : { x: W / 2, y: L.hdr + band * 0.4, s: Math.min(W * 0.17, band * 0.29) };
     if (!TC.ready) {
       Object.assign(TC, L.heroAt);
       TC.ready = true;
@@ -7957,7 +8179,79 @@ html.read #read {
         typed.push(it);
       }
     });
+    // what each passage says as film subtitles: a small label (its name or number) and its sentences
+    items.forEach((it) => {
+      if (it.card || it.kind === 'small' || it.kind === 'form' || it.el.closest('.contact-grid, .site-end')) return;
+      it.cine = cineText(it);
+    });
   }
+
+  // ---- The tour as a film. While the autopilot plays, each passage is a shot: its picture forms in the
+  // middle of the screen out of a single point of light (the opening's "idea" that grows into the logo),
+  // and its text runs underneath as subtitles, one sentence at a time, between letterbox bars. The page
+  // itself steps back meanwhile; it is all there again the moment the visitor scrolls or pauses.
+  function norm(str) {
+    return str.replace(/\s+/g, ' ').trim();
+  }
+  function splitSents(str) {
+    const out = [];
+    let cur = '';
+    for (let i = 0; i < str.length; i++) {
+      const ch = str[i];
+      cur += ch;
+      const end = ZH ? '。！？；'.includes(ch) : '.!?;'.includes(ch) && (i + 1 >= str.length || str[i + 1] === ' ');
+      if (end) {
+        if (cur.trim()) out.push(cur.trim());
+        cur = '';
+      }
+    }
+    if (cur.trim()) out.push(cur.trim());
+    // a long sentence is split at the comma nearest its middle, so a subtitle stays one or two lines
+    const MAX = ZH ? 42 : 118;
+    const res = [];
+    for (let p of out) {
+      while (p.length > MAX) {
+        const re = ZH ? /[，、：]/g : /, |: | — /g;
+        let best = -1, m;
+        while ((m = re.exec(p))) {
+          const i = m.index;
+          if (i > p.length * 0.25 && i < p.length * 0.75 && (best < 0 || Math.abs(i - p.length / 2) < Math.abs(best - p.length / 2))) best = i;
+        }
+        if (best < 0) break;
+        const cut = best + (ZH ? 1 : m && p[best] === ',' ? 1 : 1);
+        res.push(p.slice(0, cut).trim());
+        p = p.slice(cut).trim();
+      }
+      if (p) res.push(p);
+    }
+    return res;
+  }
+  function cineText(it) {
+    const el = it.el;
+    if (it.kind === 'head') return { kick: '', title: true, sents: [norm(el.textContent)] };
+    const bridge = !!el.closest('.bridge');
+    const num = el.querySelector('.spec-n, .layer-n, .pr-n, .ls-n, .sheet-n');
+    const k = el.querySelector('.demo-head h3, h3, h4, strong, dt');
+    const kick = k && k !== el ? (num ? num.textContent.trim() + '  ·  ' : '') + norm(k.textContent) : '';
+    const c = el.cloneNode(true);
+    c.querySelectorAll('h3, h4, strong, dt, .spec-n, .layer-n, .pr-n, .ls-n, .sheet-n, .demo-preview, .demo-lock, .tag-row, button, .btn, .btns, .fit-tag, .eyebrow').forEach((x) => x.remove());
+    const body = norm(c.textContent);
+    return { kick, title: false, bridge, sents: body ? splitSents(body) : kick ? [] : [norm(el.textContent)] };
+  }
+  const cineEl = document.createElement('div');
+  cineEl.className = 'cine';
+  cineEl.setAttribute('aria-hidden', 'true'); // the page's own text is what assistive technology reads
+  cineEl.innerHTML = '<p class="cine-kicker"></p><p class="cine-sub"></p>';
+  document.body.appendChild(cineEl);
+  ['top', 'bot'].forEach((k) => {
+    const bar = document.createElement('div');
+    bar.className = 'lbox ' + k;
+    bar.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(bar);
+  });
+  const cineKick = $('.cine-kicker', cineEl);
+  const cineSub = $('.cine-sub', cineEl);
+  const CINE = { on: false, item: null, k: -1, spans: [], n: 0, lo: 0, hi: 0 };
 
   // Autopilot: after the film the page glides from stop to stop ([data-stop] blocks) and lingers on each
   // as long as its text takes to read. Its whole path is a function of time, so it sits on the same
@@ -8012,6 +8306,17 @@ html.read #read {
               : it.ch
                 ? Math.max(1.2, it.typeOff + it.ch.length / CPS + 0.9)
                 : 1 + n / rate;
+      // as film subtitles: each sentence is written out, then held a moment
+      if (it.cine) {
+        let off = 0;
+        it.cineOff = it.cine.sents.map((x) => {
+          const o = off;
+          off += x.length / (it.cine.title ? CPS * 1.8 : CPS) + (ZH ? 0.85 : 0.6);
+          return o;
+        });
+        it.cineEnd = off;
+        it.time = Math.max(it.time, it.typeOff + off + 0.3, it.cine.kick ? 1.6 : 1.2);
+      }
       it.beatT = null;
     });
     // Units: a title card, a narrator line or a form is one unit; any other block is read one passage
@@ -8460,6 +8765,7 @@ html.read #read {
     } else if (Math.abs(window.scrollY - readY) > 30) el = readingNow(); // moved since opening the page
     readMode = v;
     doc.classList.toggle('read', v);
+    updateCine(); // film mode is for playing only
     readBtn.textContent = v ? UI.film : UI.read;
     glide = null;
     if (v) {
@@ -9192,8 +9498,9 @@ html.read #read {
     if (!((playing || capturing) && !readMode) || t < FILM) return;
     const tau = t - FILM;
     let k = -1;
+    const lead = CINE.on ? 1.25 : 0.8;
     for (let j = 0; j < deliveries.length; j++) {
-      if (deliveries[j].beatT - 0.8 <= tau) k = j;
+      if (deliveries[j].beatT - lead <= tau) k = j;
       else break;
     }
     if (k < 0) return;
@@ -9209,6 +9516,37 @@ html.read #read {
     SWARM.pIcon = prev ? prev.icon : null;
     SWARM.c = onScreen(cur, sy, SWc);
     SWARM.p = prev ? onScreen(prev, sy, SWp) : null;
+    if (CINE.on && CINE.item === cur) {
+      // film mode: the pen writes along the subtitle and rests as a line of light beneath it
+      const r = cineSub.getBoundingClientRect();
+      Object.assign(SWc, { l: r.left, t: r.top, w: r.width, h: r.height, x: r.left + r.width / 2, y: r.top + r.height / 2, frame: false });
+      SWARM.p = prev ? SWc : null;
+      const sp = CINE.spans;
+      SWARM.tS = cur.typeOff;
+      SWARM.tE = cur.typeOff + (cur.cineEnd || 0.4);
+      if (sp.length) {
+        const first = sp[0].getBoundingClientRect();
+        SWARM.p0x = first.left;
+        SWARM.p0y = first.top + first.height / 2;
+        const idx = clamp(Math.floor(CINE.n), 0, sp.length - 1);
+        const rr = sp[idx].getBoundingClientRect();
+        const fresh = PEN.item !== cur || PEN.k !== CINE.k;
+        PEN.item = cur;
+        PEN.k = CINE.k;
+        PEN.h = rr.height;
+        PEN.x = fresh ? first.left : lerp(PEN.x, rr.right, 0.45);
+        PEN.y = fresh ? first.top + first.height / 2 : lerp(PEN.y, rr.top + rr.height / 2, 0.45);
+        if (fresh) PEN.hist.forEach((h) => ((h.x = PEN.x), (h.y = PEN.y)));
+        PEN.head = (PEN.head + 1) % PEN_N;
+        PEN.hist[PEN.head].x = PEN.x;
+        PEN.hist[PEN.head].y = PEN.y;
+      } else {
+        SWARM.p0x = SWc.x;
+        SWARM.p0y = SWc.y;
+      }
+      SWARM.lastT = tclock;
+      return;
+    }
     if (isMobile) {
       // phones: the picture goes in the space between the passage and the controls
       const bottom = SWc.t + SWc.h;
@@ -9251,6 +9589,81 @@ html.read #read {
     }
   }
 
+  // Film mode, every frame: is the autopilot on a passage (not a title card or the form)? Which passage,
+  // which of its sentences, and how much of it is written?
+  function setCineSentence(it, k) {
+    CINE.k = k;
+    const txt = k >= 0 && it.cine.sents[k] ? it.cine.sents[k] : '';
+    const frag = document.createDocumentFragment();
+    CINE.spans = [];
+    for (const c of Array.from(txt)) {
+      if (c === ' ') {
+        frag.appendChild(document.createTextNode(' '));
+        continue;
+      }
+      const sp = document.createElement('span');
+      sp.className = 'cc';
+      sp.textContent = c;
+      frag.appendChild(sp);
+      CINE.spans.push(sp);
+    }
+    cineSub.textContent = '';
+    cineSub.appendChild(frag);
+    CINE.lo = CINE.hi = 0;
+  }
+  function updateCine() {
+    const tau = t - FILM;
+    const st = (playing || capturing) && !readMode && t >= FILM ? stepAt(tau) : null;
+    const on = !!st && !st.card && st.items.some((x) => x.cine);
+    if (on !== CINE.on) {
+      CINE.on = on;
+      doc.classList.toggle('is-cine', on);
+      SWARM_FRAC = on ? 0.7 : 0.42;
+      ILL_FRAC = on ? 0.88 : 0.62;
+    }
+    let it = null;
+    if (on) for (const x of st.items) if (x.cine && x.beatT - 1.25 <= tau) it = x;
+    if (it !== CINE.item) {
+      CINE.item = it;
+      cineKick.classList.remove('in');
+      cineSub.className = 'cine-sub' + (it && it.cine.title ? ' is-title' : '') + (it && it.cine.bridge ? ' is-bridge' : '');
+      setCineSentence(it || { cine: { sents: [] } }, -1);
+      if (it) {
+        const fit = it.el.classList.contains('for-you') ? '  ·  ' + UI.fit : '';
+        cineKick.textContent = it.cine.kick + fit;
+      }
+    }
+    cineEl.classList.toggle('on', !!it);
+    if (!it) return;
+    const rel = tau - it.beatT - it.typeOff;
+    cineKick.classList.toggle('in', tau - it.beatT > -0.2 && !!cineKick.textContent);
+    // which sentence: the last one whose turn has come
+    let k = -1;
+    it.cineOff.forEach((o, j) => {
+      if (rel >= o) k = j;
+    });
+    if (k !== CINE.k) setCineSentence(it, k);
+    if (k < 0) return;
+    const cps = it.cine.title ? CPS * 1.8 : CPS;
+    const n = (rel - it.cineOff[k]) * cps;
+    CINE.n = n;
+    const sp = CINE.spans, len = sp.length;
+    const lo = clamp(Math.floor(n - FADE), 0, len), hi = clamp(Math.ceil(n), 0, len);
+    for (let j = CINE.lo; j < lo; j++) {
+      sp[j].classList.add('on');
+      sp[j].style.opacity = '';
+      sp[j].style.textShadow = '';
+    }
+    for (let j = lo; j < hi; j++) {
+      const o = clamp((n - j) / FADE);
+      sp[j].style.opacity = o.toFixed(3);
+      sp[j].style.textShadow = `0 0 ${(4 + (1 - o) * 16).toFixed(1)}px rgba(150, 200, 255, ${(0.9 * (1 - o * 0.7)).toFixed(2)})`;
+    }
+    if (hi > CINE.hi) Sound.tick();
+    CINE.lo = lo;
+    CINE.hi = hi;
+  }
+
   // the chapter numbers drift slower than the page (parallax)
   function parallaxNumbers(sy) {
     for (const sec of tsecs) {
@@ -9270,6 +9683,7 @@ html.read #read {
 
     pointerFrame();
     if (sy < H * 0.5) {
+      if (CINE.on) updateCine();
       setMood(frontScene.id);
       // the film (its particles scroll away with it)
       if (fieldMode !== 'film') {
@@ -9289,6 +9703,7 @@ html.read #read {
         tf = { cur: want, prev: forms[formIndex(ft)].name, t0: tclock };
       }
       const wasOn = SWARM.on;
+      updateCine();
       swarmUpdate(sy);
       if (want !== tf.cur) {
         tf = { cur: want, prev: tf.cur, t0: tclock, spark: makeSpark(wasOn && !SWARM.on ? SWARM.last : null) };

@@ -4479,6 +4479,170 @@ html.tour-auto .tour .is-past {
   transition: filter 0.8s ease;
 }
 
+/* ---------- the tour as a film: while the autopilot plays, each passage is a shot with subtitles ---------- */
+
+.cine {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--ctl) + 3.5vh + 26px);
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 var(--gut);
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+html.is-cine .cine.on {
+  opacity: 1;
+}
+
+.cine-kicker {
+  min-height: 1.3em;
+  margin-bottom: 16px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.cine-kicker.in {
+  opacity: 1;
+  transform: none;
+}
+
+.cine-sub {
+  max-width: min(1060px, 100%);
+  min-height: 2.9em;
+  font-family: var(--display);
+  font-size: clamp(24px, 2.3vw, 36px);
+  font-weight: 560;
+  line-height: 1.42;
+  letter-spacing: -0.012em;
+  color: #f5f8ff;
+  text-shadow: 0 2px 22px rgba(2, 4, 10, 0.95), 0 0 3px rgba(2, 4, 10, 0.9);
+  text-wrap: balance;
+}
+
+.cine-sub.is-title {
+  font-size: clamp(32px, 3.7vw, 60px);
+  font-weight: 650;
+  line-height: 1.12;
+  letter-spacing: -0.032em;
+}
+
+.cine-sub.is-bridge {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.cine .cc {
+  opacity: 0;
+}
+
+.cine .cc.on {
+  opacity: 1;
+}
+
+html:lang(zh) .cine-sub {
+  font-weight: 500;
+  line-height: 1.62;
+  letter-spacing: 0.02em;
+}
+
+html:lang(zh) .cine-sub.is-title {
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+html:lang(zh) .cine-sub.is-bridge {
+  font-style: normal;
+  font-weight: 500;
+}
+
+/* letterbox bars slide in while the page plays as a film */
+.lbox {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  height: calc(var(--hdr) + 4.5vh);
+  background: #000;
+  pointer-events: none;
+  transform: scaleY(0);
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.lbox.top {
+  top: 0;
+  transform-origin: top;
+}
+
+.lbox.bot {
+  bottom: 0;
+  height: calc(var(--ctl) + 3.5vh);
+  transform-origin: bottom;
+}
+
+html.is-cine .lbox {
+  transform: scaleY(1);
+}
+
+/* the page itself steps back meanwhile; scrolling or pausing brings it all back */
+html.is-cine .tour [data-stop]:not(.thead):not(.contact-grid):not(.site-end) {
+  opacity: 0 !important;
+  transition: opacity 0.6s ease;
+}
+
+html.is-cine .readbar {
+  opacity: 0 !important;
+}
+
+html.read .cine,
+html.read .lbox,
+html.no-js .cine,
+html.no-js .lbox {
+  display: none;
+}
+
+@media (max-width: 759px) {
+  .cine {
+    bottom: calc(var(--ctl) + 2.5vh + 18px);
+  }
+
+  .cine-kicker {
+    margin-bottom: 12px;
+    font-size: 11px;
+  }
+
+  .cine-sub {
+    min-height: 3.2em;
+    font-size: 21px;
+  }
+
+  .cine-sub.is-title {
+    font-size: 27px;
+  }
+
+  .lbox {
+    height: calc(var(--hdr) + 2.5vh);
+  }
+
+  .lbox.bot {
+    height: calc(var(--ctl) + 2.5vh);
+  }
+}
+
 /* ---------- measuring pass (JS reads anchor positions with every element at rest) ---------- */
 
 html.measuring .scene {
