@@ -4127,8 +4127,9 @@
     SWARM.md = null;
     SWARM.c = onScreen(cur, sy, SWc);
     SWARM.p = prev ? onScreen(prev, sy, SWp) : null;
-    if (CINE.on && CINE.item === cur) {
+    if (CINE.on && cur.cine) {
       // film mode: the pen writes along the subtitle and rests as a line of light beneath it
+      // (also in the moments the swarm is already on its way to a passage whose subtitle is not up yet)
       const r = cineSub.getBoundingClientRect();
       Object.assign(SWc, { l: r.left, t: r.top, w: r.width, h: r.height, x: r.left + r.width / 2, y: r.top + r.height / 2, frame: false });
       SWARM.p = prev ? SWc : null;
@@ -4144,7 +4145,7 @@
         // when the picture is the same as the last sentence's it simply stays
         SWARM.md = ic[kp] === ic[kp - 1] ? 9 : tau - (cur.beatT + cur.typeOff + cur.cineOff[kp] - MORPH_LEAD);
       } else SWARM.pIcon = prev ? lastIcon(prev) : null;
-      const sp = CINE.spans;
+      const sp = CINE.item === cur ? CINE.spans : [];
       SWARM.tS = cur.typeOff;
       SWARM.tE = cur.typeOff + (cur.cineEnd || 0.4);
       if (sp.length) {
