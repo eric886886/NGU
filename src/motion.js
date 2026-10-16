@@ -1343,6 +1343,7 @@
   //   ['f', x0, y0, x1, y1, speed]  a line its particles keep running along (things flowing in)
   //   ['r', cx, cy, len, speed, phase]  a hand turning around a centre
   //   ['p', x, y, pulse?]  a dot
+  // Strokes passed through hot() are drawn amber: the part of a picture that is the problem.
   // Particles flow slowly along the strokes, so an icon is never quite still.
   const ICONS = {};
   function defIcon(name, strokes, spin = 0) {
@@ -1354,13 +1355,17 @@
       else if (s[0] === 'a') len = (Math.abs(s[6] - s[5]) * (s[3] + s[4])) / 2;
       else if (s[0] === 'r') len = s[3];
       else len = 0.3;
-      segs.push({ s, a: total, len });
+      segs.push({ s, a: total, len, hot: !!s.hot });
       total += len;
     }
     ICONS[name] = { segs, total, spin };
   }
   const pulseAt = (t, ph) => 0.35 + 0.65 * Math.pow(Math.max(0, Math.sin(t * 2.2 - ph)), 2);
   const poly = (pts, ph) => pts.slice(1).map((p, k) => ['l', pts[k][0], pts[k][1], p[0], p[1], ph]);
+  const hot = (strokes) => strokes.map((s) => Object.assign(s, { hot: 1 }));
+  const box = (x0, y0, x1, y1, ph) => poly([[x0, y0], [x1, y0], [x1, y1], [x0, y1], [x0, y0]], ph);
+  const cross = (x, y, r, ph) => hot([['l', x - r, y - r, x + r, y + r, ph], ['l', x + r, y - r, x - r, y + r, ph]]);
+  const tick = (x, y, r, ph) => poly([[x - r, y], [x - r * 0.3, y + r * 0.7], [x + r, y - r * 0.8]], ph);
 
   defIcon('chat', [
     ['a', 0, -0.12, 0.92, 0.64, 2.2, 1.78 + TAU],
@@ -1500,9 +1505,9 @@
     ['p', 0, 0.72, 0],
   ]);
   // three people: the one in the middle is the AI layer, the others are roles not hired yet
-  const person = (cx, s, ph) => [
-    ['a', cx, -0.38 * s, 0.22 * s, 0.22 * s, 0, TAU, ph],
-    ['a', cx, 0.5 * s, 0.44 * s, 0.36 * s, Math.PI, TAU, ph],
+  const person = (cx, s, ph, cy = 0) => [
+    ['a', cx, cy - 0.38 * s, 0.22 * s, 0.22 * s, 0, TAU, ph],
+    ['a', cx, cy + 0.5 * s, 0.44 * s, 0.36 * s, Math.PI, TAU, ph],
   ];
   defIcon('team', [...person(-0.62, 0.72, 0.5), ...person(0.62, 0.72, 1.6), ...person(0, 1, undefined)]);
   defIcon('pen', [
@@ -1616,10 +1621,181 @@
     ...[-0.44, -0.18, 0.08].map((y) => ['l', -0.3, y + 0.32, 0.4, y + 0.32]),
   ]);
 
+  // the pictures for single sentences: a chip (technology), a bolt (faster), a missed call, an unclear
+  // message, a lead that drops away, a blank page, a hand-off, scattered notes, a sprout (just starting)…
+  defIcon('chip', [
+    ...box(-0.5, -0.5, 0.5, 0.5),
+    ...box(-0.22, -0.22, 0.22, 0.22, 0),
+    ...[-0.3, 0, 0.3].flatMap((v, k) => [
+      ['l', v, -0.5, v, -0.8, k * 0.5],
+      ['l', v, 0.5, v, 0.8, k * 0.5 + 0.3],
+      ['l', -0.5, v, -0.8, v, k * 0.5 + 0.6],
+      ['l', 0.5, v, 0.8, v, k * 0.5 + 0.9],
+    ]),
+  ]);
+  defIcon('bolt', [...poly([[0.18, -0.95], [-0.48, 0.1], [-0.04, 0.1], [-0.2, 0.95], [0.5, -0.16], [0.06, -0.16], [0.18, -0.95]], 0)]);
+  defIcon('missed', [
+    ...box(-0.72, -0.78, -0.06, 0.82),
+    ['l', -0.5, -0.62, -0.28, -0.62],
+    ['a', -0.39, 0.62, 0.07, 0.07, 0, TAU],
+    ...hot([['a', 0.44, -0.4, 0.34, 0.34, 0, TAU, 0]]),
+    ...cross(0.44, -0.4, 0.15, 0),
+    // the call still ringing out, unanswered
+    ['a', -0.06, 0.3, 0.24, 0.24, -0.9, 0.9, 0.6],
+    ['a', -0.06, 0.3, 0.44, 0.44, -0.8, 0.8, 1.2],
+  ]);
+  const bubble = [
+    ['a', 0, -0.12, 0.92, 0.64, 2.2, 1.78 + TAU],
+    ['l', -0.54, 0.4, -0.62, 0.86],
+    ['l', -0.62, 0.86, -0.19, 0.51],
+  ];
+  defIcon('chatq', [
+    ...bubble,
+    ...hot([
+      ['a', 0, -0.32, 0.2, 0.2, Math.PI, TAU + 0.6, 0],
+      ['l', 0.16, -0.2, 0, -0.02, 0],
+      ['l', 0, -0.02, 0, 0.12, 0],
+      ['p', 0, 0.3, 0],
+    ]),
+  ]);
+  defIcon('chatok', [...bubble, ...tick(0, -0.12, 0.32, 0)]);
+  defIcon('dropoff', [
+    ...person(-0.6, 0.7),
+    ...hot([
+      ['p', -0.08, 0.1, 0.4],
+      ['p', 0.14, 0.12, 0.8],
+      ['p', 0.34, 0.16, 1.2],
+    ]),
+    ...cross(0.7, 0.2, 0.17, 1.6),
+  ]);
+  defIcon('blank', [
+    ...poly([[-0.62, -0.88], [0.3, -0.88], [0.62, -0.56], [0.62, 0.88], [-0.62, 0.88], [-0.62, -0.88]]),
+    ...poly([[0.3, -0.88], [0.3, -0.56], [0.62, -0.56]]),
+    // a cursor blinking on an empty page
+    ...hot([
+      ['l', -0.36, -0.56, -0.36, -0.12, 0],
+      ['l', -0.3, -0.56, -0.3, -0.12, 0],
+    ]),
+  ]);
+  defIcon('calcheck', [
+    ...box(-0.82, -0.62, 0.82, 0.82),
+    ['l', -0.82, -0.3, 0.82, -0.3],
+    ['l', -0.42, -0.82, -0.42, -0.5],
+    ['l', 0.42, -0.82, 0.42, -0.5],
+    ...[0, 1, 2, 3, 4, 5].flatMap((k) => tick(-0.5 + (k % 3) * 0.5, 0.06 + Math.floor(k / 3) * 0.4, 0.12, k * 0.5)),
+  ]);
+  defIcon('handoff', [
+    ...person(-0.6, 0.66, 0),
+    ...person(0.6, 0.66, 1.2),
+    ...box(-0.14, -0.62, 0.14, -0.26, 0.6),
+    ['f', -0.28, 0.2, 0.28, 0.2, 0.6],
+    ['l', 0.16, 0.1, 0.28, 0.2],
+    ['l', 0.16, 0.3, 0.28, 0.2],
+  ]);
+  const note = (cx, cy, a, ph) => {
+    const c = Math.cos(a), s = Math.sin(a);
+    const pt = (x, y) => [cx + x * c - y * s, cy + x * s + y * c];
+    return [
+      ...poly([pt(-0.27, -0.34), pt(0.27, -0.34), pt(0.27, 0.34), pt(-0.27, 0.34), pt(-0.27, -0.34)], ph),
+      ...[-0.14, 0.02, 0.18].map((y) => ['l', ...pt(-0.15, y), ...pt(0.15, y)]),
+    ];
+  };
+  defIcon('scatter', [
+    ...note(-0.62, -0.5, -0.35, 0),
+    ...hot(note(0.5, -0.6, 0.4, 0.8)),
+    ...note(0.66, 0.5, -0.2, 1.6),
+    ...hot(note(-0.4, 0.58, 0.55, 2.4)),
+    ['p', 0, 0, 1.2],
+  ]);
+  defIcon('sprout', [
+    ['l', -0.86, 0.78, 0.86, 0.78],
+    ['a', 0, 1.06, 0.46, 0.3, Math.PI * 1.15, Math.PI * 1.85],
+    ['l', 0, 0.78, 0, -0.3],
+    ['f', 0, 0.78, 0, -0.3, 0.3],
+    ...poly([[0, 0.02], [-0.22, -0.3], [-0.66, -0.4], [-0.44, -0.08], [0, 0.02]], 0),
+    ['l', 0, 0.02, -0.5, -0.3],
+    ...poly([[0, -0.24], [0.2, -0.6], [0.64, -0.74], [0.46, -0.38], [0, -0.24]], 0.8),
+    ['l', 0, -0.24, 0.5, -0.6],
+  ]);
+  defIcon('untangle', [
+    ...hot([
+      ['a', -0.62, -0.1, 0.3, 0.42, 0, TAU, 0],
+      ['a', -0.5, 0.1, 0.36, 0.26, 0.4, TAU + 0.4, 0.6],
+      ['a', -0.7, 0.06, 0.2, 0.3, 1, TAU + 1, 1.2],
+    ]),
+    ['f', -0.16, 0, 0.88, 0, 0.5],
+    ['l', 0.68, -0.18, 0.88, 0],
+    ['l', 0.68, 0.18, 0.88, 0],
+  ]);
+  const starPts = [];
+  for (let k = 0; k <= 10; k++) {
+    const a = -Math.PI / 2 + (k * Math.PI) / 5, r = k % 2 ? 0.38 : 0.92;
+    starPts.push([Math.cos(a) * r, Math.sin(a) * r + 0.08]);
+  }
+  defIcon('star', [...poly(starPts), ['p', 0, 0.08, 0]]);
+  defIcon('heart', [
+    ['a', -0.38, -0.28, 0.4, 0.4, Math.PI * 0.82, TAU],
+    ['a', 0.38, -0.28, 0.4, 0.4, Math.PI, TAU + Math.PI * 0.18],
+    ['l', -0.74, -0.1, 0, 0.84],
+    ['l', 0.74, -0.1, 0, 0.84],
+    ['p', 0, -0.1, 0],
+  ]);
+  defIcon('barrier', [
+    ...box(-0.9, -0.42, 0.9, 0.06),
+    ...hot([-0.62, -0.22, 0.18, 0.58].map((x, k) => ['l', x, 0.06, x + 0.3, -0.42, k * 0.5])),
+    ['l', -0.66, 0.06, -0.66, 0.86],
+    ['l', 0.66, 0.06, 0.66, 0.86],
+    ['l', -0.86, 0.86, -0.46, 0.86],
+    ['l', 0.46, 0.86, 0.86, 0.86],
+  ]);
+  defIcon('human', [...person(-0.2, 1, undefined, 0.06), ...tick(0.6, -0.42, 0.24, 0)]);
+  defIcon('ranked', [
+    ...[0, 1, 2].flatMap((k) => {
+      const y = -0.56 + k * 0.56, len = 1.3 - k * 0.38;
+      return [['a', -0.76, y, 0.1, 0.1, 0, TAU, k * 0.7], ...box(-0.52, y - 0.14, -0.52 + len, y + 0.14, k * 0.7)];
+    }),
+  ]);
+  defIcon('muted', [
+    ...poly([[-0.75, -0.26], [0.2, -0.68], [0.2, 0.68], [-0.75, 0.26], [-0.75, -0.26]]),
+    ['l', -0.55, 0.32, -0.42, 0.78],
+    ...hot([['l', -0.85, -0.85, 0.75, 0.75, 0]]),
+    ['a', 0.2, 0, 0.42, 0.42, -0.75, 0.75],
+  ]);
+
+  // Several pictures at once. 'row:a,b,c' is a sequence (this, then this) with arrows between them;
+  // 'combo:a,b,c,d' is a set (all of these). A '!' in front makes the whole picture amber: a problem.
+  const GROUPS = {};
+  function groupOf(name) {
+    let g = GROUPS[name];
+    if (g) return g;
+    const amber = name[0] === '!';
+    const body = amber ? name.slice(1) : name;
+    const c = body.indexOf(':');
+    if (c < 0) return (GROUPS[name] = { amber, one: body });
+    const row = body.slice(0, c) === 'row';
+    const parts = body.slice(c + 1).split(',');
+    const n = parts.length;
+    let slots;
+    if (row) {
+      const gap = n === 2 ? 1.56 : 1.16, s = n === 2 ? 0.44 : 0.36;
+      slots = parts.map((_, k) => [(k - (n - 1) / 2) * gap, 0, s]);
+    } else if (n === 2) slots = [[-0.62, 0, 0.5], [0.62, 0, 0.5]];
+    else if (n === 3) slots = [[-0.6, -0.46, 0.42], [0.6, -0.46, 0.42], [0, 0.52, 0.42]];
+    else slots = parts.map((_, k) => [(k % 2 ? 0.6 : -0.6), Math.floor(k / 2) ? 0.55 : -0.55, 0.42]);
+    return (GROUPS[name] = { amber, row, parts, slots, n });
+  }
+
   // where particle i sits on an icon at time t (unit coordinates); also how bright, and whether amber
   function iconPoint(name, i, t, out) {
     out.a = 1;
     out.h = 0;
+    if (name.indexOf(':') > 0 || name[0] === '!') {
+      const g = groupOf(name);
+      if (g.one) iconPoint(g.one, i, t, out);
+      else groupPoint(g, i, t, out);
+      if (g.amber) out.h = 1;
+      return out;
+    }
     if (name === 'storm') {
       // a problem: a restless knot, a third of it amber
       const ang = R1[i] * TAU + t * (1.4 + R5[i] * 1.6);
@@ -1674,6 +1850,7 @@
       ph = s[3];
     }
     if (ph != null) out.a = pulseAt(t, ph);
+    if (g.hot) out.h = 1;
     if (ic.spin) {
       const a = t * ic.spin, c = Math.cos(a), sn = Math.sin(a);
       const x1 = x * c - y * sn;
@@ -1682,6 +1859,38 @@
     }
     out.x = x + (R3[i] - 0.5) * 0.04;
     out.y = y + (R4[i] - 0.5) * 0.04;
+    return out;
+  }
+
+  // a particle's place in a group of pictures: each picture gets its share of the particles, in its slot;
+  // in a row a few of them run along arrows from one picture to the next. The pictures of a set glow in turn.
+  function groupPoint(g, i, t, out) {
+    const n = g.n;
+    if (g.row && Math.floor(i / n) % 9 === 0) {
+      const k = Math.floor(R1[i] * (n - 1) * 0.9999);
+      const a = g.slots[k], b = g.slots[k + 1];
+      const x0 = a[0] + a[2] * 1.05 + 0.04, x1 = b[0] - b[2] * 1.05 - 0.04;
+      if (R3[i] < 0.34) {
+        // the arrowhead
+        const u = R2[i], side = R3[i] < 0.17 ? -1 : 1, hl = Math.min(0.12, (x1 - x0) * 0.4);
+        out.x = x1 - hl * u;
+        out.y = side * hl * 0.8 * u;
+        out.a = 0.85;
+      } else {
+        const u = (R2[i] + t * 0.45) % 1;
+        out.x = x0 + (x1 - x0) * u;
+        out.y = (R4[i] - 0.5) * 0.02;
+        out.a = Math.sin(Math.PI * u);
+      }
+      out.h = 0;
+      return out;
+    }
+    const k = i % n;
+    const sl = g.slots[k];
+    iconPoint(g.parts[k], i, t, out);
+    out.x = sl[0] + out.x * sl[2];
+    out.y = sl[1] + out.y * sl[2];
+    if (!g.row) out.a *= 0.7 + 0.3 * Math.pow(Math.max(0, Math.sin(t * 1.3 - k * 1.1)), 2);
     return out;
   }
 
@@ -1792,6 +2001,26 @@
         SP.y = ty;
         SP.a = ta;
         SP.h = th;
+        SP.s = 0.95;
+        return SP;
+      }
+      if (CINE.on && SWARM.md != null) {
+        // the next sentence's picture: the particles stream from the last picture into this one
+        const e = easeInOut(clamp((SWARM.md - DEL[i] * 0.3) / 0.85));
+        if (e >= 1) {
+          SP.x = tx;
+          SP.y = ty;
+          SP.a = ta;
+          SP.h = th;
+          SP.s = 0.95;
+          return SP;
+        }
+        illPoint(i, t, SWARM.pIcon, fx, fy, fa);
+        const sw = Math.sin(Math.PI * e) * SW[i] * 0.55;
+        SP.x = lerp(QP.x, tx, e) + Math.cos(ANG[i] + t * 0.7) * sw;
+        SP.y = lerp(QP.y, ty, e) + Math.sin(ANG[i] + t * 0.7) * sw;
+        SP.a = lerp(QP.a, ta, e) * (1 + 0.35 * Math.sin(Math.PI * e));
+        SP.h = e < 0.5 ? QP.h : th;
         SP.s = 0.95;
         return SP;
       }
@@ -2212,7 +2441,7 @@
           dim = 1;
         } else if (rel && R5[i] < SWARM_FRAC) {
           const e = easeInOut((tclock - SWARM.rel.t0) / 0.9);
-          swarmRest(i, t, rel, SWARM.rel.item.icon, x, y, a);
+          swarmRest(i, t, rel, SWARM.rel.icon, x, y, a);
           x = lerp(QP.x, x, e);
           y = lerp(QP.y, y, e);
           a = lerp(QP.a / Math.max(0.05, fieldDim), a, e);
@@ -2465,6 +2694,8 @@
     '.eyebrow, .btn, .btns, button, label, input, select, textarea, .tag, .tag-row, .spec-n, .layer-n, .pr-n, .ls-n, .sheet-n, .demo-bar, .demo-lock, .demo-preview, .t-bignum, [data-rs], dt, svg, form';
   const CPS = ZH ? 10 : 28; // characters per second
   const FADE = ZH ? 2.5 : 6; // characters fading in at once
+  const PIC_GAP = 0.55; // in film mode, a sentence with a new picture waits this long for it to form
+  const MORPH_LEAD = 0.75; // …which starts this long before the sentence is written
   const typed = [];
   function typeRun(el) {
     const chars = [];
@@ -2556,13 +2787,14 @@
   function norm(str) {
     return str.replace(/\s+/g, ' ').trim();
   }
+  // (the mark '\u0001' is the end of a list item or paragraph inside a passage: a subtitle ends there too)
   function splitSents(str) {
     const out = [];
     let cur = '';
     for (let i = 0; i < str.length; i++) {
       const ch = str[i];
-      cur += ch;
-      const end = ZH ? '。！？；'.includes(ch) : '.!?;'.includes(ch) && (i + 1 >= str.length || str[i + 1] === ' ');
+      if (ch !== '\u0001') cur += ch;
+      const end = ch === '\u0001' || (ZH ? '。！？；'.includes(ch) : '.!?;'.includes(ch) && (i + 1 >= str.length || str[i + 1] === ' '));
       if (end) {
         if (cur.trim()) out.push(cur.trim());
         cur = '';
@@ -2591,15 +2823,28 @@
   }
   function cineText(it) {
     const el = it.el;
-    if (it.kind === 'head') return { kick: '', title: true, sents: [norm(el.textContent)] };
+    if (it.kind === 'head') return { kick: '', title: true, sents: [norm(el.textContent)], icons: iconsFor(it, 1) };
     const bridge = !!el.closest('.bridge');
     const num = el.querySelector('.spec-n, .layer-n, .pr-n, .ls-n, .sheet-n');
     const k = el.querySelector('.demo-head h3, h3, h4, strong, dt');
     const kick = k && k !== el ? (num ? num.textContent.trim() + '  ·  ' : '') + norm(k.textContent) : '';
     const c = el.cloneNode(true);
     c.querySelectorAll('h3, h4, strong, dt, .spec-n, .layer-n, .pr-n, .ls-n, .sheet-n, .demo-preview, .demo-lock, .tag-row, button, .btn, .btns, .fit-tag, .eyebrow').forEach((x) => x.remove());
-    const body = norm(c.textContent);
-    return { kick, title: false, bridge, sents: body ? splitSents(body) : kick ? [] : [norm(el.textContent)] };
+    c.querySelectorAll('li, p, dd').forEach((x) => x.append('\u0001'));
+    const body = norm(c.textContent).replace(/\s*\u0001\s*$/, '');
+    const sents = body ? splitSents(body) : kick ? [] : [norm(el.textContent)];
+    return { kick, title: false, bridge, sents, icons: iconsFor(it, sents.length) };
+  }
+  // the picture for each sentence: data-icons="a|b|c" on the passage (one per sentence, the last one
+  // carrying on), or else the one picture of the passage
+  function iconsFor(it, n) {
+    const list = (it.el.dataset.icons || '').split('|').map((x) => x.trim()).filter(Boolean);
+    if (!list.length) list.push(it.icon);
+    return Array.from({ length: Math.max(1, n) }, (_, k) => list[Math.min(k, list.length - 1)]);
+  }
+  // the picture a passage ends on
+  function lastIcon(it) {
+    return it.cine ? it.cine.icons[it.cine.icons.length - 1] : it.icon;
   }
   const cineEl = document.createElement('div');
   cineEl.className = 'cine';
@@ -2658,7 +2903,7 @@
       const n = ZH ? txt.replace(/\s/g, '').length : txt.split(/\s+/).filter(Boolean).length;
       const rate = ZH ? 10 : 5;
       // typed text starts once the particles have begun their drawing, then lingers a moment to be finished
-      it.typeOff = it.card ? 0.3 : it.icon === 'none' ? 0.45 : 0.75;
+      it.typeOff = it.card ? 0.3 : (it.cine ? it.cine.icons[0] : it.icon) === 'none' ? 0.45 : 0.75;
       it.time =
         it.kind === 'small'
           ? 0.6
@@ -2672,7 +2917,9 @@
       // as film subtitles: each sentence is written out, then held a moment
       if (it.cine) {
         let off = 0;
-        it.cineOff = it.cine.sents.map((x) => {
+        const ic = it.cine.icons;
+        it.cineOff = it.cine.sents.map((x, k) => {
+          if (k && ic[k] !== ic[k - 1]) off += PIC_GAP;
           const o = off;
           off += x.length / (it.cine.title ? CPS * 1.8 : CPS) + (ZH ? 0.85 : 0.6);
           return o;
@@ -3778,7 +4025,7 @@
         cx: (sp.x0 + x1) / 2 + (y1 - y0) * 0.22,
         cy: (y0 + y1) / 2 - (x1 - sp.x0) * 0.22,
         c: sp.item ? onScreen(sp.item, sy, SWs) : null,
-        icon: sp.item ? sp.item.icon : null,
+        icon: sp.item ? lastIcon(sp.item) : null,
       });
     }
     SWARM.relC = SWARM.rel && SWARM.rel.item && tclock - SWARM.rel.t0 < 0.9 ? onScreen(SWARM.rel.item, sy, SWr) : null;
@@ -3876,7 +4123,8 @@
     HERO.k = cur.heroK;
     SWARM.d = tau - cur.beatT;
     SWARM.icon = cur.icon;
-    SWARM.pIcon = prev ? prev.icon : null;
+    SWARM.pIcon = prev ? lastIcon(prev) : null;
+    SWARM.md = null;
     SWARM.c = onScreen(cur, sy, SWc);
     SWARM.p = prev ? onScreen(prev, sy, SWp) : null;
     if (CINE.on && CINE.item === cur) {
@@ -3884,6 +4132,18 @@
       const r = cineSub.getBoundingClientRect();
       Object.assign(SWc, { l: r.left, t: r.top, w: r.width, h: r.height, x: r.left + r.width / 2, y: r.top + r.height / 2, frame: false });
       SWARM.p = prev ? SWc : null;
+      // one picture per sentence: the picture of the sentence that is up (or about to be), flowing
+      // out of the one before
+      const ic = cur.cine.icons;
+      let kp = 0;
+      for (let j = 1; j < ic.length; j++) if (tau >= cur.beatT + cur.typeOff + cur.cineOff[j] - MORPH_LEAD) kp = j;
+      SWARM.icon = ic[kp];
+      SWARM.md = null;
+      if (kp > 0) {
+        SWARM.pIcon = ic[kp - 1];
+        // when the picture is the same as the last sentence's it simply stays
+        SWARM.md = ic[kp] === ic[kp - 1] ? 9 : tau - (cur.beatT + cur.typeOff + cur.cineOff[kp] - MORPH_LEAD);
+      } else SWARM.pIcon = prev ? lastIcon(prev) : null;
       const sp = CINE.spans;
       SWARM.tS = cur.typeOff;
       SWARM.tE = cur.typeOff + (cur.cineEnd || 0.4);
@@ -4072,7 +4332,7 @@
         tf = { cur: want, prev: tf.cur, t0: tclock, spark: makeSpark(wasOn && !SWARM.on ? SWARM.last : null) };
         Sound.whoosh();
       } else if (wasOn && !SWARM.on) {
-        SWARM.rel = { t0: tclock, item: SWARM.last };
+        SWARM.rel = { t0: tclock, item: SWARM.last, icon: SWARM.icon };
       }
       heroField(sec, sy);
     }
@@ -4160,6 +4420,9 @@
     FILM,
     get tour() {
       return tour;
+    },
+    get swarm() {
+      return { on: SWARM.on, icon: SWARM.icon, pIcon: SWARM.pIcon, d: SWARM.d, md: SWARM.md, cine: CINE.on, item: CINE.item && CINE.item.cine.sents[0] };
     },
     scenes,
     setPlaying,
