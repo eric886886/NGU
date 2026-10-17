@@ -73,6 +73,18 @@ html.no-js #world {
   padding-top: max(16px, env(safe-area-inset-top));
 }
 
+/* (over the ordinary page after the film, and over the plain page, it needs a ground of its own) */
+.hdr {
+  transition: background-color 0.4s;
+}
+
+html.past .hdr,
+html.static .hdr {
+  background-color: rgba(2, 5, 13, 0.86);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -1436,6 +1448,14 @@ html.no-js .after {
 
   .t-roi {
     font-size: 19px;
+  }
+
+  .t-step small {
+    display: none;
+  }
+
+  .t-step i {
+    margin-bottom: 2px;
   }
 
   .t-stage {

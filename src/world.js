@@ -132,7 +132,7 @@ async function world() {
   const PAIN_AT = [V(-1.7, 1.75, 0.8), V(1.9, 1.6, 0.8), V(2.3, -1.2, 0.8), V(-0.9, -2.0, 0.9)];
   const LAYER_AT = [V(-3.4, 0, -3.6), V(0.4, 0, -2.6), V(3.8, 0, -1.6), V(7.0, 0, -0.4)];
   const LAYER_AT_P = [V(-1.6, 0, -7.0), V(1.6, 0, -4.2), V(-1.6, 0, -1.6), V(1.6, 0, 1.4)];
-  const CASE_AT = [V(-4.0, 1.75, 0.3), V(-2.6, 1.0, 0.3), V(-4.4, 0.25, 0.3), V(-2.2, -0.5, 0.3)];
+  const CASE_AT = [V(-4.0, 1.9, 0.3), V(-2.6, 1.3, 0.3), V(-4.4, 0.7, 0.3), V(-2.2, 0.1, 0.3)];
   const CASE_AT_P = [V(-1.0, 3.6, 0.3), V(1.0, 2.9, 0.3), V(-1.1, 2.2, 0.3), V(0.9, 1.5, 0.3)];
   const BEAMS = [[-4.2, 1.6], [-1.5, -2.2], [1.0, 2.4], [3.6, -0.8], [-3.0, -3.8], [5.4, 2.8]];
   const waveY = (x, z, t) => Math.sin(x * 0.45 + t * 0.5) * 0.3 + Math.sin(z * 0.6 - t * 0.35) * 0.25 + Math.exp(-(x * x + z * z) * 0.07);
@@ -812,7 +812,7 @@ async function world() {
         () => (P ? at(V(-0.6, 8.5, 12), riverC(0.12).add(V(-0.3, -3.2, 0))) : at(V(-1.2, 6.5, 9.5), riverC(0.12).add(V(-1.8, -0.8, 0)))),
         () => (P ? at(V(-0.9, 1.6, 3.5), riverC(0.17).add(V(-0.4, -0.6, 0))) : at(V(-2.4, 0.6, 2.0), riverC(0.17).add(V(-1.6, 0.7, 0)))),
         () => (P ? at(V(-1.2, 5.6, 9), riverC(0.13).add(V(-0.6, -2.2, 0))) : at(V(-3.4, 3.4, 6.2), riverC(0.15).add(V(-1.2, 0, 0)))),
-        () => (P ? at(riverC(0.24).add(V(1.4, 6.5, 6.0)), riverC(0.35).add(V(0, -1.4, 0))) : at(riverC(0.34).add(V(8.5, 3.2, 1.0)), riverC(0.34).add(V(0, -0.6, 0)))),
+        () => (P ? at(riverC(0.25).add(V(0.8, 8.5, 4.5)), riverC(0.35).add(V(0, -1.6, 0))) : at(riverC(0.34).add(V(8.5, 3.2, 1.0)), riverC(0.34).add(V(0, -0.6, 0)))),
       ],
       // the knot: around it, closer and closer
       storm: [
@@ -852,8 +852,8 @@ async function world() {
       ],
       // the screens: from the middle of their arc, then facing each one
       gallery: [
-        () => (P ? at(GALLERY.clone().add(V(0, 2.0, 9.5)), GALLERY.clone().add(V(0, -0.6, -3.5))) : at(GALLERY.clone().add(V(0.6, 1.4, 7.0)), GALLERY.clone().add(V(-1.4, 0.1, -3.5)))),
-        ...[0, 1, 2, 3, 4, 5].map((k) => () => (P ? O(screenAt(k), -SCREEN_A[k], 0.08, 7.2, 0, 1.1) : O(screenAt(k), -SCREEN_A[k], 0.1, 6.6, 2.1, 0.6))),
+        () => (P ? at(GALLERY.clone().add(V(0, 2.0, 9.5)), GALLERY.clone().add(V(0, -0.6, -3.5))) : at(GALLERY.clone().add(V(0.8, 0.5, 9.0)), GALLERY.clone().add(V(-1.4, -1.6, -3.5)))),
+        ...[0, 1, 2, 3, 4, 5].map((k) => () => (P ? O(screenAt(k), -SCREEN_A[k], 0.08, 6.3, 0, 1.3) : O(screenAt(k), -SCREEN_A[k], 0.1, 7.4, 2.0, 0.75))),
       ],
       // the flow: all of it, then each case from somewhere else, then from further off
       flow: [
@@ -870,7 +870,7 @@ async function world() {
         () => (P ? at(M(-2.5, 3, 8), M(0.3, 0, -1.5)) : at(M(-6.5, 2.2, 7.5), M(0.5, 0.2, -1.5))),
         () => (P ? at(M(3, 7.5, 8.5), M(0, -0.8, -0.5)) : at(M(6.5, 7.5, 8.5), M(-0.5, -0.4, -0.5))),
         () => (P ? at(M(2, 2.5, -9), M(-0.5, 0, 1)) : at(M(4.5, 1.8, -8.5), M(-1.0, 0, 1.0))),
-        () => (P ? at(M(-4.5, 5, -2), M(0.5, -0.2, -0.5)) : at(M(-8.0, 4.5, -2.0), M(0.5, -0.2, -0.5))),
+        () => (P ? at(M(-3.5, 7, 5), M(0.3, -1.0, -0.5)) : at(M(-8.0, 4.5, -2.0), M(0.5, -0.2, -0.5))),
         () => (P ? at(M(0, 13, 9), M(0, -1.8, -1)) : at(M(0.5, 11.5, 8.0), M(0.3, -0.6, -0.6))),
         () => (P ? at(M(-1.2, 7, 8.5), M(-0.7, -0.6, 0.2)) : at(M(-3.0, 6.0, 8.0), M(-2.4, 0.4, 0.0))),
         () => (P ? at(M(0.9, 7, 7.5), M(0.9, -0.6, -1.2)) : at(M(1.5, 6.0, 7.0), M(1.2, 0.2, -1.0))),
@@ -959,7 +959,8 @@ async function world() {
     n0: () => riverC(NODES[0]).add(V(0, 0.95, 0)),
     n1: () => riverC(NODES[1]).add(V(0, 0.95, 0)),
     n2: () => riverC(NODES[2]).add(V(0, 0.95, 0)),
-    ...Object.fromEntries([0, 1, 2, 3, 4].map((k) => ['f' + k, () => riverC(0.28 + k * 0.03).add(V(0, 1.0, 0))])),
+    // (on a phone, looking down the river, they step from side to side so they do not cover one another)
+    ...Object.fromEntries([0, 1, 2, 3, 4].map((k) => ['f' + k, () => (PORT ? riverC(0.27 + k * 0.035).add(V(k % 2 ? 1.1 : -1.1, 1.0, 0)) : riverC(0.28 + k * 0.03).add(V(0, 1.0, 0)))])),
     // the troubles, around the restless mass as each stop sees it
     ...Object.fromEntries([0, 1, 2, 3, 4, 5].map((k) => ['k' + k, (t) => knot(k % 3, 1 + Math.floor(k / 3), t)])),
     ...Object.fromEntries([0, 1, 2, 3].map((k) => ['p' + k, (t) => knot(k, 3, t)])),
