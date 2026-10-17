@@ -498,9 +498,11 @@ async function world() {
   // gathered at the next, far ahead, and a few are always on their way there.
   uniform float uLead;
   float along(float s, out int k){
-    float si = clamp(s + pow(aRnd.x, 2.5) * uLead, 0.0, ${LAST.toFixed(1)});
+    float L = uLead / 1.12;
+    float si = clamp(s + pow(aRnd.x, 5.0) * uLead, 0.0, ${LAST.toFixed(1)});
     k = int(min(floor(si), ${(LAST - 1).toFixed(1)}));
-    return smoothstep(0.0, 1.0, clamp((si - float(k) - 0.62) / 0.38, 0.0, 1.0));
+    // (before the lead begins, each simply sets off a little after the one before, so the change ripples through)
+    return smoothstep(0.0, 1.0, clamp((si - float(k) - mix(aRnd.x * 0.4, 0.62, L)) / mix(0.6, 0.38, L), 0.0, 1.0));
   }`;
   const SIM_VEL = /* glsl */ `
   ${SHAPES}
@@ -596,10 +598,11 @@ async function world() {
     vec3 vel = V4.xyz;
     int k;
     float e = along(clamp(uS, 0.0, ${LAST.toFixed(1)}), k);
-    vec3 col = mix(colAt(k), colAt(k + 1), e);
-    float a = mix(alphaAt(k), alphaAt(k + 1), e);
-    // (the ones already gathered at the next sculpture, far ahead, are a glimpse of it and not the thing itself)
-    a *= mix(1.0, 0.45, step(floor(uS) + 0.5, float(k) + e));
+    // (the ones already on their way to the next sculpture, or gathered there far ahead, are a glimpse of it and not
+    // the thing itself, until the visitor sets off there too: fainter, and in the colour of where they came from)
+    float glimpse = step(floor(uS) + 0.02, float(k) + e) * (1.0 - sin(PI * fract(uS)));
+    vec3 col = mix(colAt(k), colAt(k + 1), mix(e, e * e * e, glimpse));
+    float a = mix(alphaAt(k), alphaAt(k + 1), e) * mix(1.0, 0.28, glimpse);
     // (a little thinner in the middle of a flight, where all of it passes close together)
     a = mix(a, min(a, 0.06), sin(PI * e) * (k == 0 ? 0.0 : 1.0));
     // the fast ones run hotter and whiter
@@ -840,6 +843,7 @@ async function world() {
   const T = [0];
   for (let b = 0; b < NB - 1; b++) T.push(T[b] + (beats[b + 1].ch === beats[b].ch ? 1 : b <= 1 ? 1.2 : 1.4));
   const END = T[NB - 1] + 0.6;
+  const LASTCH = beats[NB - 1].ch;
   const beatAt = (tau) => {
     let b = 0;
     while (b < NB - 1 && T[b + 1] <= tau) b++;
@@ -1150,7 +1154,8 @@ async function world() {
     U.uT.value = t;
     U.uS.value = stage;
     // (from the river on, part of every sculpture is already on its way to the next)
-    U.uLead.value = 1.12 * step(2.0, 2.9, stage);
+    // (but nothing goes on past the last chapter there is)
+    U.uLead.value = 1.12 * step(2.0, 2.9, stage) * (1 - step(LASTCH - 0.6, LASTCH - 0.1, stage));
     SU.uDt.value = Math.min(dt, 1 / 30);
     SU.uOriginPrev.value.copy(origin);
     posVar.material.uniforms.uShift.value.copy(look).sub(origin);
