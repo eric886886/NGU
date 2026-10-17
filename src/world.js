@@ -111,26 +111,12 @@ async function world() {
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const riverC = (u) => V(Math.sin(u * 5 + 0.6) * (0.5 + u * 3), -1.8 + u + Math.sin(u * 5) * 0.4, 1 - u * 72);
   const NODES = [0.06, 0.15, 0.24];
-  // (side by side they stay clear of the words in the bottom left; on a phone they stand two by two)
-  const KNOTS = [V(-3.4, 1.5, -36), V(2.4, 2.0, -38), V(1.8, -1.7, -34), V(5.6, -0.6, -36)];
-  const KNOTS_P = [V(-4.6, 1.5, -36), V(4.0, 1.9, -38), V(-3.3, -1.9, -34), V(4.6, -1.5, -35)];
-  const knotAt = (p) => V(p.x * 0.5, (p.y - 0.2) * 1.3 + 0.2, p.z);
-  const knotCenter = (k) => (PORT ? knotAt(KNOTS_P[k]) : KNOTS[k].clone());
-  const formScale = () => (PORT ? 0.62 : 1);
-  const formCenter = (g) => (PORT ? V(g % 2 ? 0.95 : -0.95, 2.9 - g * 1.45, -58) : V((g - 2) * 3.7, -0.15 - Math.abs(g - 2) * 0.12, -58 + Math.abs(g - 2) * 0.6));
-  const layerC = () => (PORT ? V(0, 0.2, -80) : V(1.6, 0, -80));
-  const layerR = (r) => (1 + r * 0.3) * (PORT ? 0.78 : 1);
-  const layerY = (r) => -1.7 + r * 1.1;
-  const CASE_Z = -102;
-  const caseX = () => (PORT ? [-2.4, 2.4] : [-2.4, 4.8]);
-  const caseRowY = (r) => (PORT ? 2.4 - r * 1.25 : 2.8 - r * 0.95);
-  const MAPC = V(0, -1.8, -124);
-  const MAPN = [V(-4.6, 0, 2.4), V(-1.9, 0, -1.4), V(1.2, 0, 1.9), V(4.3, 0, -2.5), V(-3.4, 0, -3.4), V(3.1, 0, 3.3)];
-  const mapNode = (k) => {
-    const n = MAPN[k].clone();
-    if (PORT) (n.x *= 0.4), (n.z *= 1.1);
-    return n.add(MAPC);
-  };
+  // the centres of scenes 3 to 7 (side by side, and on a phone held upright)
+  const STORM = V(2.0, 0.5, -36), STORM_P = V(0, 1.1, -36);
+  const BLOOM = V(2.0, -0.8, -58), BLOOM_P = V(0, 0.2, -58);
+  const LAYER = V(0.5, -2.2, -80), LAYER_P = V(0, -2.0, -80);
+  const FLOW = V(0.6, 0.9, -102), FLOW_P = V(0, 0.8, -102);
+  const MAPC = V(0, -2.2, -124);
   const FINAL = V(0, 0, -146);
   const glv = (v) => `vec3(${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)})`;
 
@@ -199,224 +185,6 @@ async function world() {
     aP = texture2D(tP, uv);
   }
   const float PI = 3.14159265;
-  vec3 rotY(vec3 v, float a){ float c = cos(a), s = sin(a); return vec3(c * v.x + s * v.z, v.y, -s * v.x + c * v.z); }
-  vec3 rotX(vec3 v, float a){ float c = cos(a), s = sin(a); return vec3(v.x, c * v.y - s * v.z, s * v.y + c * v.z); }
-  vec4 hash4(float n){ return fract(sin(vec4(n * 12.9898, n * 78.233, n * 37.719, n * 4.581)) * 43758.5453); }
-  // a tangle: one closed, knotted line of light (whole-number frequencies close the loop), different for each thread
-  vec3 tangle(vec4 h, float u){
-    float a = u * 6.2831853;
-    vec3 f1 = floor(h.xyz * 3.0) + 1.0, f2 = floor(h.yzw * 4.0) + 2.0, ph = h.wxy * 6.2831853;
-    return sin(a * f1 + ph) * 0.62 + sin(a * f2 + ph.zxy * 1.7) * 0.38;
-  }
-  // 2: the river, five strands like the swooshes of the mark, flowing away
-  vec3 riverC(float u){ return vec3(sin(u * 5.0 + 0.6) * (0.5 + u * 3.0), -1.8 + u + sin(u * 5.0) * 0.4, 1.0 - u * 72.0); }
-  vec3 riverAt(float u, float strand, float j){
-    vec3 c = riverC(u), c2 = riverC(u + 0.002);
-    vec2 tg = normalize(c2.xz - c.xz), nr = vec2(-tg.y, tg.x);
-    float w = 1.5 + u * 2.6;
-    float lat = (strand - 2.0) * 0.3 * w + j * 0.022 * w;
-    float wave = sin(u * 60.0 - uT * 1.2 + strand * 1.3) * 0.07 + sin(u * 23.0 + strand) * 0.12;
-    return c + vec3(nr.x * lat, wave + (strand - 2.0) * 0.08, nr.y * lat);
-  }
-  vec3 river(){
-    if (aInfo.w > 0.5) {
-      float u = aInfo.w < 1.5 ? ${NODES[0]} : aInfo.w < 2.5 ? ${NODES[1]} : ${NODES[2]};
-      vec3 o = aP.xyz - 0.5;
-      return riverC(u) + vec3(0.0, 0.3, 0.0) + normalize(o + 1e-4) * pow(length(o) * 1.7, 2.0) * 0.6;
-    }
-    return riverAt(fract(aP.x + uT * 0.006), floor(aP.y * 5.0), aP.z * 2.0 - 1.0);
-  }
-  // 4: the five assistants, each a shape that does what it does
-  vec3 formCenter(float g){
-    if (uPort > 0.5) return vec3(mod(g, 2.0) < 0.5 ? -0.95 : 0.95, 2.9 - g * 1.45, -58.0);
-    return vec3((g - 2.0) * 3.7, -0.15 - abs(g - 2.0) * 0.12, -58.0 + abs(g - 2.0) * 0.6);
-  }
-  vec3 five(){
-    float g = aInfo.y, t = uT;
-    vec3 p = aP.xyz, q;
-    if (g < 0.5) {
-      // reception: rings, like a voice that is answered
-      float k = floor(p.y * 3.0), a = p.x * 2.0 * PI;
-      q = vec3(cos(a), sin(a), 0.0) * (0.72 + k * 0.27) + (p.z - 0.5) * 0.05;
-      q = rotY(rotX(q, 0.9 + k * 0.6 + sin(t * 0.4) * 0.2), t * (0.35 + k * 0.15) + k * 2.1);
-    } else if (g < 1.5) {
-      // follow-up: a vortex drawing leads in and down
-      float h = fract(p.x - t * 0.07), r = 0.12 + h * 1.15;
-      float a = p.y * 2.0 * PI + t * (0.8 + (1.0 - h) * 2.2) + h * 6.0;
-      q = vec3(cos(a) * r, (h - 0.55) * 2.3, sin(a) * r) + (p.z - 0.5) * 0.05;
-    } else if (g < 2.5) {
-      // marketing: rings going out, like a voice carrying
-      float a = p.x * 2.0 * PI, r = fract(p.z + t * 0.22) * 1.35 + 0.06;
-      q = rotY(rotX(vec3(cos(a) * r, sin(a) * r, (p.y - 0.5) * 0.06), 0.35), -0.4);
-    } else if (g < 3.5) {
-      // research: a dense core, and what it looks into turning around it
-      if (p.z < 0.35) {
-        float th = p.x * 2.0 * PI, ph = acos(1.0 - 2.0 * p.y);
-        q = vec3(sin(ph) * cos(th), cos(ph), sin(ph) * sin(th)) * 0.34 * pow(p.z / 0.35, 0.33);
-      } else {
-        float k = floor(p.y * 3.0), a = p.x * 2.0 * PI + t * (0.5 + k * 0.25);
-        q = rotY(rotX(vec3(cos(a), 0.0, sin(a)) * (0.85 + k * 0.22), 0.5 + k * 0.9), k * 1.7) + (fract(p.z * 7.0) - 0.5) * 0.03;
-      }
-    } else {
-      // workflow: a double helix, step after step
-      float h = p.x;
-      if (p.z < 0.75) {
-        float a = h * 4.0 * PI + t * 0.7 + step(0.5, p.y) * PI;
-        q = vec3(cos(a) * 0.62, (h - 0.5) * 2.5, sin(a) * 0.62);
-      } else {
-        float k = floor(h * 10.0) / 10.0 + 0.05, a = k * 4.0 * PI + t * 0.7, w = (p.y - 0.5) * 2.0;
-        q = vec3(cos(a) * 0.62 * w, (k - 0.5) * 2.5, sin(a) * 0.62 * w);
-      }
-    }
-    return formCenter(g) + q * (uPort > 0.5 ? 0.62 : 1.0);
-  }
-  // 5: the first layer: four rings growing up a stem from a seed
-  vec3 layerC(){ return uPort > 0.5 ? vec3(0.0, 0.2, -80.0) : vec3(1.6, 0.0, -80.0); }
-  float layerR(float r){ return (1.0 + r * 0.3) * (uPort > 0.5 ? 0.78 : 1.0); }
-  vec3 layers(){
-    vec3 c = layerC();
-    if (aP.w < 0.84) {
-      float r = floor(aP.x * 4.0), a = aP.y * 2.0 * PI + uT * (0.25 + r * 0.07);
-      float R = layerR(r) * (1.0 + (aP.z - 0.5) * 0.06);
-      return c + vec3(cos(a) * R, -1.7 + r * 1.1 + sin(a * 3.0 + uT) * 0.03 + (aP.z - 0.5) * 0.03, sin(a) * R);
-    }
-    if (aP.w < 0.95) {
-      float y = mix(-2.3, 2.0, aP.y);
-      return c + vec3(sin(y * 1.3 + uT * 0.6) * 0.06 + (aP.z - 0.5) * 0.05, y, (aP.x - 0.5) * 0.05);
-    }
-    vec3 d = normalize(aP.xyz - 0.5 + 1e-4);
-    return c + vec3(0.0, -2.45, 0.0) + d * 0.3 * pow(fract(aP.w * 20.0), 0.4);
-  }
-  // 6: the cases: a tangle on the left becomes clean lines on the right
-  vec2 caseX(){ return uPort > 0.5 ? vec2(-2.4, 2.4) : vec2(-2.4, 4.8); }
-  float caseRowY(float r){ return uPort > 0.5 ? 2.4 - r * 1.25 : 2.8 - r * 0.95; }
-  vec3 knotAt(vec3 p){ return vec3(p.x * 0.5, (p.y - 0.2) * 1.3 + 0.2, p.z); }
-  // 3: the knot of daily business: four snarls, each of ten tangled threads with light running along them
-  vec3 knotC(float q){
-    vec3 a = q < 0.5 ? ${glv(KNOTS[0])} : q < 1.5 ? ${glv(KNOTS[1])} : q < 2.5 ? ${glv(KNOTS[2])} : ${glv(KNOTS[3])};
-    vec3 b = q < 0.5 ? ${glv(KNOTS_P[0])} : q < 1.5 ? ${glv(KNOTS_P[1])} : q < 2.5 ? ${glv(KNOTS_P[2])} : ${glv(KNOTS_P[3])};
-    return uPort > 0.5 ? b : a;
-  }
-  vec3 knots(){
-    float q = floor(aP.w * 4.0), j = floor(aP.y * 10.0);
-    vec4 h = hash4(q * 10.0 + j + 1.0);
-    float u = fract(aP.x + uT * (0.01 + h.x * 0.02) * (h.y < 0.5 ? 1.0 : -1.0));
-    vec3 p = knotC(q) + tangle(h, u) * vec3(1.6, 1.05, 1.4) + (aP.z - 0.5) * 0.03;
-    return uPort > 0.5 ? knotAt(p) : p;
-  }
-  vec3 cases(){
-    vec2 X = caseX();
-    float cx = (X.x + X.y) * 0.5, gap = uPort > 0.5 ? 0.35 : 0.5;
-    if (aP.w < 0.5) {
-      // before: each row's work is a small snarl of threads
-      float r = floor(aP.x * 4.0), j = floor(aP.y * 3.0);
-      vec4 h = hash4(r * 3.0 + j + 71.0);
-      vec3 t = tangle(h, fract(aP.z + uT * (0.03 + h.x * 0.03)));
-      return vec3(mix(X.x, cx - gap, t.x * 0.5 + 0.5), caseRowY(r) + t.y * 0.24, ${CASE_Z.toFixed(1)} + t.z * 0.2);
-    }
-    float r = floor(aP.x * 4.0);
-    if (aP.w < 0.93) {
-      float s = floor(aP.z * 5.0);
-      return vec3(mix(cx + gap, X.y, fract(aP.y + uT * 0.09)), caseRowY(r) + (s - 2.0) * 0.075, ${CASE_Z.toFixed(1)});
-    }
-    float u = aP.y, side = aP.z < 0.5 ? 1.0 : -1.0;
-    return vec3(cx - 0.08 + u * 0.16, caseRowY(r) + side * (0.16 - u * 0.16), ${CASE_Z.toFixed(1)});
-  }
-  // 7: a map of where AI can help: a grid, six areas, the route of the first steps, and a scan passing over it
-  vec2 mapH(){ return uPort > 0.5 ? vec2(3.4, 6.0) : vec2(6.2, 5.0); }
-  vec3 mapNode(float k){
-    vec3 n = k < 0.5 ? vec3(-4.6, 0.0, 2.4) : k < 1.5 ? vec3(-1.9, 0.0, -1.4) : k < 2.5 ? vec3(1.2, 0.0, 1.9) : k < 3.5 ? vec3(4.3, 0.0, -2.5) : k < 4.5 ? vec3(-3.4, 0.0, -3.4) : vec3(3.1, 0.0, 3.3);
-    if (uPort > 0.5) n.xz *= vec2(0.4, 1.1);
-    return vec3(${MAPC.x.toFixed(1)}, ${MAPC.y.toFixed(1)}, ${MAPC.z.toFixed(1)}) + n;
-  }
-  vec3 map(){
-    vec2 h = mapH();
-    vec3 c = vec3(${MAPC.x.toFixed(1)}, ${MAPC.y.toFixed(1)}, ${MAPC.z.toFixed(1)});
-    if (aP.w < 0.68) {
-      float idx = floor(aP.y * 11.0) / 10.0 - 0.5;
-      vec3 q = aP.z < 0.5 ? vec3((aP.x - 0.5) * 2.0 * h.x, 0.0, idx * 2.0 * h.y) : vec3(idx * 2.0 * h.x, 0.0, (aP.x - 0.5) * 2.0 * h.y);
-      q.y = sin(q.x * 0.5 + uT * 0.5) * 0.04 + sin(q.z * 0.6 - uT * 0.4) * 0.04;
-      return c + q;
-    }
-    if (aP.w < 0.84) {
-      float u = fract(aP.x + uT * 0.05) * 3.0, k = floor(u), f = u - k;
-      return mix(mapNode(k), mapNode(k + 1.0), f) + vec3(0.0, 0.03 + sin(f * PI) * 0.25, 0.0) + (aP.z - 0.5) * 0.04;
-    }
-    if (aP.w < 0.97) {
-      vec3 d = normalize(vec3(aP.y - 0.5, aP.z - 0.5, fract(aP.y * 7.0) - 0.5) + 1e-4);
-      return mapNode(floor(aP.x * 6.0)) + vec3(0.0, 0.18, 0.0) + d * 0.16 * pow(fract(aP.z * 13.0), 0.5);
-    }
-    float a = aP.x * 2.0 * PI;
-    return c + vec3(sin(uT * 0.35) * h.x * 0.6, 0.02, cos(uT * 0.27) * h.y * 0.4) + vec3(cos(a), 0.0, sin(a)) * 1.3;
-  }
-  vec3 mark(float s, vec3 at){ return aLogo * s + at + vec3(sin(uT * 0.9 + aLogo.y * 2.0) * 0.015, 0.0, 0.0); }
-  // 0: the point: a tiny dense heart, with a few motes turning slowly around it
-  vec3 seed(){
-    if (aRnd.w > 0.99) {
-      float a = aP.x * 6.2832 + uT * (0.35 + aP.y * 0.5), r = 0.16 + aP.z * 0.34;
-      return rotX(vec3(cos(a) * r, (aP.y - 0.5) * 0.08, sin(a) * r), 0.45 + aP.w * 0.7);
-    }
-    return normalize(aP.xyz - 0.5 + 1e-4) * 0.05 * aRnd.y * aRnd.z;
-  }
-  vec3 posAt(int k){
-    if (k == 0) return seed();
-    if (k == 1) return mark(1.0, vec3(0.0));
-    if (k == 2) return river();
-    if (k == 3) return knots();
-    if (k == 4) return five();
-    if (k == 5) return layers();
-    if (k == 6) return cases();
-    if (k == 7) return map();
-    return mark(1.25, vec3(${FINAL.x.toFixed(1)}, ${FINAL.y.toFixed(1)}, ${FINAL.z.toFixed(1)}));
-  }
-  vec3 markCol(float i){
-    return i < 0.5 ? vec3(0.78, 0.88, 1.0) : i < 1.5 ? vec3(0.62, 0.82, 1.0) : i < 2.5 ? vec3(0.31, 0.61, 1.0) : i < 3.5 ? vec3(0.38, 0.46, 1.0) : vec3(0.21, 0.78, 0.88);
-  }
-  vec3 colAt(int k){
-    if (k == 0) return aRnd.w > 0.99 ? vec3(0.5, 0.72, 1.0) * 0.5 : vec3(0.95, 0.97, 1.0) * step(aRnd.z, 0.01);
-    if (k == 1 || k == 8) return markCol(aInfo.x) * (1.0 + 1.1 * exp(-pow((aLogo.x + aLogo.y * 0.35 - (mod(uT * 0.9, 14.0) - 7.0)) * 1.4, 2.0)));
-    if (k == 2) {
-      if (aInfo.w > 0.5) return vec3(1.0, 0.98, 0.95);
-      float u = fract(aP.x + uT * 0.006);
-      float streak = 0.5 + 0.5 * sin(u * 90.0 - uT * 2.0 + aP.y * 5.0);
-      return mix(vec3(0.55, 0.78, 1.0), vec3(0.3, 0.9, 0.95), aP.y) * streak * smoothstep(0.0, 0.08, u) * smoothstep(1.0, 0.8, u);
-    }
-    if (k == 3) {
-      // amber threads, with beads of light running along them
-      float bead = pow(0.5 + 0.5 * sin(aP.x * 70.0 - uT * 2.4 + aP.y * 9.0), 10.0);
-      return mix(vec3(1.0, 0.56, 0.22), vec3(1.0, 0.36, 0.3), step(0.7, aRnd.w)) * (0.4 + 0.9 * bead) + vec3(1.0, 0.9, 0.75) * bead * 0.4;
-    }
-    if (k == 4) {
-      float g = aInfo.y;
-      vec3 c = g < 0.5 ? vec3(0.3, 0.9, 0.95) : g < 1.5 ? vec3(1.0, 0.74, 0.32) : g < 2.5 ? vec3(1.0, 0.45, 0.7) : g < 3.5 ? vec3(0.66, 0.55, 1.0) : vec3(0.42, 1.0, 0.72);
-      if (g > 1.5 && g < 2.5) c *= 1.0 - 0.75 * fract(aP.z + uT * 0.22);
-      return c;
-    }
-    if (k == 5) {
-      if (aP.w < 0.84) { float r = floor(aP.x * 4.0); return r < 0.5 ? vec3(0.3, 0.9, 0.95) : r < 1.5 ? vec3(0.42, 1.0, 0.72) : r < 2.5 ? vec3(0.45, 0.7, 1.0) : vec3(0.66, 0.55, 1.0); }
-      return aP.w < 0.95 ? vec3(0.7, 0.85, 1.0) : vec3(1.0);
-    }
-    if (k == 6) {
-      if (aP.w < 0.5) return vec3(1.0, 0.6, 0.24) * (0.45 + 0.9 * pow(0.5 + 0.5 * sin(aP.z * 60.0 - uT * 2.0), 8.0));
-      if (aP.w < 0.93) return mix(vec3(0.35, 0.85, 1.0), vec3(0.45, 0.6, 1.0), aP.z) * (0.6 + 0.4 * sin(aP.y * 40.0 - uT * 3.0));
-      return vec3(1.0);
-    }
-    if (aP.w < 0.68) return vec3(0.22, 0.34, 0.75);
-    if (aP.w < 0.84) return vec3(1.0, 0.76, 0.36);
-    if (aP.w < 0.97) return floor(aP.x * 6.0) < 3.5 ? vec3(1.0, 0.92, 0.75) : vec3(0.75, 0.88, 1.0);
-    return vec3(0.35, 0.95, 1.0);
-  }
-  float alphaAt(int k){
-    return k == 0 ? 0.3 : k == 1 ? 0.12 : k == 2 ? 0.15 : k == 3 ? 0.2 : k == 4 ? 0.13 : k == 5 ? 0.12 : k == 6 ? 0.12 : k == 7 ? 0.12 : 0.13;
-  }
-  // where a particle is on its way from scene k to the next (e: how far along it is; each sets off a little after
-  // the one before, so the change ripples through)
-  float along(float s, out int k){
-    k = int(min(floor(s), ${(LAST - 1).toFixed(1)}));
-    return smoothstep(0.0, 1.0, clamp((s - float(k) - aRnd.x * 0.4) / 0.6, 0.0, 1.0));
-  }`;
-  const SIM_VEL = /* glsl */ `
-  ${SHAPES}
   // simplex noise (Ashima Arts / Stefan Gustavson, MIT) and a divergence-free flow made from it: the air the
   // particles move in, so they swirl like smoke instead of sliding in straight lines
   vec3 mod289(vec3 x){ return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -471,6 +239,172 @@ async function world() {
     return vec3(snoise(p + vec3(e, 0.0, 0.0)) - n, snoise(p + vec3(0.0, e, 0.0)) - n, snoise(p + vec3(0.0, 0.0, e)) - n) / e;
   }
   vec3 curl(vec3 p){ return cross(nGrad(p), nGrad(p + vec3(31.4, -17.2, 9.7))); }
+  vec3 rotY(vec3 v, float a){ float c = cos(a), s = sin(a); return vec3(c * v.x + s * v.z, v.y, -s * v.x + c * v.z); }
+  vec3 rotX(vec3 v, float a){ float c = cos(a), s = sin(a); return vec3(v.x, c * v.y - s * v.z, s * v.y + c * v.z); }
+  // 2: the river, five strands like the swooshes of the mark, flowing away
+  vec3 riverC(float u){ return vec3(sin(u * 5.0 + 0.6) * (0.5 + u * 3.0), -1.8 + u + sin(u * 5.0) * 0.4, 1.0 - u * 72.0); }
+  vec3 riverAt(float u, float strand, float j){
+    vec3 c = riverC(u), c2 = riverC(u + 0.002);
+    vec2 tg = normalize(c2.xz - c.xz), nr = vec2(-tg.y, tg.x);
+    float w = 1.5 + u * 2.6;
+    float lat = (strand - 2.0) * 0.3 * w + j * 0.022 * w;
+    float wave = sin(u * 60.0 - uT * 1.2 + strand * 1.3) * 0.07 + sin(u * 23.0 + strand) * 0.12;
+    return c + vec3(nr.x * lat, wave + (strand - 2.0) * 0.08, nr.y * lat);
+  }
+  vec3 river(){
+    if (aInfo.w > 0.5) {
+      float u = aInfo.w < 1.5 ? ${NODES[0]} : aInfo.w < 2.5 ? ${NODES[1]} : ${NODES[2]};
+      vec3 o = aP.xyz - 0.5;
+      return riverC(u) + vec3(0.0, 0.3, 0.0) + normalize(o + 1e-4) * pow(length(o) * 1.7, 2.0) * 0.6;
+    }
+    return riverAt(fract(aP.x + uT * 0.006), floor(aP.y * 5.0), aP.z * 2.0 - 1.0);
+  }
+  vec3 sphereDir(){ float th = aP.x * 6.2831853, ph = acos(1.0 - 2.0 * aP.y); return vec3(sin(ph) * cos(th), cos(ph), sin(ph) * sin(th)); }
+  // 3: the knot of daily business: one restless mass, its skin torn and never still
+  float stormRidge(vec3 d){ return 1.0 - abs(snoise(d * 3.1 - vec3(uT * 0.18, 0.0, uT * 0.1))); }
+  vec3 storm(){
+    vec3 d = sphereDir();
+    float n = snoise(d * 1.4 + vec3(0.0, uT * 0.12, uT * 0.05));
+    float r = (1.0 + n * 0.3 + pow(stormRidge(d), 4.0) * 0.55) * 1.55;
+    if (aRnd.w > 0.8) r *= pow(aP.z, 0.6);
+    vec3 p = rotY(d * r, uT * 0.08 + n * 0.3);
+    return uPort > 0.5 ? ${glv(STORM_P)} + p * 0.72 : ${glv(STORM)} + p;
+  }
+  // 4: the five assistants: the mass calms and opens into one flower of five petals of light, slowly turning
+  vec3 bloom(){
+    vec3 c = uPort > 0.5 ? ${glv(BLOOM_P)} : ${glv(BLOOM)};
+    float s = uPort > 0.5 ? 0.72 : 1.0;
+    if (aRnd.w > 0.92) return c + (sphereDir() * 0.3 * pow(aP.z, 0.7) + vec3(0.0, 0.2, 0.0)) * s;
+    float g = aInfo.y, u = pow(aP.x, 0.75), v = aP.y * 2.0 - 1.0;
+    if (aP.z < 0.3) v = floor((v * 0.5 + 0.5) * 6.999) / 3.0 - 1.0;
+    float w = sin(PI * pow(u, 0.65)) * 0.95;
+    float open = 0.85 + 0.15 * sin(uT * 0.5 + g * 1.3);
+    vec3 q = vec3(u * 2.6, (u * u * 1.5 + v * v * u * 0.45) * open, v * w);
+    return c + rotY(q, g * 1.2566 + uT * 0.07) * s;
+  }
+  // 5: the first layer: one wide, calm sheet of light, row upon row riding slow waves, rising softly in the middle
+  vec2 layerQ(){
+    vec2 H = uPort > 0.5 ? vec2(5.0, 8.0) : vec2(9.0, 6.0);
+    return vec2((aP.x - 0.5) * 2.0 * H.x, (floor(aP.y * 72.0) / 71.0 - 0.5) * 2.0 * H.y);
+  }
+  float wave(vec2 q){ return sin(q.x * 0.45 + uT * 0.5) * 0.3 + sin(q.y * 0.6 - uT * 0.35) * 0.25 + snoise(vec3(q * 0.17, uT * 0.07)) * 0.55 + exp(-dot(q, q) * 0.07); }
+  vec3 layer(){
+    vec2 q = layerQ();
+    return (uPort > 0.5 ? ${glv(LAYER_P)} : ${glv(LAYER)}) + vec3(q.x, wave(q), q.y);
+  }
+  // 6: the cases: one wide flow, tangled where it comes in, running smooth where it goes on (top to bottom on a phone)
+  vec3 flow(){
+    float u = fract(aP.x + uT * 0.035), j = floor(aP.y * 90.0);
+    float wild = 1.0 - smoothstep(0.28, 0.62, u);
+    float lane = j / 89.0 - 0.5;
+    vec2 S = uPort > 0.5 ? vec2(9.0, 3.2) : vec2(14.0, 3.4);
+    vec3 q = vec3((u - 0.5) * S.x, lane * S.y * mix(1.0, 0.55, smoothstep(0.45, 1.0, u)), lane * 0.8);
+    q.y += wild * snoise(vec3(u * 4.5, j * 0.23, uT * 0.12)) * 1.3;
+    q.z += wild * snoise(vec3(u * 4.5 + 7.3, j * 0.23, uT * 0.12)) * 1.8;
+    return uPort > 0.5 ? ${glv(FLOW_P)} + vec3(q.y, -q.x, q.z) : ${glv(FLOW)} + q;
+  }
+  // 7: the business review: the land of the business seen from above, and six places where light rises from it
+  float land(vec2 q){ return snoise(vec3(q * 0.2, 1.7)) * 1.2 + snoise(vec3(q * 0.55, 4.1)) * 0.3; }
+  vec2 beamAt(float k){
+    vec2 b = k < 0.5 ? vec2(-4.2, 1.6) : k < 1.5 ? vec2(-1.5, -2.2) : k < 2.5 ? vec2(1.0, 2.4) : k < 3.5 ? vec2(3.6, -0.8) : k < 4.5 ? vec2(-3.0, -3.8) : vec2(5.4, 2.8);
+    return uPort > 0.5 ? b * vec2(0.45, 1.1) : b;
+  }
+  vec2 landQ(){
+    vec2 H = uPort > 0.5 ? vec2(4.5, 8.0) : vec2(9.0, 7.0);
+    return vec2((aP.x - 0.5) * 2.0 * H.x, (floor(aP.y * 84.0) / 83.0 - 0.5) * 2.0 * H.y);
+  }
+  vec3 terrain(){
+    vec3 c = ${glv(MAPC)};
+    if (aRnd.w > 0.9) {
+      vec2 b = beamAt(floor(aP.x * 6.0));
+      float h = fract(aP.y + uT * 0.1), r = 0.08 * (1.0 - h);
+      return c + vec3(b.x + (aP.z - 0.5) * r, land(b) + h * h * 4.0, b.y + (aRnd.y - 0.5) * r);
+    }
+    vec2 q = landQ();
+    return c + vec3(q.x, land(q), q.y);
+  }
+  vec3 mark(float s, vec3 at){ return aLogo * s + at + vec3(sin(uT * 0.9 + aLogo.y * 2.0) * 0.015, 0.0, 0.0); }
+  // 0: the point: a tiny dense heart, with a few motes turning slowly around it
+  vec3 seed(){
+    if (aRnd.w > 0.99) {
+      float a = aP.x * 6.2832 + uT * (0.35 + aP.y * 0.5), r = 0.16 + aP.z * 0.34;
+      return rotX(vec3(cos(a) * r, (aP.y - 0.5) * 0.08, sin(a) * r), 0.45 + aP.w * 0.7);
+    }
+    return normalize(aP.xyz - 0.5 + 1e-4) * 0.05 * aRnd.y * aRnd.z;
+  }
+  vec3 posAt(int k){
+    if (k == 0) return seed();
+    if (k == 1) return mark(1.0, vec3(0.0));
+    if (k == 2) return river();
+    if (k == 3) return storm();
+    if (k == 4) return bloom();
+    if (k == 5) return layer();
+    if (k == 6) return flow();
+    if (k == 7) return terrain();
+    return mark(1.25, vec3(${FINAL.x.toFixed(1)}, ${FINAL.y.toFixed(1)}, ${FINAL.z.toFixed(1)}));
+  }
+  vec3 markCol(float i){
+    return i < 0.5 ? vec3(0.78, 0.88, 1.0) : i < 1.5 ? vec3(0.62, 0.82, 1.0) : i < 2.5 ? vec3(0.31, 0.61, 1.0) : i < 3.5 ? vec3(0.38, 0.46, 1.0) : vec3(0.21, 0.78, 0.88);
+  }
+  vec3 colAt(int k){
+    if (k == 0) return aRnd.w > 0.99 ? vec3(0.5, 0.72, 1.0) * 0.5 : vec3(0.95, 0.97, 1.0) * step(aRnd.z, 0.01);
+    if (k == 1 || k == 8) return markCol(aInfo.x) * (1.0 + 1.1 * exp(-pow((aLogo.x + aLogo.y * 0.35 - (mod(uT * 0.9, 14.0) - 7.0)) * 1.4, 2.0)));
+    if (k == 2) {
+      if (aInfo.w > 0.5) return vec3(1.0, 0.98, 0.95);
+      float u = fract(aP.x + uT * 0.006);
+      float streak = 0.5 + 0.5 * sin(u * 90.0 - uT * 2.0 + aP.y * 5.0);
+      return mix(vec3(0.55, 0.78, 1.0), vec3(0.3, 0.9, 0.95), aP.y) * streak * smoothstep(0.0, 0.08, u) * smoothstep(1.0, 0.8, u);
+    }
+    if (k == 3) {
+      // lit from the upper left; the torn edges glow, the inside is darker
+      vec3 d = sphereDir();
+      float lit = 0.3 + 0.7 * max(dot(d, normalize(vec3(-0.5, 0.65, 0.6))), 0.0);
+      vec3 c = mix(vec3(0.55, 0.12, 0.16), vec3(1.0, 0.55, 0.22), lit) * lit + vec3(1.0, 0.8, 0.5) * pow(stormRidge(d), 6.0) * 0.9;
+      return aRnd.w > 0.8 ? c * 0.35 : c;
+    }
+    if (k == 4) {
+      // each petal its own colour, deep at the root and pale at the tip, the veins brighter
+      if (aRnd.w > 0.92) return vec3(1.0, 0.95, 0.88) * 1.2;
+      float g = aInfo.y, u = pow(aP.x, 0.75);
+      vec3 pc = g < 0.5 ? vec3(0.3, 0.85, 1.0) : g < 1.5 ? vec3(0.45, 0.58, 1.0) : g < 2.5 ? vec3(0.72, 0.5, 1.0) : g < 3.5 ? vec3(0.98, 0.52, 0.85) : vec3(0.35, 0.95, 0.8);
+      return mix(pc * 0.3, mix(pc, vec3(1.0), 0.4), smoothstep(0.0, 1.0, u)) * (aP.z < 0.3 ? 1.1 : 0.75);
+    }
+    if (k == 5) {
+      // higher is lighter; a band of light passes over it, and its middle glows
+      vec2 q = layerQ();
+      float band = exp(-pow(q.x - (mod(uT * 2.0, 26.0) - 13.0), 2.0) * 0.4);
+      vec3 c = mix(vec3(0.08, 0.3, 0.6), vec3(0.35, 0.95, 0.95), clamp(wave(q) * 0.55 + 0.35, 0.0, 1.0));
+      return c * (0.55 + band * 0.9) + vec3(1.0) * exp(-dot(q, q) * 0.25) * 0.6;
+    }
+    if (k == 6) {
+      // warm where it is tangled, cool where it runs smooth, with pulses travelling along
+      float u = fract(aP.x + uT * 0.035);
+      vec3 c = mix(vec3(1.0, 0.45, 0.25), vec3(0.35, 0.75, 1.0), smoothstep(0.3, 0.7, u));
+      float pulse = 0.55 + 0.45 * pow(0.5 + 0.5 * sin(u * 50.0 - uT * 3.0 + aP.y * 20.0), 4.0);
+      return c * pulse * smoothstep(0.0, 0.06, u) * smoothstep(1.0, 0.92, u);
+    }
+    if (k == 7) {
+      // valleys deep blue, heights pale; warm light rising at six places, which warms the ground around them
+      if (aRnd.w > 0.9) { float h = fract(aP.y + uT * 0.1); return vec3(1.0, 0.8, 0.45) * (1.0 - h) * smoothstep(0.0, 0.05, h) * 1.4; }
+      vec2 q = landQ();
+      float h = land(q), g = 0.0;
+      for (int i = 0; i < 6; i++) { vec2 b = q - beamAt(float(i)); g += exp(-dot(b, b) * 1.5); }
+      vec3 c = mix(vec3(0.06, 0.16, 0.45), vec3(0.35, 0.75, 1.0), smoothstep(-1.0, 1.2, h));
+      return mix(c, vec3(0.95, 0.97, 1.0), smoothstep(1.0, 1.6, h)) * 0.7 + vec3(1.0, 0.75, 0.4) * g * 0.8;
+    }
+    return markCol(aInfo.x) * (1.0 + 1.1 * exp(-pow((aLogo.x + aLogo.y * 0.35 - (mod(uT * 0.9, 14.0) - 7.0)) * 1.4, 2.0)));
+  }
+  float alphaAt(int k){
+    return k == 0 ? 0.3 : k == 1 ? 0.12 : k == 2 ? 0.15 : k == 3 ? 0.1 : k == 4 ? 0.12 : k == 5 ? 0.16 : k == 6 ? 0.11 : k == 7 ? 0.11 : 0.13;
+  }
+  // where a particle is on its way from scene k to the next (e: how far along it is; each sets off a little after
+  // the one before, so the change ripples through)
+  float along(float s, out int k){
+    k = int(min(floor(s), ${(LAST - 1).toFixed(1)}));
+    return smoothstep(0.0, 1.0, clamp((s - float(k) - aRnd.x * 0.4) / 0.6, 0.0, 1.0));
+  }`;
+  const SIM_VEL = /* glsl */ `
+  ${SHAPES}
   uniform float uS, uDt, uStream, uPtr;
   uniform vec3 uC0, uC1, uOriginPrev, uRayO, uRayD;
   void main(){
@@ -736,22 +670,22 @@ async function world() {
           { pos: V(0, 0, 7.5), look: V(0, 0, 0) },
           { pos: V(0, -1.6, 13.5), look: V(0, -1.6, 0) },
           { pos: V(-1.2, 5.6, 9), look: riverC(0.13).add(V(-0.6, -2.2, 0)) },
-          { pos: V(0, -0.9, -15), look: V(0, -1.6, -36) },
-          { pos: V(0, -0.8, -45.5), look: V(0, -1.3, -58) },
-          { pos: V(0, 0.3, -69), look: V(0, -1.2, -80) },
-          { pos: V(0, 0.4, -92.5), look: V(0, -0.8, CASE_Z) },
-          { pos: V(0, 5.4, -114.5), look: V(0, -2.6, -124.5) },
+          { pos: V(0, 0.4, -24.5), look: V(0, -0.6, -36) },
+          { pos: V(0, 7.4, -52.2), look: V(0, -0.5, -58) },
+          { pos: V(0, 0.8, -70), look: V(0, -1.6, -82) },
+          { pos: V(0, 0.6, -91), look: V(0, 0, -102) },
+          { pos: V(0, 5.5, -114), look: V(0, -2.6, -125) },
           { pos: V(0, -1.6, -132.5), look: V(0, -1.6, -146) },
         ]
       : [
           { pos: V(0, 0, 7.5), look: V(0, 0, 0) },
           { pos: V(-1.9, 0, 9.4), look: V(-1.9, -0.25, 0) },
           { pos: V(-3.4, 3.4, 6.2), look: riverC(0.15).add(V(-1.2, 0, 0)) },
-          { pos: V(0, 0.1, -21.5), look: V(0, -0.6, -36) },
-          { pos: V(0, -0.1, -41), look: V(0, -1.2, -58) },
-          { pos: V(-0.6, 2.8, -69.5), look: V(-0.6, -0.2, -80) },
-          { pos: V(1.2, 0.95, -91.6), look: V(1.2, 0.4, CASE_Z) },
-          { pos: V(-2.5, 4.3, -110.8), look: V(-2.5, -3.1, -125) },
+          { pos: V(0.5, 1.0, -26.5), look: V(0.6, 0.6, -36) },
+          { pos: V(0.3, 8.2, -51.4), look: V(0.0, -0.8, -58) },
+          { pos: V(0, 1.7, -71), look: V(0.6, -1.9, -82) },
+          { pos: V(0.4, 0.8, -93.8), look: V(0.4, 0.6, -102) },
+          { pos: V(-1.0, 4.5, -113.5), look: V(-0.6, -2.2, -125) },
           { pos: V(-2.3, 0.6, -136.6), look: FINAL.clone().add(V(-2.3, 0.35, 0)) },
         ];
   }
@@ -775,20 +709,14 @@ async function world() {
   }
 
   // ---------------------------------------------------------------- the words that follow places, the words of each stage, the rail
-  const sc = formScale;
   const anchors = {
     idea: () => V(0, -0.38, 0),
     brand: () => V(0, -2.75, 0),
     n0: () => riverC(NODES[0]).add(V(0, 0.95, 0)),
     n1: () => riverC(NODES[1]).add(V(0, 0.95, 0)),
     n2: () => riverC(NODES[2]).add(V(0, 0.95, 0)),
-    ...Object.fromEntries([0, 1, 2, 3].map((k) => ['p' + k, () => knotCenter(k).add(V(0, PORT ? 1.55 : 1.35, 0))])),
-    ...Object.fromEntries([0, 1, 2, 3, 4].map((g) => ['a' + g, () => formCenter(g).add(V(0, -1.75 * sc(), 0))])),
-    ...Object.fromEntries([0, 1, 2, 3].map((r) => ['l' + r, () => (PORT ? layerC().add(V(0, layerY(r) + 0.3, layerR(r))) : layerC().add(V(layerR(r) + 0.3, layerY(r), 0)))])),
-    ...Object.fromEntries([0, 1, 2, 3].map((r) => ['c' + r, () => V(PORT ? 0 : (caseX()[0] + (caseX()[0] + caseX()[1]) / 2) / 2, caseRowY(r) + 0.48, CASE_Z)])),
-    ...Object.fromEntries([0, 1, 2, 3, 4, 5].map((k) => ['m' + k, () => mapNode(k).add(V(0, 0.65, 0))])),
   };
-  const STAGE_OF = { idea: 0, brand: 1, n: 2, p: 3, a: 4, l: 5, c: 6, m: 7 };
+  const STAGE_OF = { idea: 0, brand: 1, n: 2 };
   let tags = [];
   const placeTags = () => {
     tags = [...document.querySelectorAll('[data-tag]')].map((el) => {
