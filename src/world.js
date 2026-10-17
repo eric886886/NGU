@@ -15,6 +15,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { GPUComputationRenderer } from 'three/examples/jsm/misc/GPUComputationRenderer.js';
 import { initAsk } from './ask.js';
 
 const doc = document.documentElement;
@@ -50,7 +51,7 @@ async function world() {
   let W = innerWidth, H = innerHeight;
   let PORT = H > W * 1.05; // a phone held upright: things are stacked instead of side by side
   const SMALL = Math.min(W, H) < 600;
-  const N = SMALL ? 64000 : 150000;
+  const SIDE = SMALL ? 256 : 384, N = SIDE * SIDE; // the particles live in a SIDE x SIDE texture
 
   // ---------------------------------------------------------------- renderer
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: CAPTURE });
@@ -62,18 +63,42 @@ async function world() {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(PORT ? 58 : 40, W / H, 0.05, 400);
 
-  // the deep navy of the brand, lighter in the middle; warmer while the knot is on screen
+  // the air: the deep navy of the brand, and slow drifting haze tinted by the scene it is in; the nearer layer
+  // slides more than the farther one as the camera travels, so it has depth
   const bgMat = new THREE.ShaderMaterial({
     depthTest: false,
     depthWrite: false,
-    uniforms: { uAsp: { value: W / H }, uS: { value: 0 } },
+    uniforms: { uAsp: { value: W / H }, uS: { value: 0 }, uT: { value: 0 }, uCam: { value: new THREE.Vector3() } },
     vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.9999, 1.0); }`,
-    fragmentShader: `varying vec2 vUv; uniform float uAsp, uS;
+    fragmentShader: `varying vec2 vUv; uniform float uAsp, uS, uT; uniform vec3 uCam;
+      float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float vnoise(vec2 p){
+        vec2 i = floor(p), f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+      }
+      float fbm(vec2 p){
+        float s = 0.0, a = 0.5;
+        for (int i = 0; i < 4; i++) { s += a * vnoise(p); p = p * 2.03 + vec2(1.7, 9.2); a *= 0.5; }
+        return s;
+      }
+      vec3 tint(float k){
+        return k < 0.5 ? vec3(0.25, 0.45, 1.0) : k < 1.5 ? vec3(0.3, 0.5, 1.0) : k < 2.5 ? vec3(0.2, 0.62, 0.95) : k < 3.5 ? vec3(1.0, 0.42, 0.18)
+          : k < 4.5 ? vec3(0.55, 0.4, 1.0) : k < 5.5 ? vec3(0.18, 0.78, 0.8) : k < 6.5 ? vec3(0.75, 0.5, 0.45) : k < 7.5 ? vec3(0.3, 0.5, 1.0) : vec3(0.35, 0.45, 1.0);
+      }
       void main(){
-        vec2 p = vUv - vec2(0.5, 0.48); p.x *= uAsp;
-        float g = exp(-dot(p, p) * 2.2);
-        float knot = smoothstep(2.4, 3.0, uS) * (1.0 - smoothstep(3.0, 3.7, uS));
-        vec3 c = vec3(0.008, 0.016, 0.04) + vec3(0.025, 0.05, 0.11) * g * min(1.0, 0.25 + uS) + vec3(0.07, 0.04, 0.02) * knot * g;
+        vec2 p = vUv - vec2(0.5, 0.48);
+        p.x *= uAsp;
+        float g = exp(-dot(p, p) * 2.0);
+        float k = floor(uS);
+        vec3 tc = mix(tint(k), tint(k + 1.0), smoothstep(0.0, 1.0, uS - k));
+        vec3 c = vec3(0.006, 0.012, 0.03) + vec3(0.016, 0.03, 0.075) * g;
+        vec2 q1 = p * 1.5 + vec2(uCam.x * 0.04 + uT * 0.012, uCam.y * 0.04 - uCam.z * 0.01);
+        vec2 q2 = p * 2.8 + vec2(uCam.x * 0.1 - uT * 0.01, uCam.y * 0.1 - uCam.z * 0.026);
+        float f1 = fbm(q1);
+        float f2 = fbm(q2 + f1 * 1.6 + vec2(0.0, uT * 0.02));
+        float haze = smoothstep(0.38, 0.95, f1) * 0.55 + smoothstep(0.42, 1.0, f2) * 0.6;
+        c += tc * haze * (0.028 + 0.075 * g) * min(1.0, 0.2 + uS);
         gl_FragColor = vec4(c, 1.0);
       }`,
   });
@@ -86,8 +111,11 @@ async function world() {
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const riverC = (u) => V(Math.sin(u * 5 + 0.6) * (0.5 + u * 3), -1.8 + u + Math.sin(u * 5) * 0.4, 1 - u * 72);
   const NODES = [0.06, 0.15, 0.24];
-  const KNOTS = [V(-4.6, 1.5, -36), V(4.0, 1.9, -38), V(-3.3, -1.9, -34), V(4.6, -1.5, -35)];
-  const knotAt = (p) => (PORT ? V(p.x * 0.5, (p.y - 0.2) * 1.3 + 0.2, p.z) : p.clone());
+  // (side by side they stay clear of the words in the bottom left; on a phone they stand two by two)
+  const KNOTS = [V(-3.4, 1.5, -36), V(2.4, 2.0, -38), V(1.8, -1.7, -34), V(5.6, -0.6, -36)];
+  const KNOTS_P = [V(-4.6, 1.5, -36), V(4.0, 1.9, -38), V(-3.3, -1.9, -34), V(4.6, -1.5, -35)];
+  const knotAt = (p) => V(p.x * 0.5, (p.y - 0.2) * 1.3 + 0.2, p.z);
+  const knotCenter = (k) => (PORT ? knotAt(KNOTS_P[k]) : KNOTS[k].clone());
   const formScale = () => (PORT ? 0.62 : 1);
   const formCenter = (g) => (PORT ? V(g % 2 ? 0.95 : -0.95, 2.9 - g * 1.45, -58) : V((g - 2) * 3.7, -0.15 - Math.abs(g - 2) * 0.12, -58 + Math.abs(g - 2) * 0.6));
   const layerC = () => (PORT ? V(0, 0.2, -80) : V(1.6, 0, -80));
@@ -104,6 +132,7 @@ async function world() {
     return n.add(MAPC);
   };
   const FINAL = V(0, 0, -146);
+  const glv = (v) => `vec3(${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)})`;
 
   let seed = 3;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
@@ -152,64 +181,40 @@ async function world() {
     }
     return { pos, cls };
   }
-  // the knot: tangled threads, gathered around four snarls
-  function knot(n) {
-    const out = new Float32Array(n * 3);
-    let i = 0;
-    while (i < n) {
-      const a = KNOTS[Math.floor(rnd() * 4)], b = rnd() < 0.25 ? KNOTS[Math.floor(rnd() * 4)] : a;
-      const p = a.clone().add(V((rnd() - 0.5) * 3, (rnd() - 0.5) * 2.4, (rnd() - 0.5) * 3));
-      const v = V(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).normalize();
-      const len = 300 + Math.floor(rnd() * 500);
-      for (let s = 0; s < len && i < n; s++, i++) {
-        v.add(V(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).multiplyScalar(0.35));
-        v.add(b.clone().sub(p).multiplyScalar(0.012)).normalize();
-        p.addScaledVector(v, 0.035);
-        out.set([p.x + (rnd() - 0.5) * 0.02, p.y + (rnd() - 0.5) * 0.02, p.z + (rnd() - 0.5) * 0.02], i * 3);
-      }
-    }
-    return out;
-  }
-  // the cases' tangles, one per row, in a box of their own (placed by the shader): x, y in -1..1, and the row
-  function tangles(n) {
-    const out = new Float32Array(n * 3);
-    let i = 0;
-    while (i < n) {
-      const row = Math.floor(rnd() * 4);
-      let x = rnd() * 2 - 1, y = rnd() * 2 - 1, vx = rnd() - 0.5, vy = rnd() - 0.5;
-      const len = 120 + Math.floor(rnd() * 200);
-      for (let s = 0; s < len && i < n; s++, i++) {
-        vx += (rnd() - 0.5) * 0.5 - x * 0.04;
-        vy += (rnd() - 0.5) * 0.5 - y * 0.06;
-        const l = Math.hypot(vx, vy) || 1;
-        x += (vx / l) * 0.03;
-        y += (vy / l) * 0.05;
-        if (Math.abs(x) > 1) (x = Math.sign(x) * 2 - x), (vx = -vx);
-        if (Math.abs(y) > 1) (y = Math.sign(y) * 2 - y), (vy = -vy);
-        out.set([x, y, row], i * 3);
-      }
-    }
-    return out;
-  }
 
   // ---------------------------------------------------------------- the particles
-  const VERT = /* glsl */ `
-  uniform float uT, uS, uFocus, uPR, uSize, uPort, uStream, uDof;
-  uniform vec3 uC0, uC1;
-  attribute vec3 aLogo, aKnot, aCase;
-  attribute vec4 aRnd, aP, aInfo; // info: x the mark's colour, y which assistant, z dust, w a node of the river
-  varying vec3 vCol;
-  varying float vA;
+  // They live on the graphics card: each frame a small simulation moves every one of them (a spring toward where
+  // the story wants it, through slowly swirling air), and then they are drawn like light seen through a lens:
+  // sharp where the camera is focused, soft round discs where it is not, drawn out a little when they move fast.
+  const SHAPES = /* glsl */ `
+  uniform float uT, uPort;
+  uniform sampler2D tA, tB, tC, tR, tP;
+  vec3 aLogo;
+  vec4 aRnd, aP, aInfo; // info: x the mark's colour, y which assistant, w a node of the river
+  void loadAttrs(vec2 uv){
+    vec4 a = texture2D(tA, uv);
+    aLogo = a.xyz;
+    aInfo = vec4(a.w, texture2D(tB, uv).w, 0.0, texture2D(tC, uv).w);
+    aRnd = texture2D(tR, uv);
+    aP = texture2D(tP, uv);
+  }
   const float PI = 3.14159265;
   vec3 rotY(vec3 v, float a){ float c = cos(a), s = sin(a); return vec3(c * v.x + s * v.z, v.y, -s * v.x + c * v.z); }
   vec3 rotX(vec3 v, float a){ float c = cos(a), s = sin(a); return vec3(v.x, c * v.y - s * v.z, s * v.y + c * v.z); }
+  vec4 hash4(float n){ return fract(sin(vec4(n * 12.9898, n * 78.233, n * 37.719, n * 4.581)) * 43758.5453); }
+  // a tangle: one closed, knotted line of light (whole-number frequencies close the loop), different for each thread
+  vec3 tangle(vec4 h, float u){
+    float a = u * 6.2831853;
+    vec3 f1 = floor(h.xyz * 3.0) + 1.0, f2 = floor(h.yzw * 4.0) + 2.0, ph = h.wxy * 6.2831853;
+    return sin(a * f1 + ph) * 0.62 + sin(a * f2 + ph.zxy * 1.7) * 0.38;
+  }
   // 2: the river, five strands like the swooshes of the mark, flowing away
   vec3 riverC(float u){ return vec3(sin(u * 5.0 + 0.6) * (0.5 + u * 3.0), -1.8 + u + sin(u * 5.0) * 0.4, 1.0 - u * 72.0); }
   vec3 riverAt(float u, float strand, float j){
     vec3 c = riverC(u), c2 = riverC(u + 0.002);
     vec2 tg = normalize(c2.xz - c.xz), nr = vec2(-tg.y, tg.x);
     float w = 1.5 + u * 2.6;
-    float lat = (strand - 2.0) * 0.3 * w + j * 0.06 * w;
+    float lat = (strand - 2.0) * 0.3 * w + j * 0.022 * w;
     float wave = sin(u * 60.0 - uT * 1.2 + strand * 1.3) * 0.07 + sin(u * 23.0 + strand) * 0.12;
     return c + vec3(nr.x * lat, wave + (strand - 2.0) * 0.08, nr.y * lat);
   }
@@ -285,13 +290,29 @@ async function world() {
   // 6: the cases: a tangle on the left becomes clean lines on the right
   vec2 caseX(){ return uPort > 0.5 ? vec2(-2.4, 2.4) : vec2(-2.4, 4.8); }
   float caseRowY(float r){ return uPort > 0.5 ? 2.4 - r * 1.25 : 2.8 - r * 0.95; }
+  vec3 knotAt(vec3 p){ return vec3(p.x * 0.5, (p.y - 0.2) * 1.3 + 0.2, p.z); }
+  // 3: the knot of daily business: four snarls, each of ten tangled threads with light running along them
+  vec3 knotC(float q){
+    vec3 a = q < 0.5 ? ${glv(KNOTS[0])} : q < 1.5 ? ${glv(KNOTS[1])} : q < 2.5 ? ${glv(KNOTS[2])} : ${glv(KNOTS[3])};
+    vec3 b = q < 0.5 ? ${glv(KNOTS_P[0])} : q < 1.5 ? ${glv(KNOTS_P[1])} : q < 2.5 ? ${glv(KNOTS_P[2])} : ${glv(KNOTS_P[3])};
+    return uPort > 0.5 ? b : a;
+  }
+  vec3 knots(){
+    float q = floor(aP.w * 4.0), j = floor(aP.y * 10.0);
+    vec4 h = hash4(q * 10.0 + j + 1.0);
+    float u = fract(aP.x + uT * (0.01 + h.x * 0.02) * (h.y < 0.5 ? 1.0 : -1.0));
+    vec3 p = knotC(q) + tangle(h, u) * vec3(1.6, 1.05, 1.4) + (aP.z - 0.5) * 0.03;
+    return uPort > 0.5 ? knotAt(p) : p;
+  }
   vec3 cases(){
     vec2 X = caseX();
     float cx = (X.x + X.y) * 0.5, gap = uPort > 0.5 ? 0.35 : 0.5;
     if (aP.w < 0.5) {
-      float r = aCase.z;
-      return vec3(mix(X.x, cx - gap, aCase.x * 0.5 + 0.5), caseRowY(r) + aCase.y * 0.26, ${CASE_Z.toFixed(1)} + sin(aCase.x * 9.0 + aCase.y * 7.0) * 0.15)
-        + vec3(sin(uT * 1.4 + aRnd.y * 30.0), cos(uT * 1.2 + aRnd.z * 30.0), 0.0) * 0.02;
+      // before: each row's work is a small snarl of threads
+      float r = floor(aP.x * 4.0), j = floor(aP.y * 3.0);
+      vec4 h = hash4(r * 3.0 + j + 71.0);
+      vec3 t = tangle(h, fract(aP.z + uT * (0.03 + h.x * 0.03)));
+      return vec3(mix(X.x, cx - gap, t.x * 0.5 + 0.5), caseRowY(r) + t.y * 0.24, ${CASE_Z.toFixed(1)} + t.z * 0.2);
     }
     float r = floor(aP.x * 4.0);
     if (aP.w < 0.93) {
@@ -328,13 +349,20 @@ async function world() {
     float a = aP.x * 2.0 * PI;
     return c + vec3(sin(uT * 0.35) * h.x * 0.6, 0.02, cos(uT * 0.27) * h.y * 0.4) + vec3(cos(a), 0.0, sin(a)) * 1.3;
   }
-  vec3 knotAt(vec3 p){ return uPort > 0.5 ? vec3(p.x * 0.5, (p.y - 0.2) * 1.3 + 0.2, p.z) : p; }
   vec3 mark(float s, vec3 at){ return aLogo * s + at + vec3(sin(uT * 0.9 + aLogo.y * 2.0) * 0.015, 0.0, 0.0); }
+  // 0: the point: a tiny dense heart, with a few motes turning slowly around it
+  vec3 seed(){
+    if (aRnd.w > 0.99) {
+      float a = aP.x * 6.2832 + uT * (0.35 + aP.y * 0.5), r = 0.16 + aP.z * 0.34;
+      return rotX(vec3(cos(a) * r, (aP.y - 0.5) * 0.08, sin(a) * r), 0.45 + aP.w * 0.7);
+    }
+    return normalize(aP.xyz - 0.5 + 1e-4) * 0.05 * aRnd.y * aRnd.z;
+  }
   vec3 posAt(int k){
-    if (k == 0) return position;
+    if (k == 0) return seed();
     if (k == 1) return mark(1.0, vec3(0.0));
     if (k == 2) return river();
-    if (k == 3) return knotAt(aKnot) + vec3(sin(uT * 1.3 + aRnd.y * 30.0), cos(uT * 1.1 + aRnd.z * 30.0), sin(uT * 0.9 + aRnd.w * 30.0)) * 0.16;
+    if (k == 3) return knots();
     if (k == 4) return five();
     if (k == 5) return layers();
     if (k == 6) return cases();
@@ -342,18 +370,22 @@ async function world() {
     return mark(1.25, vec3(${FINAL.x.toFixed(1)}, ${FINAL.y.toFixed(1)}, ${FINAL.z.toFixed(1)}));
   }
   vec3 markCol(float i){
-    return i < 0.5 ? vec3(0.92, 0.96, 1.0) : i < 1.5 ? vec3(0.62, 0.82, 1.0) : i < 2.5 ? vec3(0.31, 0.61, 1.0) : i < 3.5 ? vec3(0.38, 0.46, 1.0) : vec3(0.21, 0.78, 0.88);
+    return i < 0.5 ? vec3(0.78, 0.88, 1.0) : i < 1.5 ? vec3(0.62, 0.82, 1.0) : i < 2.5 ? vec3(0.31, 0.61, 1.0) : i < 3.5 ? vec3(0.38, 0.46, 1.0) : vec3(0.21, 0.78, 0.88);
   }
   vec3 colAt(int k){
-    if (k == 0) return vec3(0.95, 0.97, 1.0) * step(aRnd.z, 0.007);
-    if (k == 1 || k == 8) return markCol(aInfo.x);
+    if (k == 0) return aRnd.w > 0.99 ? vec3(0.5, 0.72, 1.0) * 0.5 : vec3(0.95, 0.97, 1.0) * step(aRnd.z, 0.01);
+    if (k == 1 || k == 8) return markCol(aInfo.x) * (1.0 + 1.1 * exp(-pow((aLogo.x + aLogo.y * 0.35 - (mod(uT * 0.9, 14.0) - 7.0)) * 1.4, 2.0)));
     if (k == 2) {
       if (aInfo.w > 0.5) return vec3(1.0, 0.98, 0.95);
       float u = fract(aP.x + uT * 0.006);
       float streak = 0.5 + 0.5 * sin(u * 90.0 - uT * 2.0 + aP.y * 5.0);
-      return mix(vec3(0.55, 0.78, 1.0), vec3(0.3, 0.9, 0.95), aP.y) * streak * smoothstep(0.0, 0.03, u) * smoothstep(1.0, 0.8, u);
+      return mix(vec3(0.55, 0.78, 1.0), vec3(0.3, 0.9, 0.95), aP.y) * streak * smoothstep(0.0, 0.08, u) * smoothstep(1.0, 0.8, u);
     }
-    if (k == 3) return aRnd.y < 0.6 ? vec3(1.0, 0.64, 0.24) : vec3(0.32, 0.42, 0.78);
+    if (k == 3) {
+      // amber threads, with beads of light running along them
+      float bead = pow(0.5 + 0.5 * sin(aP.x * 70.0 - uT * 2.4 + aP.y * 9.0), 10.0);
+      return mix(vec3(1.0, 0.56, 0.22), vec3(1.0, 0.36, 0.3), step(0.7, aRnd.w)) * (0.4 + 0.9 * bead) + vec3(1.0, 0.9, 0.75) * bead * 0.4;
+    }
     if (k == 4) {
       float g = aInfo.y;
       vec3 c = g < 0.5 ? vec3(0.3, 0.9, 0.95) : g < 1.5 ? vec3(1.0, 0.74, 0.32) : g < 2.5 ? vec3(1.0, 0.45, 0.7) : g < 3.5 ? vec3(0.66, 0.55, 1.0) : vec3(0.42, 1.0, 0.72);
@@ -365,7 +397,7 @@ async function world() {
       return aP.w < 0.95 ? vec3(0.7, 0.85, 1.0) : vec3(1.0);
     }
     if (k == 6) {
-      if (aP.w < 0.5) return vec3(1.0, 0.64, 0.24);
+      if (aP.w < 0.5) return vec3(1.0, 0.6, 0.24) * (0.45 + 0.9 * pow(0.5 + 0.5 * sin(aP.z * 60.0 - uT * 2.0), 8.0));
       if (aP.w < 0.93) return mix(vec3(0.35, 0.85, 1.0), vec3(0.45, 0.6, 1.0), aP.z) * (0.6 + 0.4 * sin(aP.y * 40.0 - uT * 3.0));
       return vec3(1.0);
     }
@@ -375,99 +407,306 @@ async function world() {
     return vec3(0.35, 0.95, 1.0);
   }
   float alphaAt(int k){
-    return k == 0 ? 0.3 : k == 1 ? 0.085 : k == 2 ? 0.15 : k == 3 ? 0.22 : k == 4 ? 0.13 : k == 5 ? 0.12 : k == 6 ? 0.12 : k == 7 ? 0.12 : 0.1;
+    return k == 0 ? 0.3 : k == 1 ? 0.12 : k == 2 ? 0.15 : k == 3 ? 0.2 : k == 4 ? 0.13 : k == 5 ? 0.12 : k == 6 ? 0.12 : k == 7 ? 0.12 : 0.13;
   }
+  // where a particle is on its way from scene k to the next (e: how far along it is; each sets off a little after
+  // the one before, so the change ripples through)
+  float along(float s, out int k){
+    k = int(min(floor(s), ${(LAST - 1).toFixed(1)}));
+    return smoothstep(0.0, 1.0, clamp((s - float(k) - aRnd.x * 0.4) / 0.6, 0.0, 1.0));
+  }`;
+  const SIM_VEL = /* glsl */ `
+  ${SHAPES}
+  // simplex noise (Ashima Arts / Stefan Gustavson, MIT) and a divergence-free flow made from it: the air the
+  // particles move in, so they swirl like smoke instead of sliding in straight lines
+  vec3 mod289(vec3 x){ return x - floor(x * (1.0 / 289.0)) * 289.0; }
+  vec4 mod289(vec4 x){ return x - floor(x * (1.0 / 289.0)) * 289.0; }
+  vec4 permute(vec4 x){ return mod289(((x * 34.0) + 10.0) * x); }
+  vec4 taylorInvSqrt(vec4 r){ return 1.79284291400159 - 0.85373472095314 * r; }
+  float snoise(vec3 v){
+    const vec2 C = vec2(1.0 / 6.0, 1.0 / 3.0);
+    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+    vec3 i = floor(v + dot(v, C.yyy));
+    vec3 x0 = v - i + dot(i, C.xxx);
+    vec3 g = step(x0.yzx, x0.xyz);
+    vec3 l = 1.0 - g;
+    vec3 i1 = min(g.xyz, l.zxy);
+    vec3 i2 = max(g.xyz, l.zxy);
+    vec3 x1 = x0 - i1 + C.xxx;
+    vec3 x2 = x0 - i2 + C.yyy;
+    vec3 x3 = x0 - D.yyy;
+    i = mod289(i);
+    vec4 p = permute(permute(permute(i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+    float n_ = 0.142857142857;
+    vec3 ns = n_ * D.wyz - D.xzx;
+    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+    vec4 x_ = floor(j * ns.z);
+    vec4 y_ = floor(j - 7.0 * x_);
+    vec4 x = x_ * ns.x + ns.yyyy;
+    vec4 y = y_ * ns.x + ns.yyyy;
+    vec4 h = 1.0 - abs(x) - abs(y);
+    vec4 b0 = vec4(x.xy, y.xy);
+    vec4 b1 = vec4(x.zw, y.zw);
+    vec4 s0 = floor(b0) * 2.0 + 1.0;
+    vec4 s1 = floor(b1) * 2.0 + 1.0;
+    vec4 sh = -step(h, vec4(0.0));
+    vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+    vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+    vec3 p0 = vec3(a0.xy, h.x);
+    vec3 p1 = vec3(a0.zw, h.y);
+    vec3 p2 = vec3(a1.xy, h.z);
+    vec3 p3 = vec3(a1.zw, h.w);
+    vec4 norm = taylorInvSqrt(vec4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3)));
+    p0 *= norm.x;
+    p1 *= norm.y;
+    p2 *= norm.z;
+    p3 *= norm.w;
+    vec4 m = max(0.5 - vec4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0);
+    m = m * m;
+    return 105.0 * dot(m * m, vec4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3)));
+  }
+  vec3 nGrad(vec3 p){
+    const float e = 0.08;
+    float n = snoise(p);
+    return vec3(snoise(p + vec3(e, 0.0, 0.0)) - n, snoise(p + vec3(0.0, e, 0.0)) - n, snoise(p + vec3(0.0, 0.0, e)) - n) / e;
+  }
+  vec3 curl(vec3 p){ return cross(nGrad(p), nGrad(p + vec3(31.4, -17.2, 9.7))); }
+  uniform float uS, uDt, uStream, uPtr;
+  uniform vec3 uC0, uC1, uOriginPrev, uRayO, uRayD;
   void main(){
-    vec3 p, col;
-    float a;
-    if (aInfo.z > 0.5) {
-      // the dust of the world, faint until the point opens
-      p = position + vec3(sin(uT * 0.2 + aRnd.x * 30.0), cos(uT * 0.17 + aRnd.y * 30.0), sin(uT * 0.13 + aRnd.z * 30.0)) * 0.6;
-      col = mix(vec3(0.42, 0.58, 1.0), vec3(0.85, 0.9, 1.0), aRnd.w) * (0.3 + aRnd.y * 0.45);
-      a = 0.45 * mix(0.1, 1.0, clamp(uS, 0.0, 1.0));
-    } else {
-      float s = clamp(uS, 0.0, ${LAST.toFixed(1)});
-      int k = int(min(floor(s), ${(LAST - 1).toFixed(1)}));
-      float f = s - float(k);
-      // each particle sets off a little after the one before: the change ripples through
-      float e = smoothstep(0.0, 1.0, clamp((f - aRnd.x * 0.4) / 0.6, 0.0, 1.0));
-      vec3 p0 = posAt(k), p1 = posAt(k + 1);
-      float d = min(length(p1 - p0), 8.0);
-      vec3 sw = vec3(sin(aRnd.y * 31.0 + uT * 0.9), cos(aRnd.z * 27.0 + uT * 0.7), sin(aRnd.w * 23.0 + uT * 0.8));
-      vec3 burst = mix(p0, p1, e) + sw * sin(PI * e) * (0.3 + d * 0.18);
-      // on the way, the whole shape pours into one twisting river of light that runs from this place to the next
-      // (along the camera's own way), and opens out again into the next shape
-      vec3 dir = normalize(uC1 - uC0 + vec3(0.0, 0.0, 1e-3));
-      vec3 side = normalize(cross(dir, vec3(0.0, 1.0, 0.0)) + vec3(1e-3, 0.0, 0.0));
-      vec3 up = cross(side, dir);
-      float ang = aRnd.y * 6.2832 + e * 4.0 + uT * 0.5;
-      vec3 off = (side * cos(ang) + up * sin(ang)) * (0.25 + pow(aRnd.z, 1.3) * 1.6);
-      vec3 c1 = mix(uC0, uC1, 0.3) + off, c2 = mix(uC0, uC1, 0.7) + off;
-      float ie = 1.0 - e;
-      vec3 river = ie * ie * ie * p0 + 3.0 * ie * ie * e * c1 + 3.0 * ie * e * e * c2 + e * e * e * p1;
-      p = mix(burst, river, uStream);
-      col = mix(colAt(k), colAt(k + 1), e);
-      // (a little thinner in the middle, where all of it passes close together)
-      a = mix(alphaAt(k), alphaAt(k + 1), e);
-      a = mix(a, min(a, 0.11) * 0.8, sin(PI * e) * uStream);
-    }
-    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    loadAttrs(uv);
+    vec3 p = texture2D(tPos, uv).xyz + uOriginPrev;
+    vec3 v = texture2D(tVel, uv).xyz;
+    int k;
+    float e = along(clamp(uS, 0.0, ${LAST.toFixed(1)}), k);
+    vec3 p0 = posAt(k), p1 = posAt(k + 1);
+    // the point opens into the mark in a burst; after that, each shape pours as one twisting river of light along
+    // the camera's own way to the next place, and opens out again into the next shape
+    float d = min(length(p1 - p0), 8.0);
+    vec3 sw = vec3(sin(aRnd.y * 31.0 + uT * 0.9), cos(aRnd.z * 27.0 + uT * 0.7), sin(aRnd.w * 23.0 + uT * 0.8));
+    vec3 burst = mix(p0, p1, e) + sw * sin(PI * e) * (0.3 + d * 0.18);
+    vec3 dir = normalize(uC1 - uC0 + vec3(0.0, 0.0, 1e-3));
+    vec3 side = normalize(cross(dir, vec3(0.0, 1.0, 0.0)) + vec3(1e-3, 0.0, 0.0));
+    vec3 up = cross(side, dir);
+    float ang = aRnd.y * 6.2832 + e * 4.0 + uT * 0.5;
+    vec3 off = (side * cos(ang) + up * sin(ang)) * (0.1 + pow(aRnd.z, 2.2) * 1.5);
+    vec3 c1 = mix(uC0, uC1, 0.3) + off, c2 = mix(uC0, uC1, 0.7) + off;
+    float ie = 1.0 - e;
+    vec3 river = ie * ie * ie * p0 + 3.0 * ie * ie * e * c1 + 3.0 * ie * e * e * c2 + e * e * e * p1;
+    vec3 target = mix(burst, river, uStream);
+    // a spring pulls it there, firm at rest and loose in flight, and the air it moves through swirls it about
+    float fly = sin(PI * e);
+    float K = mix(30.0, 6.0, fly);
+    vec3 acc = (target - p) * K - v * (1.7 * sqrt(K));
+    acc += curl(p * mix(0.45, 0.2, fly) + vec3(0.0, uT * 0.05, uT * 0.03)) * 0.18 * mix(0.25, 2.2, fly) * (0.5 + aRnd.y);
+    // the pointer parts them as it passes
+    vec3 w = p - uRayO;
+    vec3 perp = w - uRayD * dot(w, uRayD);
+    float dd = length(perp);
+    acc += perp / max(dd, 1e-3) * uPtr * 40.0 * exp(-dd * dd * 2.5);
+    // (one that has to cross a long way while its shape holds still, like a drop of the river going back to its
+    // source, does it unseen)
+    float away = smoothstep(0.7, 1.8, length(target - p)) * (1.0 - smoothstep(0.0, 0.08, fly));
+    gl_FragColor = vec4(v + acc * uDt, away);
+  }`;
+  const SIM_POS = /* glsl */ `
+  uniform float uDt;
+  uniform vec3 uShift;
+  void main(){
+    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    vec4 p = texture2D(tPos, uv);
+    // (positions are kept relative to where the camera looks, so they stay precise anywhere along the way)
+    p.xyz += texture2D(tVel, uv).xyz * uDt - uShift;
+    gl_FragColor = p;
+  }`;
+  // how one particle is drawn: its size is its own (at least a pixel or so) and the blur of the lens
+  const SPRITE = /* glsl */ `
+  uniform float uFocus, uAperture, uPR, uSize, uVW, uVH, uMaxPt;
+  varying vec3 vCol;
+  varying float vA, vSize, vStretch;
+  varying vec2 vDir;
+  void sprite(vec3 wp, vec3 vel, vec3 col, float a, float grain){
+    vec4 mv = modelViewMatrix * vec4(wp, 1.0);
     gl_Position = projectionMatrix * mv;
     float dep = -mv.z;
-    float blur = abs(dep - uFocus) / max(uFocus, 1.0) * uDof;
-    gl_PointSize = uPR * uSize * (1.0 + aRnd.w * 1.3) * (1.0 + blur * 7.0) * (12.0 / max(dep, 0.3));
-    vA = a / (1.0 + blur * blur * 22.0) * smoothstep(0.2, 1.5, dep) * (0.72 + 0.28 * sin(uT * 2.1 + aRnd.z * 60.0));
+    float ppu = projectionMatrix[1][1] * uVH * 0.5 / max(dep, 0.05);
+    float core = max(1.4 * uPR * uSize * grain, 0.009 * ppu * grain);
+    float coc = uAperture * uPR * abs(dep - uFocus) / max(dep, 0.05);
+    float size = min(sqrt(core * core + coc * coc), uMaxPt * uPR);
+    // (a blurred one spreads the same light over a larger disc)
+    a *= max(pow(min(1.0, core * 1.5 / size), 1.7), 0.003);
+    vec4 c2 = projectionMatrix * modelViewMatrix * vec4(wp + vel * 0.07, 1.0);
+    vec2 sv = (c2.xy / c2.w - gl_Position.xy / gl_Position.w) * 0.5 * vec2(uVW, uVH);
+    float L = c2.w > 0.05 ? length(sv) : 0.0;
+    vStretch = clamp(1.0 + L / size, 1.0, 9.0);
+    vDir = L > 1e-3 ? sv / L : vec2(1.0, 0.0);
+    vSize = size;
     vCol = col;
+    vA = a / mix(1.0, vStretch, 0.7) * smoothstep(1.0, 3.5, dep);
+    gl_PointSize = dep < 0.4 || vA * max(col.r, max(col.g, col.b)) < 0.0004 ? 0.0 : size * vStretch;
+  }`;
+  const VERT = /* glsl */ `
+  ${SHAPES}
+  ${SPRITE}
+  uniform sampler2D tPos, tVel;
+  uniform vec3 uOrigin;
+  uniform float uS, uStream;
+  attribute vec2 ref;
+  void main(){
+    loadAttrs(ref);
+    vec3 wp = texture2D(tPos, ref).xyz + uOrigin;
+    vec4 V4 = texture2D(tVel, ref);
+    vec3 vel = V4.xyz;
+    int k;
+    float e = along(clamp(uS, 0.0, ${LAST.toFixed(1)}), k);
+    vec3 col = mix(colAt(k), colAt(k + 1), e);
+    float a = mix(alphaAt(k), alphaAt(k + 1), e);
+    // (a little thinner in the middle of a flight, where all of it passes close together)
+    a = mix(a, min(a, 0.06), sin(PI * e) * uStream);
+    // the fast ones run hotter and whiter
+    float sp = clamp(length(vel) * 0.035, 0.0, 0.5);
+    col = mix(col, vec3(max(col.r, max(col.g, col.b))), sp) * (1.0 + sp);
+    // a few catch the light now and then
+    float glint = step(0.93, aRnd.z) * pow(0.5 + 0.5 * sin(uT * (0.7 + aRnd.w * 2.4) + aRnd.x * 60.0), 14.0) * 3.5;
+    sprite(wp, vel, col, a * (0.55 + aRnd.y * 0.9) * (1.0 + glint) * (1.0 - V4.w), 0.75 + aRnd.w * 0.7);
+  }`;
+  // the stars: the space the journey passes through, near ones big and soft, far ones fine
+  const STAR_VERT = /* glsl */ `
+  ${SPRITE}
+  uniform float uT, uS;
+  attribute vec4 aR;
+  void main(){
+    vec3 wp = position + vec3(sin(uT * 0.2 + aR.x * 30.0), cos(uT * 0.17 + aR.y * 30.0), sin(uT * 0.13 + aR.z * 30.0)) * 0.35;
+    vec3 col = mix(vec3(0.42, 0.58, 1.0), vec3(0.88, 0.92, 1.0), aR.w) * (0.3 + aR.y * 0.55);
+    float tw = 0.75 + 0.25 * sin(uT * (0.6 + aR.z) + aR.x * 40.0);
+    // (and they fade into the distance)
+    float far = 1.0 - smoothstep(16.0, 45.0, -(modelViewMatrix * vec4(wp, 1.0)).z);
+    sprite(wp, vec3(0.0), col, 0.55 * tw * far * mix(0.08, 1.0, clamp(uS, 0.0, 1.0)), 0.7 + aR.z * 0.9);
   }`;
   const FRAG = /* glsl */ `
   varying vec3 vCol;
-  varying float vA;
+  varying float vA, vSize, vStretch;
+  varying vec2 vDir;
   void main(){
-    float d = length(gl_PointCoord - 0.5);
-    float a = smoothstep(0.5, 0.0, d);
-    gl_FragColor = vec4(vCol * a * a * vA * 1.9, 1.0);
+    vec2 c = gl_PointCoord - 0.5;
+    c.y = -c.y;
+    vec2 q = vec2(dot(c, vDir), dot(c, vec2(-vDir.y, vDir.x)));
+    float h = 0.5 / vStretch;
+    float d = length(vec2(max(abs(q.x) - (0.5 - h), 0.0), q.y)) / h;
+    if (d > 1.0) discard;
+    // in focus a soft point of light; out of focus a clean disc with a slightly brighter rim, as a lens draws it
+    float big = smoothstep(3.0, 10.0, vSize);
+    float edge = clamp(1.6 / vSize, 0.04, 1.0);
+    float disc = (1.0 - smoothstep(1.0 - edge, 1.0, d)) * (0.7 + 0.45 * smoothstep(0.45, 0.95, d));
+    float pt = exp(-d * d * 4.5);
+    gl_FragColor = vec4(vCol * vA * mix(pt, disc, big) * 2.6, 1.0);
   }`;
-  const U = { uT: { value: 0 }, uS: { value: 0 }, uFocus: { value: 7.5 }, uPR: { value: PR }, uSize: { value: SMALL ? 1.25 : 1 }, uPort: { value: PORT ? 1 : 0 }, uStream: { value: 0 }, uDof: { value: 1 }, uC0: { value: new THREE.Vector3() }, uC1: { value: new THREE.Vector3() } };
-  const NA = Math.round(N * 0.12), NM = N - NA;
-  const markPts = await sampleMark(NM);
-  const knotPts = knot(NM), casePts = tangles(NM);
-  const pos = new Float32Array(N * 3), logo = new Float32Array(N * 3), kn = new Float32Array(N * 3), cs = new Float32Array(N * 3);
-  const rr = new Float32Array(N * 4), pp = new Float32Array(N * 4), info = new Float32Array(N * 4);
+
+  // what each particle is: data textures the simulation and the drawing both read
+  const markPts = await sampleMark(N);
+
+  const tex = (data) => {
+    const t = new THREE.DataTexture(data, SIDE, SIDE, THREE.RGBAFormat, THREE.FloatType);
+    t.magFilter = t.minFilter = THREE.NearestFilter;
+    t.needsUpdate = true;
+    return t;
+  };
+  const A = new Float32Array(N * 4), B = new Float32Array(N * 4), C = new Float32Array(N * 4), R = new Float32Array(N * 4), PP = new Float32Array(N * 4);
   for (let i = 0; i < N; i++) {
-    rr.set([rnd(), rnd(), rnd(), rnd()], i * 4);
-    pp.set([rnd(), rnd(), rnd(), rnd()], i * 4);
-    if (i >= NM) {
-      // dust: the whole length of the world
-      pos.set([(rnd() - 0.5) * 36, (rnd() - 0.5) * 22, 14 - rnd() * 176], i * 3);
-      info[i * 4 + 2] = 1;
-      continue;
-    }
-    // the point: a tiny, dense heart
-    const th = rnd() * Math.PI * 2, ph = Math.acos(2 * rnd() - 1), r = 0.05 * rnd() * rnd();
-    pos.set([r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph), r * Math.sin(ph) * Math.sin(th)], i * 3);
-    logo.set(markPts.pos.subarray(i * 3, i * 3 + 3), i * 3);
-    kn.set(knotPts.subarray(i * 3, i * 3 + 3), i * 3);
-    cs.set(casePts.subarray(i * 3, i * 3 + 3), i * 3);
-    info[i * 4] = markPts.cls[i];
-    info[i * 4 + 1] = Math.floor(rnd() * 5);
-    if (rnd() < 0.045) info[i * 4 + 3] = 1 + Math.floor(rnd() * 3);
+    A.set([markPts.pos[i * 3], markPts.pos[i * 3 + 1], markPts.pos[i * 3 + 2], markPts.cls[i]], i * 4);
+    B[i * 4 + 3] = Math.floor(rnd() * 5);
+    C[i * 4 + 3] = rnd() < 0.045 ? 1 + Math.floor(rnd() * 3) : 0;
+    R.set([rnd(), rnd(), rnd(), rnd()], i * 4);
+    PP.set([rnd(), rnd(), rnd(), rnd()], i * 4);
   }
+  const U = {
+    uT: { value: 0 },
+    uPort: { value: PORT ? 1 : 0 },
+    tA: { value: tex(A) },
+    tB: { value: tex(B) },
+    tC: { value: tex(C) },
+    tR: { value: tex(R) },
+    tP: { value: tex(PP) },
+    uS: { value: 0 },
+    uStream: { value: 0 },
+    tPos: { value: null },
+    tVel: { value: null },
+    uOrigin: { value: new THREE.Vector3() },
+    uFocus: { value: 7.5 },
+    uAperture: { value: SMALL ? 7 : 10 },
+    uPR: { value: PR },
+    uSize: { value: 1 },
+    uVW: { value: W * PR },
+    uVH: { value: H * PR },
+    uMaxPt: { value: SMALL ? 26 : 40 },
+  };
+
+  // the simulation
+  const gpu = new GPUComputationRenderer(SIDE, SIDE, renderer);
+  if (!renderer.extensions.has('EXT_color_buffer_float')) gpu.setDataType(THREE.HalfFloatType);
+  const pos0 = gpu.createTexture();
+  for (let i = 0; i < N; i++) {
+    // everything starts in the point
+    const th = rnd() * Math.PI * 2, ph = Math.acos(2 * rnd() - 1), r = 0.05 * rnd() * rnd();
+    pos0.image.data.set([r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph), r * Math.sin(ph) * Math.sin(th), 1], i * 4);
+  }
+  const posVar = gpu.addVariable('tPos', SIM_POS, pos0);
+  const velVar = gpu.addVariable('tVel', SIM_VEL, gpu.createTexture());
+  gpu.setVariableDependencies(posVar, [posVar, velVar]);
+  gpu.setVariableDependencies(velVar, [posVar, velVar]);
+  const SU = {
+    uDt: { value: 0 },
+    uPtr: { value: 0 },
+    uC0: { value: new THREE.Vector3() },
+    uC1: { value: new THREE.Vector3() },
+    uOriginPrev: { value: new THREE.Vector3() },
+    uRayO: { value: new THREE.Vector3() },
+    uRayD: { value: new THREE.Vector3(0, 0, -1) },
+  };
+  Object.assign(velVar.material.uniforms, { uT: U.uT, uPort: U.uPort, tA: U.tA, tB: U.tB, tC: U.tC, tR: U.tR, tP: U.tP, uS: U.uS, uStream: U.uStream }, SU);
+  Object.assign(posVar.material.uniforms, { uDt: SU.uDt, uShift: { value: new THREE.Vector3() } });
+  const gpuErr = gpu.init();
+  if (gpuErr) throw new Error(gpuErr);
+
+  // the drawing
+  const refs = new Float32Array(N * 2);
+  for (let i = 0; i < N; i++) refs.set([((i % SIDE) + 0.5) / SIDE, (Math.floor(i / SIDE) + 0.5) / SIDE], i * 2);
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  geo.setAttribute('aLogo', new THREE.BufferAttribute(logo, 3));
-  geo.setAttribute('aKnot', new THREE.BufferAttribute(kn, 3));
-  geo.setAttribute('aCase', new THREE.BufferAttribute(cs, 3));
-  geo.setAttribute('aRnd', new THREE.BufferAttribute(rr, 4));
-  geo.setAttribute('aP', new THREE.BufferAttribute(pp, 4));
-  geo.setAttribute('aInfo', new THREE.BufferAttribute(info, 4));
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 3), 3));
+  geo.setAttribute('ref', new THREE.BufferAttribute(refs, 2));
   const points = new THREE.Points(geo, new THREE.ShaderMaterial({ uniforms: U, vertexShader: VERT, fragmentShader: FRAG, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending }));
   points.frustumCulled = false;
   scene.add(points);
+  const NS = SMALL ? 4500 : 9000;
+  const starPos = new Float32Array(NS * 3), starR = new Float32Array(NS * 4);
+  for (let i = 0; i < NS; i++) {
+    // (around the way rather than on it, so the far ones do not gather in the middle of the view)
+    const a = rnd() * Math.PI * 2, r = 3 + Math.pow(rnd(), 0.7) * 22;
+    starPos.set([Math.cos(a) * r * 1.4, Math.sin(a) * r * 0.8, 14 - rnd() * 180], i * 3);
+    starR.set([rnd(), rnd(), rnd(), rnd()], i * 4);
+  }
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  starGeo.setAttribute('aR', new THREE.BufferAttribute(starR, 4));
+  const stars = new THREE.Points(starGeo, new THREE.ShaderMaterial({
+    uniforms: { uT: U.uT, uS: U.uS, uFocus: U.uFocus, uAperture: U.uAperture, uPR: U.uPR, uSize: U.uSize, uVW: U.uVW, uVH: U.uVH, uMaxPt: U.uMaxPt },
+    vertexShader: STAR_VERT,
+    fragmentShader: FRAG,
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+    blending: THREE.AdditiveBlending,
+  }));
+  stars.frustumCulled = false;
+  scene.add(stars);
 
-  // ---------------------------------------------------------------- glow, then a little grain and a vignette
+  // ---------------------------------------------------------------- the glow, then the look of film: a soft
+  // shoulder for the bright parts, a touch of colour fringing toward the edges, cool shadows and warm light, a
+  // vignette and grain
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 0.7, 0.5, 0.18);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(W, H), 0.6, 0.6, 0.2);
   composer.addPass(bloom);
   const grain = new ShaderPass({
     uniforms: { tDiffuse: { value: null }, uT: { value: 0 } },
@@ -475,10 +714,15 @@ async function world() {
     fragmentShader: `uniform sampler2D tDiffuse; uniform float uT; varying vec2 vUv;
       float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
       void main(){
-        vec3 c = texture2D(tDiffuse, vUv).rgb;
         vec2 d = vUv - 0.5;
-        c *= 1.0 - dot(d, d) * 0.7;
-        c += (h(vUv * 1000.0 + fract(uT) * 77.0) - 0.5) * 0.025;
+        float r2 = dot(d, d);
+        vec2 o = d * r2 * 0.02;
+        vec3 c = vec3(texture2D(tDiffuse, vUv + o).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - o).b);
+        c = 1.0 - exp(-c * 1.15);
+        float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+        c += vec3(-0.004, 0.002, 0.012) * (1.0 - l) + vec3(0.02, 0.008, -0.014) * l;
+        c *= 1.0 - r2 * 0.9;
+        c += (h(vUv * 1000.0 + fract(uT) * 77.0) - 0.5) * 0.026;
         gl_FragColor = vec4(c, 1.0);
       }`,
   });
@@ -503,7 +747,7 @@ async function world() {
           { pos: V(0, 0, 7.5), look: V(0, 0, 0) },
           { pos: V(-1.9, 0, 9.4), look: V(-1.9, -0.25, 0) },
           { pos: V(-3.4, 3.4, 6.2), look: riverC(0.15).add(V(-1.2, 0, 0)) },
-          { pos: V(0, 0.7, -21.5), look: V(0, 0.2, -36) },
+          { pos: V(0, 0.1, -21.5), look: V(0, -0.6, -36) },
           { pos: V(0, -0.1, -41), look: V(0, -1.2, -58) },
           { pos: V(-0.6, 2.8, -69.5), look: V(-0.6, -0.2, -80) },
           { pos: V(1.2, 0.95, -91.6), look: V(1.2, 0.4, CASE_Z) },
@@ -538,7 +782,7 @@ async function world() {
     n0: () => riverC(NODES[0]).add(V(0, 0.95, 0)),
     n1: () => riverC(NODES[1]).add(V(0, 0.95, 0)),
     n2: () => riverC(NODES[2]).add(V(0, 0.95, 0)),
-    ...Object.fromEntries([0, 1, 2, 3].map((k) => ['p' + k, () => knotAt(KNOTS[k]).add(V(0, 1.4, 0))])),
+    ...Object.fromEntries([0, 1, 2, 3].map((k) => ['p' + k, () => knotCenter(k).add(V(0, PORT ? 1.55 : 1.35, 0))])),
     ...Object.fromEntries([0, 1, 2, 3, 4].map((g) => ['a' + g, () => formCenter(g).add(V(0, -1.75 * sc(), 0))])),
     ...Object.fromEntries([0, 1, 2, 3].map((r) => ['l' + r, () => (PORT ? layerC().add(V(0, layerY(r) + 0.3, layerR(r))) : layerC().add(V(layerR(r) + 0.3, layerY(r), 0)))])),
     ...Object.fromEntries([0, 1, 2, 3].map((r) => ['c' + r, () => V(PORT ? 0 : (caseX()[0] + (caseX()[0] + caseX()[1]) / 2) / 2, caseRowY(r) + 0.48, CASE_Z)])),
@@ -599,6 +843,11 @@ async function world() {
           if (!p) continue;
           if (!p.trim()) {
             frag.append(p);
+            continue;
+          }
+          // (a mark of punctuation stays with the letter before it, so it never starts a line by itself)
+          if (ZH && out.length && /[，。、？！：；…）」』]/.test(p)) {
+            out[out.length - 1].textContent += p;
             continue;
           }
           const u = document.createElement('span');
@@ -700,7 +949,7 @@ async function world() {
     return k >= LAST ? Math.min(1, f / HOLD) : f < HOLD ? f / HOLD : 1 - (f - HOLD) / (1 - HOLD);
   };
   let tauT = 0, tau = -1, stage = 0, t = 0;
-  const PTR = { x: 0, y: 0, tx: 0, ty: 0 };
+  const PTR = { x: 0, y: 0, tx: 0, ty: 0, at: -9 };
   const jump = (k) => {
     const to = k <= 0 ? 0 : Math.min(END, k + 0.12);
     if (CAPTURE) tauT = to;
@@ -713,6 +962,7 @@ async function world() {
     addEventListener('pointermove', (e) => {
       PTR.tx = (e.clientX / W - 0.5) * 2;
       PTR.ty = (e.clientY / H - 0.5) * 2;
+      PTR.at = t;
     }, { passive: true });
   addEventListener('resize', () => {
     W = innerWidth;
@@ -725,6 +975,8 @@ async function world() {
     camera.updateProjectionMatrix();
     bgMat.uniforms.uAsp.value = W / H;
     U.uPort.value = PORT ? 1 : 0;
+    U.uVW.value = W * PR;
+    U.uVH.value = H * PR;
     keys();
     placeTags();
     // (a phone's address bar coming and going changes the height a little; that keeps the story where it is)
@@ -739,6 +991,7 @@ async function world() {
 
   // ---------------------------------------------------------------- each frame; on a slow device it draws less
   let slow = 0, frames = 0, level = 0;
+  const origin = new THREE.Vector3(), ray = new THREE.Raycaster();
   function frame(dt) {
     t += dt;
     if (!CAPTURE) tauT = Math.min(END, Math.max(0, scrollY / SEG));
@@ -755,13 +1008,30 @@ async function world() {
     // (the river of light between two places runs from where the camera looked to where it will look; the point
     // opening into the mark at the start is a burst instead)
     const k = Math.min(Math.floor(stage), LAST - 1);
-    U.uC0.value.copy(KEYS[k].look);
-    U.uC1.value.copy(KEYS[k + 1].look);
+    SU.uC0.value.copy(KEYS[k].look);
+    SU.uC1.value.copy(KEYS[k + 1].look);
     U.uStream.value = k === 0 ? 0 : 1;
+    // the simulation keeps its positions around where the camera looks
+    SU.uDt.value = Math.min(dt, 1 / 30);
+    SU.uOriginPrev.value.copy(origin);
+    posVar.material.uniforms.uShift.value.copy(look).sub(origin);
+    origin.copy(look);
+    if (!CAPTURE) {
+      ray.setFromCamera(new THREE.Vector2(PTR.tx, -PTR.ty), camera);
+      SU.uRayO.value.copy(ray.ray.origin);
+      SU.uRayD.value.copy(ray.ray.direction);
+      SU.uPtr.value = Math.max(0, 1 - (t - PTR.at) / 1.2);
+    }
+    gpu.compute();
+    U.tPos.value = gpu.getCurrentRenderTarget(posVar).texture;
+    U.tVel.value = gpu.getCurrentRenderTarget(velVar).texture;
+    U.uOrigin.value.copy(origin);
     // (in flight the picture is everywhere at once, so less of it is out of focus)
-    U.uDof.value = 1 - 0.65 * Math.sin(Math.PI * Math.min(1, stage - k));
     U.uFocus.value = pos.distanceTo(look);
+    U.uAperture.value = (SMALL ? 7 : 10) * (1 - 0.85 * Math.sin(Math.PI * Math.min(1, stage - k)));
     bgMat.uniforms.uS.value = stage;
+    bgMat.uniforms.uT.value = t;
+    bgMat.uniforms.uCam.value.copy(pos);
     grain.uniforms.uT.value = t;
     labels(stage);
     story(tau);
@@ -778,6 +1048,8 @@ async function world() {
             renderer.setPixelRatio(PR);
             composer.setPixelRatio && composer.setPixelRatio(PR);
             U.uPR.value = PR;
+            U.uVW.value = W * PR;
+            U.uVH.value = H * PR;
           } else geo.setDrawRange(0, Math.round(N * 0.55));
         }
         frames = slow = 0;
