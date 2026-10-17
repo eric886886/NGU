@@ -1188,6 +1188,24 @@ html.no-js .st-only {
   display: block;
 }
 
+/* ---------- the journey (the sample of the home page as one way through the world): the words stand in the
+   world itself, placed there by flow.js with CSS 3D ---------- */
+
+.words {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+html.flow .st,
+html.flow .st.st-hero {
+  left: 0;
+  top: 0;
+  right: auto;
+  bottom: auto;
+}
+
 /* ---------- after the film: the form and the footer, as an ordinary page ---------- */
 
 .after {
@@ -1540,6 +1558,13 @@ html.no-js .after {
     margin-bottom: 7px;
     font-size: 12.5px;
     line-height: 1.55;
+  }
+
+  html.flow .st,
+  html.flow .st.st-hero {
+    width: calc(100vw - 2 * var(--gut));
+    padding: 0;
+    background: none;
   }
 
   .after {

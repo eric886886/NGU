@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-Hans" class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <title>样片 · 纳想 NaxaStudio | 把想法变成行动</title>
+    <meta name="description" content="纳想 NaxaStudio 帮助创业者和小企业老板，把想法变成行动，用实用 AI 系统提升客户回复、销售跟进、营销和日常运营效率。" />
+    <meta name="theme-color" content="#02050d" />
+    <link rel="canonical" href="https://naxastudio.com/zh" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="纳想 NaxaStudio" />
+    <meta property="og:title" content="纳想 NaxaStudio | 把想法变成行动" />
+    <meta property="og:description" content="纳想 NaxaStudio 帮助创业者和小企业老板，把想法变成行动，用实用 AI 系统提升客户回复、销售跟进、营销和日常运营效率。" />
+    <meta property="og:url" content="https://naxastudio.com/zh" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:image" content="https://naxastudio.com/assets/brand/og-zh.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="纳想 NaxaStudio：把想法变成行动。没有你想象的那么难。" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://naxastudio.com/assets/brand/og-zh.jpg" />
+    <link rel="alternate" hreflang="en" href="https://naxastudio.com/" />
+    <link rel="alternate" hreflang="zh-Hans" href="https://naxastudio.com/zh" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{FAVICON}}" />
+    <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet" />
+    <script>document.documentElement.classList.remove('no-js');</script>
+    <link rel="stylesheet" href="world.css" />
+  </head>
+  <body>
+    <canvas id="world" aria-hidden="true" data-mark="{{MARK}}"></canvas>
+
+    <header class="hdr">
+      <a class="brand" href="zh.html" aria-label="纳想 NaxaStudio 首页">
+        <img src="{{LOGO_ICON}}" alt="" width="34" height="34" />
+        <span>纳想 NaxaStudio<small>AI 执行力系统</small></span>
+      </a>
+      <div class="tools">
+        <a href="index.html" class="lang" lang="en">EN</a>
+        <button class="ask-btn" id="askBtn" type="button" aria-expanded="false" aria-controls="ask"><i aria-hidden="true"></i><span class="long">问点什么…</span><span class="short">问问题</span></button>
+        <a href="zh-business-review.html" class="cta">预约业务诊断</a>
+      </div>
+    </header>
+
+    <!-- ask: the answers are in #ask-data below, in the site's own words -->
+    <div class="ask" id="ask" role="dialog" aria-label="提问">
+      <button class="ask-close" type="button" aria-label="关闭">×</button>
+      <p class="ask-intro">有什么想知道的，直接问。答案都来自这个网站上的内容。</p>
+      <form class="ask-form" autocomplete="off">
+        <input class="ask-input" name="q" type="text" placeholder="问点什么，比如：能帮我更快回复客户吗？" enterkeyhint="send" />
+        <button class="ask-send" type="submit">问</button>
+      </form>
+      <div class="ask-log" aria-live="polite"></div>
+      <div class="ask-sugg">
+        <p class="ask-h">可以这样问</p>
+        <button type="button" class="ask-q">你们能帮我做什么？</button>
+        <button type="button" class="ask-q">我团队很小，该从哪里开始？</button>
+        <button type="button" class="ask-q">能帮我更快回复客户吗？</button>
+        <button type="button" class="ask-q">能先看看 Demo 吗？</button>
+        <button type="button" class="ask-q">收费怎么算？</button>
+      </div>
+      <nav class="ask-links" aria-label="或者直接跳到">
+        <p class="ask-h">或者直接跳到</p>
+        <a href="zh-about.html">关于</a><a href="zh-ai-agents.html">AI 方案</a><a href="zh-base-ai-agent.html">起步方案</a><a href="zh-demo-center.html">Demo</a><a href="zh-cases.html">案例</a><a href="zh-business-review.html">AI 业务诊断</a><a href="zh-contact.html">联系</a>
+      </nav>
+    </div>
+
+    <!-- the words of the film, one section for each stop of the camera (data-ch: the chapter, its sculpture); a plain page without WebGL -->
+    <main class="story">
+      <section class="st" data-ch="seed">
+        <p class="st-k st-only">纳想 NaxaStudio · AI 执行力系统</p>
+      </section>
+      <section class="st" data-ch="brand"></section>
+
+      <!-- 01 · 首屏 -->
+      <section class="st st-hero" data-ch="hero">
+        <p class="st-k st-eyebrow"><span>01</span>纳想 NaxaStudio | AI 执行力工作室</p>
+        <h1>把想法变成行动。<b class="serif">没有你想象的<br />那么难。</b></h1>
+        <p class="st-statement"><strong>乘着 AI 的风，</strong><em>一个人也能拥有一支团队的执行力。</em></p>
+      </section>
+      <section class="st" data-ch="hero">
+        <p class="st-lead">纳想帮助创业者和小企业老板，把想法变成能运行的 AI 系统：AI 接待、销售跟进、营销内容、业务 dashboard 和日常流程自动化，让你用更少人力处理更多客户和机会。</p>
+        <div class="st-links"><a class="st-btn" href="zh-business-review.html">预约 AI 业务诊断</a><a href="zh-demo-center.html">查看 Demo →</a></div>
+      </section>
+
+      <!-- 02 · 关于 (zh-about.html)，03 · 实时执行流程 -->
+      <section class="st" data-ch="river">
+        <p class="st-k">02 &nbsp;/&nbsp; 关于纳想 NaxaStudio</p>
+        <h2>陪你借助 AI 的力量，<b>把想法变成现实。</b></h2>
+        <p>NaxaStudio 是为那些有想法、但需要一个方法把想法变成现实的人而存在的。</p>
+      </section>
+      <section class="st" data-ch="river">
+        <h2 class="st-say">不管你是想发展一门生意，做一个有意义的项目，实现一个梦想，还是想走过业务里的某个卡点，最难的往往不是想法本身，<b>而是踏出第一步，并持续推进下去。</b></h2>
+      </section>
+      <section class="st" data-ch="river">
+        <h2>帮助人从想法走向行动，<b>从行动走向真实的结果。</b></h2>
+        <p>我们相信 AI 不应该是冰冷、遥远、复杂的技术。它应该成为一个实用的解决方案，帮助人从想法走向行动，从行动走向真实的结果。</p>
+        <p>NaxaStudio 存在的原因，就是陪你借助 AI 的力量，把想法变成现实。</p>
+        <div class="st-links"><a href="zh-about.html">关于纳想 →</a></div>
+      </section>
+      <section class="st" data-ch="river">
+        <p class="st-k">03 &nbsp;/&nbsp; 实时执行流程</p>
+        <h2>想法 → <b>行动</b></h2>
+        <p class="st-only">01 捕捉 · 想法与咨询　02 整理 · AI 理解　03 构建 · 定制系统　04 执行 · 自动推进　05 优化 · 持续学习</p>
+      </section>
+
+      <!-- 04 · 小企业老板的常见压力 -->
+      <section class="st st-wide" data-ch="storm">
+        <p class="st-k">04 &nbsp;/&nbsp; 小企业老板的常见压力</p>
+        <h2>当接待、销售、营销和行政都靠<em>老板一个人</em>时，时间和销售机会都会流失。</h2>
+        <p>很多小企业不是没有客户，而是回复慢、跟进断、资料乱、重复工作太多。纳想 NaxaStudio 帮你先把最容易影响收入的环节理顺，再用 AI 帮你更快回复、跟进和整理。</p>
+      </section>
+      <section class="st" data-ch="storm">
+        <ul class="st-items">
+          <li><i>01</i><b>客户消息太多</b><span>电话、邮件、表单、私信一起进来，老板很难全部手动处理。</span></li>
+          <li><i>02</i><b>回复不够快</b><span>错过电话或回复太慢，客户很容易转去找竞争对手。</span></li>
+          <li><i>03</i><b>跟进不稳定</b><span>潜在客户问了一次之后，没有清楚的下一步，就容易流失。</span></li>
+        </ul>
+      </section>
+    </main>
+
+    <!-- the narration that carries the story from one chapter to the next (data-after: the chapter it leaves) -->
+    <div class="subs" aria-label="旁白">
+      <p class="sub" data-after="seed">我们帮它长出形状。</p>
+      <p class="sub" data-after="hero">先说说，纳想为什么存在。</p>
+      <p class="sub" data-after="river">可是走着走着，事情开始打结。</p>
+    </div>
+
+    <!-- words that float beside the sculptures (data-ch: its chapter; data-b: only at these stops of it; data-hl: brighter at this stop) -->
+    <div class="tags" aria-hidden="true">
+      <span class="tag t-idea" data-tag="idea" data-ch="seed">想法</span>
+      <span class="tag t-brand" data-tag="brand" data-ch="brand">纳想 <span>NaxaStudio</span><small>AI 执行力系统</small></span>
+      <span class="tag t-node" data-tag="n0" data-ch="river" data-b="2">想法</span>
+      <span class="tag t-node" data-tag="n1" data-ch="river" data-b="2">行动</span>
+      <span class="tag t-node" data-tag="n2" data-ch="river" data-b="2">结果</span>
+      <span class="tag t-step" data-tag="f0" data-ch="river" data-b="3"><i>01</i>捕捉<small>想法与咨询</small></span>
+      <span class="tag t-step" data-tag="f1" data-ch="river" data-b="3"><i>02</i>整理<small>AI 理解</small></span>
+      <span class="tag t-step" data-tag="f2" data-ch="river" data-b="3"><i>03</i>构建<small>定制系统</small></span>
+      <span class="tag t-step" data-tag="f3" data-ch="river" data-b="3"><i>04</i>执行<small>自动推进</small></span>
+      <span class="tag t-step" data-tag="f4" data-ch="river" data-b="3"><i>05</i>优化<small>持续学习</small></span>
+      <span class="tag t-pain" data-tag="k0" data-ch="storm" data-b="1">客户消息太多</span>
+      <span class="tag t-pain" data-tag="k1" data-ch="storm" data-b="1">回复不够快</span>
+      <span class="tag t-pain" data-tag="k2" data-ch="storm" data-b="1">跟进不稳定</span>
+    </div>
+
+    <nav class="rail" aria-label="章节">
+      <button type="button" data-go="seed" aria-label="想法"></button>
+      <button type="button" data-go="brand" aria-label="纳想 NaxaStudio"></button>
+      <button type="button" data-go="hero" aria-label="把想法变成行动"></button>
+      <button type="button" data-go="river" aria-label="关于纳想"></button>
+      <button type="button" data-go="storm" aria-label="小企业老板的常见压力"></button>
+    </nav>
+
+    <div class="hint" aria-hidden="true">向下滑动<b></b></div>
+
+    <script type="application/json" id="ask-data">
+      {
+        "go": "去看看",
+        "open": "打开页面 →",
+        "items": [
+          { "k": ["做什么", "帮我", "能帮", "服务", "提供", "方案"], "a": "围绕时间、成本和销售设计的实用方案：AI 接待助手、AI 销售跟进助手、AI 营销助手、AI 研究助手、AI 流程助手。", "go": "bloom", "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["团队很小", "小团队", "从哪里开始", "开始", "起步", "刚创业", "创业", "雇"], "a": "适合刚开始创业或团队还很小的阶段。在雇完整团队之前，先让 AI 帮你处理最重复的客户和行政工作。", "go": "layer", "href": "zh-base-ai-agent.html", "label": "看起步方案 →" },
+          { "k": ["回复", "漏接", "电话", "咨询", "接待", "慢回"], "a": "AI 接待助手：更快回复客户咨询，收集缺失信息，减少漏接和慢回。", "go": "bloom", "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["销售", "跟进", "线索", "潜在客户"], "a": "AI 销售跟进助手：整理潜在客户、准备跟进草稿，让更多线索有下一步。", "go": "bloom", "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["营销", "内容", "帖子", "文案", "推广"], "a": "AI 营销助手：把老板的想法变成内容方向、文案草稿和营销任务。", "go": "bloom", "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["研究", "比较", "市场", "竞争", "调研"], "a": "AI 研究助手：整理市场、工具、竞争对手或客户资料，帮助老板更快判断。", "go": "bloom", "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["流程", "行政", "清单", "交接", "重复", "模板"], "a": "AI 流程助手：把重复行政工作变成清单、模板、交接记录和下一步提醒。", "go": "bloom", "href": "zh-ai-agents.html", "label": "看 AI 方案 →" },
+          { "k": ["demo", "演示", "看看", "试试", "试用", "预览"], "a": "做决定之前，先看看它实际怎么工作。", "go": "gallery", "href": "zh-demo-center.html", "label": "打开 Demo 中心 →" },
+          { "k": ["收费", "价格", "多少钱", "费用", "预算", "怎么算"], "a": "不知道先做哪个？先做 AI 业务诊断，找出最影响时间、成本和销售机会的流程。", "go": "terrain", "href": "zh-business-review.html", "label": "AI 业务诊断 →" },
+          { "k": ["案例", "例子", "效果", "真实"], "a": "好的 AI 方案，应该先帮你少漏客户、少浪费时间、多抓住销售机会。", "go": "flow", "href": "zh-cases.html", "label": "看案例 →" },
+          { "k": ["关于", "你们是谁", "为什么", "纳想", "naxastudio", "背景"], "a": "NaxaStudio 是为那些有想法、但需要一个方法把想法变成现实的人而存在的。", "go": "river", "href": "zh-about.html", "label": "关于纳想 →" },
+          { "k": ["联系", "预约", "诊断", "合作", "电话号码", "邮箱"], "a": "准备好了，就告诉我们哪里最卡。", "go": "final", "href": "zh-contact.html", "label": "联系我们 →" }
+        ],
+        "fallback": { "a": "这个问题我们当面聊更清楚。准备好了，就告诉我们哪里最卡。", "href": "zh-contact.html", "label": "联系我们 →" }
+      }
+    </script>
+    <script>
+{{WORLD_JS}}
+    </script>
+  </body>
+</html>
