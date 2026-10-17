@@ -416,14 +416,6 @@ html.webgl .st.st-wide h2 {
   color: var(--dim);
 }
 
-.st p.st-list {
-  margin-top: 14px;
-  font-size: 13px;
-  line-height: 1.7;
-  letter-spacing: 0.04em;
-  color: rgba(200, 220, 255, 0.62);
-}
-
 .st-links {
   display: flex;
   flex-wrap: wrap;
@@ -557,6 +549,64 @@ html.no-js .tags {
   font-weight: 600;
   letter-spacing: 0.18em;
   text-shadow: 0 0 16px rgba(120, 190, 255, 0.9);
+}
+
+/* the words that float beside the shapes of scenes 3 to 7: light text, glowing in the colour of what it names */
+.t-pain,
+.t-agent,
+.t-layer,
+.t-case,
+.t-map {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: #f4f8ff;
+  text-decoration: none;
+  text-shadow: 0 0 16px var(--glow), 0 0 2px rgba(2, 5, 13, 0.8);
+}
+
+.t-pain {
+  --glow: rgba(255, 140, 70, 0.95);
+  color: #ffe6cc;
+}
+
+.t-agent {
+  pointer-events: auto;
+}
+
+.t-agent[data-tag="a0"] {
+  --glow: rgba(80, 210, 255, 0.95);
+}
+
+.t-agent[data-tag="a1"] {
+  --glow: rgba(110, 150, 255, 0.95);
+}
+
+.t-agent[data-tag="a2"] {
+  --glow: rgba(180, 130, 255, 0.95);
+}
+
+.t-agent[data-tag="a3"] {
+  --glow: rgba(250, 130, 220, 0.95);
+}
+
+.t-agent[data-tag="a4"] {
+  --glow: rgba(90, 240, 200, 0.95);
+}
+
+.t-layer {
+  --glow: rgba(70, 220, 230, 0.95);
+}
+
+.t-case {
+  --glow: rgba(255, 150, 80, 0.9);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+
+.t-map {
+  --glow: rgba(255, 200, 110, 0.95);
 }
 
 /* ---------- where you are ---------- */
@@ -779,7 +829,15 @@ html.no-js .st-only {
     font-size: 15px;
   }
 
-  .st p.st-list {
+  .t-pain,
+  .t-agent,
+  .t-layer,
+  .t-map {
+    font-size: 12.5px;
+    letter-spacing: 0.1em;
+  }
+
+  .t-case {
     font-size: 12px;
   }
 

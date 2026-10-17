@@ -117,6 +117,15 @@ async function world() {
   const LAYER = V(0.5, -2.2, -80), LAYER_P = V(0, -2.0, -80);
   const FLOW = V(0.6, 0.9, -102), FLOW_P = V(0, 0.8, -102);
   const MAPC = V(0, -2.2, -124);
+  // where the words of scenes 3 to 7 float (beside each shape, clear of the heading in the bottom left)
+  const PAIN_AT = [V(-1.7, 1.75, 0.8), V(1.9, 1.6, 0.8), V(2.3, -1.2, 0.8), V(-0.9, -2.0, 0.9)];
+  const LAYER_AT = [V(-3.4, 0, -3.6), V(0.4, 0, -2.6), V(3.8, 0, -1.6), V(7.0, 0, -0.4)];
+  const LAYER_AT_P = [V(-1.6, 0, -7.0), V(1.6, 0, -4.2), V(-1.6, 0, -1.6), V(1.6, 0, 1.4)];
+  const CASE_AT = [V(-4.0, 1.75, 0.3), V(-2.6, 1.0, 0.3), V(-4.4, 0.25, 0.3), V(-2.2, -0.5, 0.3)];
+  const CASE_AT_P = [V(-1.0, 3.6, 0.3), V(1.0, 2.9, 0.3), V(-1.1, 2.2, 0.3), V(0.9, 1.5, 0.3)];
+  const BEAMS = [[-4.2, 1.6], [-1.5, -2.2], [1.0, 2.4], [3.6, -0.8], [-3.0, -3.8], [5.4, 2.8]];
+  const waveY = (x, z, t) => Math.sin(x * 0.45 + t * 0.5) * 0.3 + Math.sin(z * 0.6 - t * 0.35) * 0.25 + Math.exp(-(x * x + z * z) * 0.07);
+  const rotY = (v, a) => V(Math.cos(a) * v.x + Math.sin(a) * v.z, v.y, -Math.sin(a) * v.x + Math.cos(a) * v.z);
   const FINAL = V(0, 0, -146);
   const glv = (v) => `vec3(${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)})`;
 
@@ -672,7 +681,7 @@ async function world() {
           { pos: V(-1.2, 5.6, 9), look: riverC(0.13).add(V(-0.6, -2.2, 0)) },
           { pos: V(0, 0.4, -24.5), look: V(0, -0.6, -36) },
           { pos: V(0, 7.4, -52.2), look: V(0, -0.5, -58) },
-          { pos: V(0, 0.8, -70), look: V(0, -1.6, -82) },
+          { pos: V(0, 4.6, -71.5), look: V(0, -2.2, -81) },
           { pos: V(0, 0.6, -91), look: V(0, 0, -102) },
           { pos: V(0, 5.5, -114), look: V(0, -2.6, -125) },
           { pos: V(0, -1.6, -132.5), look: V(0, -1.6, -146) },
@@ -715,15 +724,30 @@ async function world() {
     n0: () => riverC(NODES[0]).add(V(0, 0.95, 0)),
     n1: () => riverC(NODES[1]).add(V(0, 0.95, 0)),
     n2: () => riverC(NODES[2]).add(V(0, 0.95, 0)),
+    // 3: the four troubles, around the restless mass
+    ...Object.fromEntries([0, 1, 2, 3].map((k) => ['p' + k, () => (PORT ? STORM_P.clone().addScaledVector(PAIN_AT[k], 0.72) : STORM.clone().add(PAIN_AT[k]))])),
+    // 4: each assistant's name rides just beyond the tip of its petal, turning with the flower
+    ...Object.fromEntries([0, 1, 2, 3, 4].map((g) => ['a' + g, (t) => {
+      const open = 0.85 + 0.15 * Math.sin(t * 0.5 + g * 1.3);
+      const q = rotY(V(2.95, 1.5 * open + 0.3, 0), g * 1.2566 + t * 0.07).multiplyScalar(PORT ? 0.72 : 1);
+      return (PORT ? BLOOM_P : BLOOM).clone().add(q);
+    }])),
+    // 5: the four first tasks, riding just above the waves
+    ...Object.fromEntries([0, 1, 2, 3].map((k) => ['l' + k, (t) => {
+      const q = (PORT ? LAYER_AT_P : LAYER_AT)[k];
+      return (PORT ? LAYER_P : LAYER).clone().add(V(q.x, waveY(q.x, q.z, t) + 0.95, q.z));
+    }])),
+    // 6: the four cases, where the flow is still tangled
+    ...Object.fromEntries([0, 1, 2, 3].map((k) => ['c' + k, () => (PORT ? FLOW_P.clone().add(CASE_AT_P[k]) : FLOW.clone().add(CASE_AT[k]))])),
+    // 7: each place to start, at the top of its beam of light
+    ...Object.fromEntries([0, 1, 2, 3, 4, 5].map((k) => ['m' + k, () => MAPC.clone().add(V(BEAMS[k][0] * (PORT ? 0.45 : 1), 3.3, BEAMS[k][1] * (PORT ? 1.1 : 1)))])),
   };
-  const STAGE_OF = { idea: 0, brand: 1, n: 2 };
+  const STAGE_OF = { idea: 0, brand: 1, n: 2, p: 3, a: 4, l: 5, c: 6, m: 7 };
   let tags = [];
   const placeTags = () => {
     tags = [...document.querySelectorAll('[data-tag]')].map((el) => {
       const id = el.dataset.tag;
-      // (the startup layers' labels start at their ring's edge rather than straddling it)
-      const left = !PORT && el.classList.contains('t-layer');
-      return { el, at: anchors[id](), stage: STAGE_OF[id] ?? STAGE_OF[id[0]], left, w: el.offsetWidth, shift: left ? 'translate(0, -50%)' : 'translate(-50%, -50%)' };
+      return { el, at: anchors[id], stage: STAGE_OF[id] ?? STAGE_OF[id[0]], w: el.offsetWidth };
     });
     // the labels of one place come one after another, in the order they are written
     const seen = {};
@@ -738,15 +762,15 @@ async function world() {
     for (const g of tags) {
       const near = 1 - Math.abs(s - g.stage) * 2.4;
       let o = Math.min(1, Math.max(0, near * (1 + (g.n - 1) * 0.18) - g.i * 0.18));
-      tmp.copy(g.at).project(camera);
+      tmp.copy(g.at(t)).project(camera);
       if (tmp.z > 1) o = 0;
       g.el.style.opacity = o.toFixed(3);
       g.el.style.visibility = o > 0.02 ? 'visible' : 'hidden';
       if (o <= 0) continue;
       // (kept inside the screen, clear of the rail on the right)
-      const lo = g.left ? 12 : 12 + g.w / 2, hi = W - (PORT ? 16 : 44) - (g.left ? g.w : g.w / 2);
+      const lo = 12 + g.w / 2, hi = W - (PORT ? 16 : 44) - g.w / 2;
       const x = Math.min(Math.max((tmp.x * 0.5 + 0.5) * W, lo), Math.max(lo, hi));
-      g.el.style.transform = `translate3d(${x.toFixed(1)}px, ${((-tmp.y * 0.5 + 0.5) * H).toFixed(1)}px, 0) ${g.shift}`;
+      g.el.style.transform = `translate3d(${x.toFixed(1)}px, ${((-tmp.y * 0.5 + 0.5) * H).toFixed(1)}px, 0) translate(-50%, -50%)`;
     }
   }
 
