@@ -20,7 +20,7 @@ import { initAsk } from './ask.js';
 
 const doc = document.documentElement;
 const CAPTURE = /[?&]capture/.test(location.search);
-const LAST = 8; // the last stage
+const LAST = 9; // the last stage
 const sections = [...document.querySelectorAll('[data-stage]')];
 
 function canWebGL() {
@@ -83,8 +83,8 @@ async function world() {
         return s;
       }
       vec3 tint(float k){
-        return k < 0.5 ? vec3(0.25, 0.45, 1.0) : k < 1.5 ? vec3(0.3, 0.5, 1.0) : k < 2.5 ? vec3(0.2, 0.62, 0.95) : k < 3.5 ? vec3(1.0, 0.42, 0.18)
-          : k < 4.5 ? vec3(0.55, 0.4, 1.0) : k < 5.5 ? vec3(0.18, 0.78, 0.8) : k < 6.5 ? vec3(0.75, 0.5, 0.45) : k < 7.5 ? vec3(0.3, 0.5, 1.0) : vec3(0.35, 0.45, 1.0);
+        return k < 2.5 ? vec3(0.28, 0.48, 1.0) : k < 3.5 ? vec3(0.2, 0.62, 0.95) : k < 4.5 ? vec3(1.0, 0.42, 0.18) : k < 5.5 ? vec3(0.55, 0.4, 1.0)
+          : k < 6.5 ? vec3(0.18, 0.78, 0.8) : k < 7.5 ? vec3(0.75, 0.5, 0.45) : k < 8.5 ? vec3(0.3, 0.5, 1.0) : vec3(0.35, 0.45, 1.0);
       }
       void main(){
         vec2 p = vUv - vec2(0.5, 0.48);
@@ -182,7 +182,7 @@ async function world() {
   // the story wants it, through slowly swirling air), and then they are drawn like light seen through a lens:
   // sharp where the camera is focused, soft round discs where it is not, drawn out a little when they move fast.
   const SHAPES = /* glsl */ `
-  uniform float uT, uPort;
+  uniform float uT, uPort, uGrain;
   uniform sampler2D tA, tB, tC, tR, tP;
   vec3 aLogo;
   vec4 aRnd, aP, aInfo; // info: x the mark's colour, y which assistant, w a node of the river
@@ -333,66 +333,63 @@ async function world() {
     return c + vec3(q.x, land(q), q.y);
   }
   vec3 mark(float s, vec3 at){ return aLogo * s + at + vec3(sin(uT * 0.9 + aLogo.y * 2.0) * 0.015, 0.0, 0.0); }
-  // 0: the point: a tiny dense heart, with a few motes turning slowly around it
-  vec3 seed(){
-    if (aRnd.w > 0.99) {
-      float a = aP.x * 6.2832 + uT * (0.35 + aP.y * 0.5), r = 0.16 + aP.z * 0.34;
-      return rotX(vec3(cos(a) * r, (aP.y - 0.5) * 0.08, sin(a) * r), 0.45 + aP.w * 0.7);
-    }
-    return normalize(aP.xyz - 0.5 + 1e-4) * 0.05 * aRnd.y * aRnd.z;
-  }
+  // 0: the point: one small, dense, bright heart
+  vec3 seed(){ return normalize(aP.xyz - 0.5 + 1e-4) * 0.16 * pow(aRnd.y, 0.6); }
   vec3 posAt(int k){
     if (k == 0) return seed();
-    if (k == 1) return mark(1.0, vec3(0.0));
-    if (k == 2) return river();
-    if (k == 3) return storm();
-    if (k == 4) return bloom();
-    if (k == 5) return layer();
-    if (k == 6) return flow();
-    if (k == 7) return terrain();
+    if (k <= 2) return mark(1.0, vec3(0.0));
+    if (k == 3) return river();
+    if (k == 4) return storm();
+    if (k == 5) return bloom();
+    if (k == 6) return layer();
+    if (k == 7) return flow();
+    if (k == 8) return terrain();
     return mark(1.25, vec3(${FINAL.x.toFixed(1)}, ${FINAL.y.toFixed(1)}, ${FINAL.z.toFixed(1)}));
   }
+  bool isMark(int k){ return k == 1 || k == 2 || k == ${LAST}; }
   vec3 markCol(float i){
     return i < 0.5 ? vec3(0.78, 0.88, 1.0) : i < 1.5 ? vec3(0.62, 0.82, 1.0) : i < 2.5 ? vec3(0.31, 0.61, 1.0) : i < 3.5 ? vec3(0.38, 0.46, 1.0) : vec3(0.21, 0.78, 0.88);
   }
   vec3 colAt(int k){
-    if (k == 0) return aRnd.w > 0.99 ? vec3(0.5, 0.72, 1.0) * 0.5 : vec3(0.95, 0.97, 1.0) * step(aRnd.z, 0.01);
-    if (k == 1 || k == 8) return markCol(aInfo.x) * (1.0 + 1.1 * exp(-pow((aLogo.x + aLogo.y * 0.35 - (mod(uT * 0.9, 14.0) - 7.0)) * 1.4, 2.0)));
-    if (k == 2) {
+    if (k == 0) return vec3(0.95, 0.97, 1.0) * step(aRnd.z, 0.01);
+    // the mark as the home page has always drawn it: a few thousand bright grains (not a fine dust), twinkling
+    if (isMark(k)) return markCol(aInfo.x) * step(aRnd.z, uGrain) * (0.75 + 0.9 * pow(0.5 + 0.5 * sin(uT * (0.8 + aRnd.w * 2.0) + aRnd.x * 50.0), 8.0))
+      * (1.0 + 0.8 * exp(-pow((aLogo.x + aLogo.y * 0.35 - (mod(uT * 0.9, 14.0) - 7.0)) * 1.4, 2.0)));
+    if (k == 3) {
       if (aInfo.w > 0.5) return vec3(1.0, 0.98, 0.95);
       float u = fract(aP.x + uT * 0.006);
       float streak = 0.5 + 0.5 * sin(u * 90.0 - uT * 2.0 + aP.y * 5.0);
       return mix(vec3(0.55, 0.78, 1.0), vec3(0.3, 0.9, 0.95), aP.y) * streak * smoothstep(0.0, 0.08, u) * smoothstep(1.0, 0.8, u);
     }
-    if (k == 3) {
+    if (k == 4) {
       // lit from the upper left; the torn edges glow, the inside is darker
       vec3 d = sphereDir();
       float lit = 0.3 + 0.7 * max(dot(d, normalize(vec3(-0.5, 0.65, 0.6))), 0.0);
       vec3 c = mix(vec3(0.55, 0.12, 0.16), vec3(1.0, 0.55, 0.22), lit) * lit + vec3(1.0, 0.8, 0.5) * pow(stormRidge(d), 6.0) * 0.9;
       return aRnd.w > 0.8 ? c * 0.35 : c;
     }
-    if (k == 4) {
+    if (k == 5) {
       // each petal its own colour, deep at the root and pale at the tip, the veins brighter
       if (aRnd.w > 0.92) return vec3(1.0, 0.95, 0.88) * 1.2;
       float g = aInfo.y, u = pow(aP.x, 0.75);
       vec3 pc = g < 0.5 ? vec3(0.3, 0.85, 1.0) : g < 1.5 ? vec3(0.45, 0.58, 1.0) : g < 2.5 ? vec3(0.72, 0.5, 1.0) : g < 3.5 ? vec3(0.98, 0.52, 0.85) : vec3(0.35, 0.95, 0.8);
       return mix(pc * 0.3, mix(pc, vec3(1.0), 0.4), smoothstep(0.0, 1.0, u)) * (aP.z < 0.3 ? 1.1 : 0.75);
     }
-    if (k == 5) {
+    if (k == 6) {
       // higher is lighter; a band of light passes over it, and its middle glows
       vec2 q = layerQ();
       float band = exp(-pow(q.x - (mod(uT * 2.0, 26.0) - 13.0), 2.0) * 0.4);
       vec3 c = mix(vec3(0.08, 0.3, 0.6), vec3(0.35, 0.95, 0.95), clamp(wave(q) * 0.55 + 0.35, 0.0, 1.0));
       return c * (0.55 + band * 0.9) + vec3(1.0) * exp(-dot(q, q) * 0.25) * 0.6;
     }
-    if (k == 6) {
+    if (k == 7) {
       // warm where it is tangled, cool where it runs smooth, with pulses travelling along
       float u = fract(aP.x + uT * 0.035);
       vec3 c = mix(vec3(1.0, 0.45, 0.25), vec3(0.35, 0.75, 1.0), smoothstep(0.3, 0.7, u));
       float pulse = 0.55 + 0.45 * pow(0.5 + 0.5 * sin(u * 50.0 - uT * 3.0 + aP.y * 20.0), 4.0);
       return c * pulse * smoothstep(0.0, 0.06, u) * smoothstep(1.0, 0.92, u);
     }
-    if (k == 7) {
+    if (k == 8) {
       // valleys deep blue, heights pale; warm light rising at six places, which warms the ground around them
       if (aRnd.w > 0.9) { float h = fract(aP.y + uT * 0.1); return vec3(1.0, 0.8, 0.45) * (1.0 - h) * smoothstep(0.0, 0.05, h) * 1.4; }
       vec2 q = landQ();
@@ -404,7 +401,11 @@ async function world() {
     return markCol(aInfo.x) * (1.0 + 1.1 * exp(-pow((aLogo.x + aLogo.y * 0.35 - (mod(uT * 0.9, 14.0) - 7.0)) * 1.4, 2.0)));
   }
   float alphaAt(int k){
-    return k == 0 ? 0.3 : k == 1 ? 0.12 : k == 2 ? 0.15 : k == 3 ? 0.1 : k == 4 ? 0.12 : k == 5 ? 0.16 : k == 6 ? 0.11 : k == 7 ? 0.11 : 0.13;
+    return k == 0 ? 0.3 : isMark(k) ? (uPort > 0.5 ? 0.5 : 0.75) : k == 3 ? 0.15 : k == 4 ? 0.1 : k == 5 ? 0.12 : k == 6 ? 0.16 : k == 7 ? 0.11 : 0.11;
+  }
+  // (the grains of the mark are drawn larger than the dust of the other scenes)
+  float sizeAt(int k){
+    return isMark(k) ? 3.0 : 1.0;
   }
   // where a particle is on its way from scene k to the next (e: how far along it is; each sets off a little after
   // the one before, so the change ripples through)
@@ -428,7 +429,7 @@ async function world() {
     // the camera's own way to the next place, and opens out again into the next shape
     float d = min(length(p1 - p0), 8.0);
     vec3 sw = vec3(sin(aRnd.y * 31.0 + uT * 0.9), cos(aRnd.z * 27.0 + uT * 0.7), sin(aRnd.w * 23.0 + uT * 0.8));
-    vec3 burst = mix(p0, p1, e) + sw * sin(PI * e) * (0.3 + d * 0.18);
+    vec3 burst = mix(p0, p1, e) + sw * sin(PI * e) * (min(d, 1.0) * 0.3 + d * 0.18);
     vec3 dir = normalize(uC1 - uC0 + vec3(0.0, 0.0, 1e-3));
     vec3 side = normalize(cross(dir, vec3(0.0, 1.0, 0.0)) + vec3(1e-3, 0.0, 0.0));
     vec3 up = cross(side, dir);
@@ -439,7 +440,8 @@ async function world() {
     vec3 river = ie * ie * ie * p0 + 3.0 * ie * ie * e * c1 + 3.0 * ie * e * e * c2 + e * e * e * p1;
     vec3 target = mix(burst, river, uStream);
     // a spring pulls it there, firm at rest and loose in flight, and the air it moves through swirls it about
-    float fly = sin(PI * e);
+    // (where the shape stays where it is and only the camera moves, it stays still and sharp)
+    float fly = sin(PI * e) * clamp(d * 1.5, 0.0, 1.0);
     float K = mix(30.0, 6.0, fly);
     vec3 acc = (target - p) * K - v * (1.7 * sqrt(K));
     acc += curl(p * mix(0.45, 0.2, fly) + vec3(0.0, uT * 0.05, uT * 0.03)) * 0.18 * mix(0.25, 2.2, fly) * (0.5 + aRnd.y);
@@ -512,7 +514,7 @@ async function world() {
     col = mix(col, vec3(max(col.r, max(col.g, col.b))), sp) * (1.0 + sp);
     // a few catch the light now and then
     float glint = step(0.93, aRnd.z) * pow(0.5 + 0.5 * sin(uT * (0.7 + aRnd.w * 2.4) + aRnd.x * 60.0), 14.0) * 3.5;
-    sprite(wp, vel, col, a * (0.55 + aRnd.y * 0.9) * (1.0 + glint) * (1.0 - V4.w), 0.75 + aRnd.w * 0.7);
+    sprite(wp, vel, col, a * (0.55 + aRnd.y * 0.9) * (1.0 + glint) * (1.0 - V4.w), (0.75 + aRnd.w * 0.7) * mix(sizeAt(k), sizeAt(k + 1), e));
   }`;
   // the stars: the space the journey passes through, near ones big and soft, far ones fine
   const STAR_VERT = /* glsl */ `
@@ -566,6 +568,7 @@ async function world() {
   const U = {
     uT: { value: 0 },
     uPort: { value: PORT ? 1 : 0 },
+    uGrain: { value: SMALL ? 0.028 : 0.03 }, // (the share of particles that draw the mark: about 4,400, or 1,800 on a phone)
     tA: { value: tex(A) },
     tB: { value: tex(B) },
     tC: { value: tex(C) },
@@ -607,7 +610,7 @@ async function world() {
     uRayO: { value: new THREE.Vector3() },
     uRayD: { value: new THREE.Vector3(0, 0, -1) },
   };
-  Object.assign(velVar.material.uniforms, { uT: U.uT, uPort: U.uPort, tA: U.tA, tB: U.tB, tC: U.tC, tR: U.tR, tP: U.tP, uS: U.uS, uStream: U.uStream }, SU);
+  Object.assign(velVar.material.uniforms, { uT: U.uT, uPort: U.uPort, uGrain: U.uGrain, tA: U.tA, tB: U.tB, tC: U.tC, tR: U.tR, tP: U.tP, uS: U.uS, uStream: U.uStream }, SU);
   Object.assign(posVar.material.uniforms, { uDt: SU.uDt, uShift: { value: new THREE.Vector3() } });
   const gpuErr = gpu.init();
   if (gpuErr) throw new Error(gpuErr);
@@ -677,25 +680,27 @@ async function world() {
     KEYS = PORT
       ? [
           { pos: V(0, 0, 7.5), look: V(0, 0, 0) },
-          { pos: V(0, -1.6, 13.5), look: V(0, -1.6, 0) },
+          { pos: V(0, -1.6, 15), look: V(0, -1.6, 0) },
+          { pos: V(0, -3.4, 16), look: V(0, -3.4, 0) },
           { pos: V(-1.2, 5.6, 9), look: riverC(0.13).add(V(-0.6, -2.2, 0)) },
           { pos: V(0, 0.4, -24.5), look: V(0, -0.6, -36) },
           { pos: V(0, 7.4, -52.2), look: V(0, -0.5, -58) },
           { pos: V(0, 4.6, -71.5), look: V(0, -2.2, -81) },
           { pos: V(0, 0.6, -91), look: V(0, 0, -102) },
           { pos: V(0, 5.5, -114), look: V(0, -2.6, -125) },
-          { pos: V(0, -1.6, -132.5), look: V(0, -1.6, -146) },
+          { pos: V(0, -2.2, -128.2), look: V(0, -2.2, -146) },
         ]
       : [
           { pos: V(0, 0, 7.5), look: V(0, 0, 0) },
-          { pos: V(-1.9, 0, 9.4), look: V(-1.9, -0.25, 0) },
+          { pos: V(0, -0.9, 14), look: V(0, -0.9, 0) },
+          { pos: V(-3.3, 0.1, 12), look: V(-3.3, 0.1, 0) },
           { pos: V(-3.4, 3.4, 6.2), look: riverC(0.15).add(V(-1.2, 0, 0)) },
           { pos: V(0.5, 1.0, -26.5), look: V(0.6, 0.6, -36) },
           { pos: V(0.3, 8.2, -51.4), look: V(0.0, -0.8, -58) },
           { pos: V(0, 1.7, -71), look: V(0.6, -1.9, -82) },
           { pos: V(0.4, 0.8, -93.8), look: V(0.4, 0.6, -102) },
           { pos: V(-1.0, 4.5, -113.5), look: V(-0.6, -2.2, -125) },
-          { pos: V(-2.3, 0.6, -136.6), look: FINAL.clone().add(V(-2.3, 0.35, 0)) },
+          { pos: V(-4.0, 0.4, -132.2), look: FINAL.clone().add(V(-4.0, 0.2, 0)) },
         ];
   }
   keys();
@@ -707,8 +712,9 @@ async function world() {
     pos.lerp(look, 0.07 * smooth(push));
     // between two places the camera rises a little, as if it took a breath
     pos.y += Math.sin(Math.PI * f) * 0.9;
-    // at the mark it turns slowly around it
-    const near1 = Math.max(0, 1 - Math.abs(s - 1) * 1.5) + Math.max(0, 1 - Math.abs(s - LAST) * 1.5);
+    // at the mark it turns slowly around it (hardly at all on the first screen, where the words sit beside it)
+    const near = (k) => Math.max(0, 1 - Math.abs(s - k) * 1.5);
+    const near1 = near(1) + near(2) * 0.15 + near(LAST);
     pos.x += Math.sin(t * 0.22) * (PORT ? 0.8 : 1.4) * near1;
     pos.y += Math.cos(t * 0.17) * 0.4 * near1;
     // and it is never quite still
@@ -719,7 +725,7 @@ async function world() {
 
   // ---------------------------------------------------------------- the words that follow places, the words of each stage, the rail
   const anchors = {
-    idea: () => V(0, -0.38, 0),
+    idea: () => V(0, -0.55, 0),
     brand: () => V(0, -2.75, 0),
     n0: () => riverC(NODES[0]).add(V(0, 0.95, 0)),
     n1: () => riverC(NODES[1]).add(V(0, 0.95, 0)),
@@ -742,7 +748,7 @@ async function world() {
     // 7: each place to start, at the top of its beam of light
     ...Object.fromEntries([0, 1, 2, 3, 4, 5].map((k) => ['m' + k, () => MAPC.clone().add(V(BEAMS[k][0] * (PORT ? 0.45 : 1), 3.3, BEAMS[k][1] * (PORT ? 1.1 : 1)))])),
   };
-  const STAGE_OF = { idea: 0, brand: 1, n: 2, p: 3, a: 4, l: 5, c: 6, m: 7 };
+  const STAGE_OF = { idea: 0, brand: 1, n: 3, p: 4, a: 5, l: 6, c: 7, m: 8 };
   let tags = [];
   const placeTags = () => {
     tags = [...document.querySelectorAll('[data-tag]')].map((el) => {
@@ -780,8 +786,9 @@ async function world() {
   // (<p class="sub" data-t="from,to">, in story time) carries the story across while the particles fly.
   const ZH = /^zh/.test(doc.lang);
   const GRAD = [[0xb9, 0xa4, 0xff], [0x7f, 0xb6, 0xff], [0x8e, 0xf0, 0xff]]; // as --grad in world.css
-  const gradAt = (x) => {
-    const [a, b, f] = x < 0.6 ? [GRAD[0], GRAD[1], x / 0.6] : [GRAD[1], GRAD[2], (x - 0.6) / 0.4];
+  const HERO_GRAD = [[0x5a, 0x9c, 0xff], [0x39, 0x7f, 0xeb], [0x6c, 0x66, 0xee]]; // the first screen's own blue
+  const gradAt = (x, G = GRAD) => {
+    const [a, b, f] = x < 0.6 ? [G[0], G[1], x / 0.6] : [G[1], G[2], (x - 0.6) / 0.4];
     return `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * f)).join(',')})`;
   };
   function cut(el) {
@@ -815,7 +822,8 @@ async function world() {
     walk(el, false);
     // (the coloured line keeps its gradient, one letter at a time)
     const c = out.filter((u) => u.coloured);
-    c.forEach((u, i) => (u.style.color = gradAt(c.length > 1 ? i / (c.length - 1) : 0)));
+    const G = el.closest('.st-hero') ? HERO_GRAD : GRAD;
+    c.forEach((u, i) => (u.style.color = gradAt(c.length > 1 ? i / (c.length - 1) : 0, G)));
     return out;
   }
   const lines = [
@@ -962,7 +970,7 @@ async function world() {
     const k = Math.min(Math.floor(stage), LAST - 1);
     SU.uC0.value.copy(KEYS[k].look);
     SU.uC1.value.copy(KEYS[k + 1].look);
-    U.uStream.value = k === 0 ? 0 : 1;
+    U.uStream.value = k <= 1 ? 0 : 1;
     // the simulation keeps its positions around where the camera looks
     SU.uDt.value = Math.min(dt, 1 / 30);
     SU.uOriginPrev.value.copy(origin);
