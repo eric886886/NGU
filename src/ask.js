@@ -1,6 +1,6 @@
 // Ask: a visitor types a question (or picks one) and gets an answer in the site's own words, with a way to see
-// it: a stage of the home page ("go") or the page that says more ("open"). The answers are in the page, in
-// <script type="application/json" id="ask-data">: items of { k: [words to look for], a: answer, go?: stage,
+// it: a chapter of the home page ("go") or the page that says more ("open"). The answers are in the page, in
+// <script type="application/json" id="ask-data">: items of { k: [words to look for], a: answer, go?: chapter,
 // href?, label? }, and a fallback.
 export function initAsk(jump) {
   const btn = document.getElementById('askBtn'), box = document.getElementById('ask');

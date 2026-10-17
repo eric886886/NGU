@@ -1,15 +1,16 @@
-// The NaxaStudio home page: a world of light the visitor scrolls through.
+// The NaxaStudio home page: a world of light the visitor scrolls through, the whole site told as one film.
 //
 // Everything starts from one point of light, the idea (as the old home page did). Scrolling takes it on one
-// continuous journey, like a film the visitor plays with the scroll, and the same particles become everything on
-// the way:
-//   0 the point    1 the mark (the logo, in depth)    2 a river: idea, action, result    3 the knot of daily
-//   business    4 the five assistants    5 the first layer (the startup solution)    6 the cases: tangled
-//   before, flowing after    7 a map of opportunities (the business review)    8 one again: the mark, and an invitation
-// Scrolling back plays it backwards. The words of each stage are ordinary HTML (<section data-stage>) laid over
-// the picture and rise in as their scene forms; a line of narration (<p class="sub">) carries the story across
-// each flight from one scene to the next; small labels (<… data-tag>) follow the places they name. Without WebGL,
-// or with reduced motion, the same sections read as a plain page.
+// continuous journey, and the same particles become one sculpture for each chapter of the story:
+//   seed the point    brand, hero the mark (the logo, in depth)    river about us: idea, action, result
+//   storm the knot of daily business    bloom the five assistants    layer the first layer (the startup solution)
+//   rise the results    pillars the returns    gallery the demos    flow the cases: tangled before, flowing after
+//   terrain the business review: a land with six lights    final one again: the mark, and an invitation
+// Each block of words (<section class="st" data-ch="chapter">) is a stop of the camera, which walks around the
+// chapter's sculpture as the words tell its details; between two chapters the shape pours into the next one while a
+// line of narration (<p class="sub">) carries the story across; small labels (<… data-tag>) float beside the places
+// they name. Scrolling back plays it backwards; after the film the page goes on as an ordinary page (the contact
+// form). Without WebGL, or with reduced motion, the same sections read as a plain page.
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -20,8 +21,11 @@ import { initAsk } from './ask.js';
 
 const doc = document.documentElement;
 const CAPTURE = /[?&]capture/.test(location.search);
-const LAST = 9; // the last stage
-const sections = [...document.querySelectorAll('[data-stage]')];
+// the chapters, in order, each with its own shape of the particles (the index is the shape's number in the shader)
+const CH = ['seed', 'brand', 'hero', 'river', 'storm', 'bloom', 'layer', 'rise', 'pillars', 'gallery', 'flow', 'terrain', 'final'];
+const LAST = CH.length - 1;
+// the stops of the camera: one for every block of words, in order (data-ch says which chapter it belongs to)
+const sections = [...document.querySelectorAll('.story > .st')];
 
 function canWebGL() {
   try {
@@ -35,7 +39,10 @@ const still = !CAPTURE && (matchMedia('(prefers-reduced-motion: reduce)').matche
 if (still || !canWebGL()) {
   // the plain page: the stages one under another
   doc.classList.add('static');
-  initAsk((s) => sections[s] && sections[s].scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  initAsk((ch) => {
+    const el = sections.find((x) => x.dataset.ch === ch);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
 } else {
   doc.classList.add('webgl');
   world().catch((err) => {
@@ -84,7 +91,8 @@ async function world() {
       }
       vec3 tint(float k){
         return k < 2.5 ? vec3(0.28, 0.48, 1.0) : k < 3.5 ? vec3(0.2, 0.62, 0.95) : k < 4.5 ? vec3(1.0, 0.42, 0.18) : k < 5.5 ? vec3(0.55, 0.4, 1.0)
-          : k < 6.5 ? vec3(0.18, 0.78, 0.8) : k < 7.5 ? vec3(0.75, 0.5, 0.45) : k < 8.5 ? vec3(0.3, 0.5, 1.0) : vec3(0.35, 0.45, 1.0);
+          : k < 6.5 ? vec3(0.18, 0.78, 0.8) : k < 7.5 ? vec3(0.25, 0.7, 0.6) : k < 8.5 ? vec3(0.9, 0.65, 0.3) : k < 9.5 ? vec3(0.45, 0.45, 1.0)
+          : k < 10.5 ? vec3(0.75, 0.5, 0.45) : k < 11.5 ? vec3(0.3, 0.5, 1.0) : vec3(0.35, 0.45, 1.0);
       }
       void main(){
         vec2 p = vUv - vec2(0.5, 0.48);
@@ -115,8 +123,11 @@ async function world() {
   const STORM = V(2.0, 0.5, -36), STORM_P = V(0, 1.1, -36);
   const BLOOM = V(2.0, -0.8, -58), BLOOM_P = V(0, 0.2, -58);
   const LAYER = V(0.5, -2.2, -80), LAYER_P = V(0, -2.0, -80);
-  const FLOW = V(0.6, 0.9, -102), FLOW_P = V(0, 0.8, -102);
-  const MAPC = V(0, -2.2, -124);
+  const RISE = V(1.6, -0.4, -102), RISE_P = V(0, 0.6, -102);
+  const PILLARS = V(1.8, -1.6, -124), PILLARS_P = V(0, -0.8, -124);
+  const GALLERY = V(0, 0, -146);
+  const FLOW = V(0.6, 0.9, -168), FLOW_P = V(0, 0.8, -168);
+  const MAPC = V(0, -2.2, -190);
   // where the words of scenes 3 to 7 float (beside each shape, clear of the heading in the bottom left)
   const PAIN_AT = [V(-1.7, 1.75, 0.8), V(1.9, 1.6, 0.8), V(2.3, -1.2, 0.8), V(-0.9, -2.0, 0.9)];
   const LAYER_AT = [V(-3.4, 0, -3.6), V(0.4, 0, -2.6), V(3.8, 0, -1.6), V(7.0, 0, -0.4)];
@@ -126,7 +137,16 @@ async function world() {
   const BEAMS = [[-4.2, 1.6], [-1.5, -2.2], [1.0, 2.4], [3.6, -0.8], [-3.0, -3.8], [5.4, 2.8]];
   const waveY = (x, z, t) => Math.sin(x * 0.45 + t * 0.5) * 0.3 + Math.sin(z * 0.6 - t * 0.35) * 0.25 + Math.exp(-(x * x + z * z) * 0.07);
   const rotY = (v, a) => V(Math.cos(a) * v.x + Math.sin(a) * v.z, v.y, -Math.sin(a) * v.x + Math.cos(a) * v.z);
-  const FINAL = V(0, 0, -146);
+  const FINAL = V(0, 0, -212);
+  // the results: points along the rising ribbon; the returns: the three columns; the demos: six screens on an arc
+  const riseAt = (u, v = 0) => {
+    const a = u * 2.2 + 0.4;
+    return V((u - 0.5) * 9.0, (u - 0.5) * 4.6 + Math.sin(u * 3.0) * 0.4 + Math.cos(a) * v * (0.5 + u * 0.6), Math.sin(u * 4.0) * 1.2 + Math.sin(a) * v * (0.5 + u * 0.6));
+  };
+  const RISE_U = [0.12, 0.27, 0.42, 0.57, 0.72, 0.87];
+  const PILLAR = [V(-2.6, 0, 0.6), V(0, 0, -0.9), V(2.6, 0, 0.4)], PILLAR_H = [2.6, 4.4, 3.4];
+  const SCREEN_A = [-62, -37, -12, 12, 37, 62].map((d) => (d * Math.PI) / 180), SCREEN_R = 6.5;
+  const screenAt = (k) => GALLERY.clone().add(V(Math.sin(SCREEN_A[k]) * SCREEN_R, (k % 2 ? 0.35 : -0.35), -Math.cos(SCREEN_A[k]) * SCREEN_R));
   const glv = (v) => `vec3(${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)})`;
 
   let seed = 3;
@@ -332,6 +352,46 @@ async function world() {
     vec2 q = landQ();
     return c + vec3(q.x, land(q), q.y);
   }
+  // 7: the results: a wide ribbon of light rising and turning as it climbs, six points of light along it
+  vec3 riseAt(float u, float v){
+    float a = u * 2.2 + 0.4;
+    return vec3((u - 0.5) * 9.0, (u - 0.5) * 4.6 + sin(u * 3.0) * 0.4 + cos(a) * v * (0.5 + u * 0.6), sin(u * 4.0) * 1.2 + sin(a) * v * (0.5 + u * 0.6));
+  }
+  vec3 rise(){
+    vec3 c = uPort > 0.5 ? ${glv(RISE_P)} : ${glv(RISE)};
+    float s = uPort > 0.5 ? 0.62 : 1.0;
+    if (aRnd.w > 0.94) return c + (riseAt(0.12 + floor(aP.x * 6.0) * 0.15, 0.0) + normalize(aP.yzw - 0.5 + 1e-4) * 0.2 * pow(aP.z, 0.5)) * s;
+    float u = fract(aP.x + uT * 0.02), v = aP.y * 2.0 - 1.0;
+    if (aP.z < 0.45) v = floor((v * 0.5 + 0.5) * 12.999) / 6.0 - 1.0;
+    return c + riseAt(u, v) * s;
+  }
+  // 8: the returns: three columns of light, each a slow spiral climbing, with a ring of light at its foot
+  vec3 pillarB(float k){ return k < 0.5 ? ${glv(PILLAR[0])} : k < 1.5 ? ${glv(PILLAR[1])} : ${glv(PILLAR[2])}; }
+  float pillarH(float k){ return k < 0.5 ? ${PILLAR_H[0].toFixed(1)} : k < 1.5 ? ${PILLAR_H[1].toFixed(1)} : ${PILLAR_H[2].toFixed(1)}; }
+  vec3 pillars(){
+    vec3 c = uPort > 0.5 ? ${glv(PILLARS_P)} : ${glv(PILLARS)};
+    float s = uPort > 0.5 ? 0.7 : 1.0, k = floor(aP.x * 3.0), H = pillarH(k);
+    if (aRnd.w > 0.9) {
+      float a = aP.y * 6.2832 + uT * 0.2;
+      return c + (pillarB(k) + vec3(cos(a), 0.0, sin(a)) * (0.75 + aP.z * 0.15)) * s;
+    }
+    float y = fract(aP.y + uT * (0.04 + k * 0.012)) * H;
+    float a = aP.z * 6.2832 + y * 2.2 + uT * 0.5;
+    float r = (aRnd.y < 0.6 ? 0.42 : 0.42 * sqrt(aP.w)) * (1.0 - y / H * 0.35);
+    return c + (pillarB(k) + vec3(cos(a) * r, y, sin(a) * r)) * s;
+  }
+  // 9: the demos: six screens of light hanging on an arc, facing its middle, each with lines of light like a page
+  float screenA(float k){ return (k < 0.5 ? -62.0 : k < 1.5 ? -37.0 : k < 2.5 ? -12.0 : k < 3.5 ? 12.0 : k < 4.5 ? 37.0 : 62.0) * PI / 180.0; }
+  vec3 gallery(){
+    float k = floor(aP.x * 6.0), A = screenA(k);
+    vec3 c = ${glv(GALLERY)} + vec3(sin(A) * ${SCREEN_R.toFixed(1)}, mod(k, 2.0) > 0.5 ? 0.35 : -0.35, -cos(A) * ${SCREEN_R.toFixed(1)});
+    vec2 q = vec2(aP.y - 0.5, aP.z - 0.5);
+    if (aRnd.w < 0.35) {
+      float e = aRnd.y * 4.0, f = fract(e) - 0.5;
+      q = e < 1.0 ? vec2(f, -0.5) : e < 2.0 ? vec2(f, 0.5) : e < 3.0 ? vec2(-0.5, f) : vec2(0.5, f);
+    } else q.y = (floor((q.y + 0.5) * 14.0) + 0.5) / 14.0 - 0.5;
+    return c + rotY(vec3(q.x * 2.6, q.y * 1.6, 0.0), -A) + vec3(0.0, sin(uT * 0.6 + k) * 0.06, 0.0);
+  }
   vec3 mark(float s, vec3 at){ return aLogo * s + at + vec3(sin(uT * 0.9 + aLogo.y * 2.0) * 0.015, 0.0, 0.0); }
   // 0: the point: one small, dense, bright heart
   vec3 seed(){ return normalize(aP.xyz - 0.5 + 1e-4) * 0.16 * pow(aRnd.y, 0.6); }
@@ -342,8 +402,11 @@ async function world() {
     if (k == 4) return storm();
     if (k == 5) return bloom();
     if (k == 6) return layer();
-    if (k == 7) return flow();
-    if (k == 8) return terrain();
+    if (k == 7) return rise();
+    if (k == 8) return pillars();
+    if (k == 9) return gallery();
+    if (k == 10) return flow();
+    if (k == 11) return terrain();
     return mark(1.25, vec3(${FINAL.x.toFixed(1)}, ${FINAL.y.toFixed(1)}, ${FINAL.z.toFixed(1)}));
   }
   bool isMark(int k){ return k == 1 || k == 2 || k == ${LAST}; }
@@ -383,13 +446,39 @@ async function world() {
       return c * (0.55 + band * 0.9) + vec3(1.0) * exp(-dot(q, q) * 0.25) * 0.6;
     }
     if (k == 7) {
+      // cool at its foot, warm gold as it climbs; pulses running up it; the six points white-gold
+      if (aRnd.w > 0.94) return vec3(1.0, 0.92, 0.7) * 1.3;
+      float u = fract(aP.x + uT * 0.02);
+      vec3 c = mix(vec3(0.15, 0.55, 0.85), vec3(1.0, 0.78, 0.4), smoothstep(0.1, 0.95, u));
+      float pulse = 0.5 + 0.5 * pow(0.5 + 0.5 * sin(u * 40.0 - uT * 2.5 + aP.y * 8.0), 6.0);
+      return c * pulse * (aP.z < 0.45 ? 1.2 : 0.6) * smoothstep(0.0, 0.05, u) * smoothstep(1.0, 0.95, u);
+    }
+    if (k == 8) {
+      // gold, brighter toward the top
+      float kk = floor(aP.x * 3.0);
+      vec3 pc = kk < 0.5 ? vec3(1.0, 0.82, 0.45) : kk < 1.5 ? vec3(1.0, 0.95, 0.8) : vec3(1.0, 0.62, 0.3);
+      if (aRnd.w > 0.9) return pc * 0.8;
+      float y = fract(aP.y + uT * (0.04 + kk * 0.012));
+      return pc * (0.45 + 0.9 * y) * smoothstep(0.0, 0.04, y) * smoothstep(1.0, 0.9, y);
+    }
+    if (k == 9) {
+      // each screen its own colour; a bright frame, lines of light of different lengths like a page, a scan passing down
+      float kk = floor(aP.x * 6.0);
+      vec3 pc = kk < 0.5 ? vec3(0.3, 0.85, 1.0) : kk < 1.5 ? vec3(0.45, 0.58, 1.0) : kk < 2.5 ? vec3(0.72, 0.5, 1.0) : kk < 3.5 ? vec3(0.98, 0.52, 0.85) : kk < 4.5 ? vec3(0.35, 0.95, 0.8) : vec3(0.85, 0.9, 1.0);
+      if (aRnd.w < 0.35) return mix(pc, vec3(1.0), 0.35) * 1.2;
+      float row = floor(aP.z * 14.0);
+      float len = 0.3 + 0.62 * fract(sin(row * 12.9898 + kk * 7.0) * 43758.5453);
+      float scan = exp(-pow((aP.z - fract(uT * 0.25 + kk * 0.17)) * 10.0, 2.0));
+      return pc * (0.3 + 1.2 * scan) * step(aP.y, len);
+    }
+    if (k == 10) {
       // warm where it is tangled, cool where it runs smooth, with pulses travelling along
       float u = fract(aP.x + uT * 0.035);
       vec3 c = mix(vec3(1.0, 0.45, 0.25), vec3(0.35, 0.75, 1.0), smoothstep(0.3, 0.7, u));
       float pulse = 0.55 + 0.45 * pow(0.5 + 0.5 * sin(u * 50.0 - uT * 3.0 + aP.y * 20.0), 4.0);
       return c * pulse * smoothstep(0.0, 0.06, u) * smoothstep(1.0, 0.92, u);
     }
-    if (k == 8) {
+    if (k == 11) {
       // valleys deep blue, heights pale; warm light rising at six places, which warms the ground around them
       if (aRnd.w > 0.9) { float h = fract(aP.y + uT * 0.1); return vec3(1.0, 0.8, 0.45) * (1.0 - h) * smoothstep(0.0, 0.05, h) * 1.4; }
       vec2 q = landQ();
@@ -401,7 +490,7 @@ async function world() {
     return markCol(aInfo.x) * (1.0 + 1.1 * exp(-pow((aLogo.x + aLogo.y * 0.35 - (mod(uT * 0.9, 14.0) - 7.0)) * 1.4, 2.0)));
   }
   float alphaAt(int k){
-    return k == 0 ? 0.3 : isMark(k) ? (uPort > 0.5 ? 0.5 : 0.75) : k == 3 ? 0.15 : k == 4 ? 0.1 : k == 5 ? 0.12 : k == 6 ? 0.16 : k == 7 ? 0.11 : 0.11;
+    return k == 0 ? 0.3 : isMark(k) ? (uPort > 0.5 ? 0.5 : 0.75) : k == 3 ? 0.15 : k == 4 ? 0.1 : k == 5 ? 0.12 : k == 6 ? 0.16 : k == 7 ? 0.12 : k == 8 ? 0.13 : k == 9 ? 0.12 : 0.11;
   }
   // (the grains of the mark are drawn larger than the dust of the other scenes)
   float sizeAt(int k){
@@ -629,7 +718,7 @@ async function world() {
   for (let i = 0; i < NS; i++) {
     // (around the way rather than on it, so the far ones do not gather in the middle of the view)
     const a = rnd() * Math.PI * 2, r = 3 + Math.pow(rnd(), 0.7) * 22;
-    starPos.set([Math.cos(a) * r * 1.4, Math.sin(a) * r * 0.8, 14 - rnd() * 180], i * 3);
+    starPos.set([Math.cos(a) * r * 1.4, Math.sin(a) * r * 0.8, 14 - rnd() * 245], i * 3);
     starR.set([rnd(), rnd(), rnd(), rnd()], i * 4);
   }
   const starGeo = new THREE.BufferGeometry();
@@ -674,46 +763,174 @@ async function world() {
   });
   composer.addPass(grain);
 
-  // ---------------------------------------------------------------- the camera at each stage (the picture sits beside or above the words)
-  let KEYS;
-  function keys() {
-    KEYS = PORT
-      ? [
-          { pos: V(0, 0, 7.5), look: V(0, 0, 0) },
-          { pos: V(0, -1.6, 15), look: V(0, -1.6, 0) },
-          { pos: V(0, -3.4, 16), look: V(0, -3.4, 0) },
-          { pos: V(-1.2, 5.6, 9), look: riverC(0.13).add(V(-0.6, -2.2, 0)) },
-          { pos: V(0, 0.4, -24.5), look: V(0, -0.6, -36) },
-          { pos: V(0, 7.4, -52.2), look: V(0, -0.5, -58) },
-          { pos: V(0, 4.6, -71.5), look: V(0, -2.2, -81) },
-          { pos: V(0, 0.6, -91), look: V(0, 0, -102) },
-          { pos: V(0, 5.5, -114), look: V(0, -2.6, -125) },
-          { pos: V(0, -2.2, -128.2), look: V(0, -2.2, -146) },
-        ]
-      : [
-          { pos: V(0, 0, 7.5), look: V(0, 0, 0) },
-          { pos: V(0, -0.9, 14), look: V(0, -0.9, 0) },
-          { pos: V(-3.3, 0.1, 12), look: V(-3.3, 0.1, 0) },
-          { pos: V(-3.4, 3.4, 6.2), look: riverC(0.15).add(V(-1.2, 0, 0)) },
-          { pos: V(0.5, 1.0, -26.5), look: V(0.6, 0.6, -36) },
-          { pos: V(0.3, 8.2, -51.4), look: V(0.0, -0.8, -58) },
-          { pos: V(0, 1.7, -71), look: V(0.6, -1.9, -82) },
-          { pos: V(0.4, 0.8, -93.8), look: V(0.4, 0.6, -102) },
-          { pos: V(-1.0, 4.5, -113.5), look: V(-0.6, -2.2, -125) },
-          { pos: V(-4.0, 0.4, -132.2), look: FINAL.clone().add(V(-4.0, 0.2, 0)) },
-        ];
+  // ---------------------------------------------------------------- the stops of the camera
+  // Every block of words is one stop. All the stops of a chapter look at its one shape, each from somewhere new
+  // (closer, around it, along it), so the camera walks around the sculpture while the words tell its details. The
+  // shape sits beside the words: to their right side by side, above them on a phone held upright.
+  const beats = sections.map((el) => ({ el, ch: CH.indexOf(el.dataset.ch), key: el.dataset.ch }));
+  const NB = beats.length;
+  const first = {};
+  beats.forEach((x, b) => {
+    if (!(x.key in first)) first[x.key] = b;
+    x.i = b - first[x.key];
+  });
+  beats.forEach((x) => (x.n = beats.filter((y) => y.ch === x.ch).length));
+  const UP = V(0, 1, 0);
+  // looking at c from the direction az (around it) and el (above it), d away; then the whole view slid so that c
+  // sits sx to the right of the middle and sy above it
+  function orbit(c, az, el, d, sx = 0, sy = 0) {
+    const dir = V(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+    const right = dir.clone().negate().cross(UP).normalize();
+    const up = right.clone().cross(dir.clone().negate());
+    const off = right.multiplyScalar(-sx).addScaledVector(up, -sy);
+    return { pos: c.clone().addScaledVector(dir, d).add(off), look: c.clone().add(off) };
   }
-  keys();
+  const at = (pos, look) => ({ pos, look });
+  // (where petal g of the flower points: it turns slowly, and the camera turns with it)
+  const petalAz = (g, t) => g * 1.2566 + t * 0.07 + Math.PI / 2;
+  const petalAt = (g, t, s) => rotY(V(1.6, 0.8, 0), g * 1.2566 + t * 0.07).multiplyScalar(s);
+  const mapAt = (x, z) => MAPC.clone().add(V(x, 0, z));
+  let STOPS;
+  function stops() {
+    const P = PORT, O = orbit;
+    const S = P ? STORM_P : STORM, Bl = P ? BLOOM_P : BLOOM, Ri = P ? RISE_P : RISE, Pi = P ? PILLARS_P : PILLARS;
+    const sB = P ? 0.72 : 1, sR = P ? 0.62 : 1, sP = P ? 0.7 : 1;
+    const pillar = (k) => Pi.clone().addScaledVector(PILLAR[k].clone().add(V(0, PILLAR_H[k] * 0.5, 0)), sP);
+    const L = (x, y, z) => (P ? LAYER_P : LAYER).clone().add(V(x, y, z));
+    const F = (x, y, z) => (P ? FLOW_P : FLOW).clone().add(V(x, y, z));
+    const M = (x, y, z) => MAPC.clone().add(V(x, y, z));
+    const E = (x, y, z) => FINAL.clone().add(V(x, y, z));
+    STOPS = {
+      seed: [() => at(V(0, 0, 7.5), V(0, 0, 0))],
+      brand: [() => (P ? at(V(0, -1.6, 15), V(0, -1.6, 0)) : at(V(0, -0.9, 14), V(0, -0.9, 0)))],
+      hero: [
+        () => (P ? at(V(0, -3.4, 16), V(0, -3.4, 0)) : at(V(-3.3, 0.1, 12), V(-3.3, 0.1, 0))),
+        () => (P ? O(V(0, 0, 0), 0.25, 0.08, 16, 0, 2.6) : O(V(0, 0, 0), -0.32, 0.1, 11.5, 2.8, 0.8)),
+      ],
+      // the river: from high above its source, then low along it, then its three places, then from its side
+      river: [
+        () => (P ? at(V(-0.6, 8.5, 12), riverC(0.12).add(V(-0.3, -3.2, 0))) : at(V(-1.2, 6.5, 9.5), riverC(0.12).add(V(-1.8, -0.8, 0)))),
+        () => (P ? at(V(-0.9, 1.6, 3.5), riverC(0.17).add(V(-0.4, -0.6, 0))) : at(V(-2.4, 0.6, 2.0), riverC(0.17).add(V(-1.6, 0.7, 0)))),
+        () => (P ? at(V(-1.2, 5.6, 9), riverC(0.13).add(V(-0.6, -2.2, 0))) : at(V(-3.4, 3.4, 6.2), riverC(0.15).add(V(-1.2, 0, 0)))),
+        () => (P ? at(riverC(0.24).add(V(1.4, 6.5, 6.0)), riverC(0.35).add(V(0, -1.4, 0))) : at(riverC(0.34).add(V(8.5, 3.2, 1.0)), riverC(0.34).add(V(0, -0.6, 0)))),
+      ],
+      // the knot: around it, closer and closer
+      storm: [
+        () => (P ? O(S, 0, -0.05, 11.5, 0, 1.6) : O(S, -0.15, 0.05, 9.5, 1.6, 0.3)),
+        () => (P ? O(S, 0.5, 0.15, 10.5, 0, 1.8) : O(S, 0.45, 0.18, 8.0, 1.5, 0.5)),
+        () => (P ? O(S, 1.0, -0.05, 8.0, 0, 1.6) : O(S, 1.0, -0.05, 5.6, 1.1, 0.4)),
+        () => (P ? O(S, -0.5, 0.3, 10.0, 0, 1.8) : O(S, -0.55, 0.3, 7.0, 1.3, 0.4)),
+        () => (P ? O(S, -0.2, 0.1, 12.5, 0, 2.4) : O(S, -0.2, 0.12, 11.0, 2.4, 0.9)),
+        () => (P ? O(S, 0.25, 0.4, 11.5, 0, 2.0) : O(S, 0.25, 0.4, 9.0, 1.8, 0.6)),
+      ],
+      // the flower: from above, around it, then beside each petal in turn (turning with it), then all of it
+      bloom: [
+        () => (P ? at(V(0, 7.4, -52.2), V(0, -0.5, -58)) : at(V(0.3, 8.2, -51.4), V(0.0, -0.8, -58))),
+        () => (P ? O(Bl, -0.4, 0.35, 10.5, 0, 1.6) : O(Bl, -0.4, 0.35, 9.5, 2.0, 0.6)),
+        ...[0, 1, 2, 3, 4].map((g) => (t) => (P ? O(Bl.clone().add(V(0, 0.4 * sB, 0)), petalAz(g, t) - 0.3, 0.9, 11, 0, 1.7) : O(Bl.clone().add(V(0, 0.4, 0)), petalAz(g, t) - 0.35, 0.85, 10.5, 2.0, 0.3))),
+        () => (P ? O(Bl, 0.2, 0.9, 12, 0, 1.8) : O(Bl, 0.2, 0.85, 12.5, 2.4, 0.5)),
+      ],
+      // the sheet of light: over it, low across it, its four first tasks, from its side, from above
+      layer: [
+        () => (P ? at(L(0, 6.6, 8.5), L(0, -0.2, -1)) : at(L(-0.5, 3.9, 9), L(0.1, 0.3, -2))),
+        () => (P ? at(L(-1.5, 3.2, 8), L(0.3, 0.8, -2)) : at(L(-5.0, 1.8, 6.5), L(0.5, 0.8, -3))),
+        () => (P ? at(L(0, 8.5, 9), L(0, -1.2, 0)) : at(L(0.1, 5.4, 10.5), L(0.4, 0.2, -1))),
+        () => (P ? at(L(2.5, 5.0, 8), L(0, 0, -1)) : at(L(6.0, 3.6, 9), L(-0.3, 0.4, -1))),
+        () => (P ? at(L(-1, 7.5, 9.5), L(0, -0.6, 0)) : at(L(-3.0, 7.2, 7.5), L(0.9, 0, -1))),
+        () => (P ? at(L(0.5, 4.5, 10.5), L(0, 0.2, 1)) : at(L(1.5, 2.4, 12), L(0.7, 0.6, 0))),
+      ],
+      // the rising ribbon: all of it, its foot, its top
+      rise: [
+        () => (P ? O(Ri, 0.1, 0.1, 12, 0, 1.5) : O(Ri, 0.12, 0.1, 12.5, 1.2, 1.0)),
+        () => (P ? O(Ri.clone().addScaledVector(riseAt(0.27), sR), 0.4, 0.15, 8.5, 0, 1.5) : O(Ri.clone().add(riseAt(0.27)), 0.5, 0.15, 8.0, 1.6, 0.6)),
+        () => (P ? O(Ri.clone().addScaledVector(riseAt(0.72), sR), -0.3, 0.2, 8.5, 0, 1.4) : O(Ri.clone().add(riseAt(0.72)), -0.35, 0.2, 8.5, 1.6, 0.8)),
+      ],
+      // the three columns: together, then each in turn
+      pillars: [
+        () => (P ? O(Pi.clone().add(V(0, 1.6, 0)), 0.1, 0.12, 13, 0, 1.6) : O(Pi.clone().add(V(0, 2.0, 0)), 0.15, 0.12, 12, 1.6, 0.4)),
+        ...[0, 1, 2].map((k) => () => (P ? O(pillar(k), [0.4, -0.1, -0.4][k], 0.18, 12, 0, 1.8) : O(pillar(k), [0.45, -0.1, -0.45][k], 0.2, 12, 2.4, 0.6))),
+      ],
+      // the screens: from the middle of their arc, then facing each one
+      gallery: [
+        () => (P ? at(GALLERY.clone().add(V(0, 2.0, 9.5)), GALLERY.clone().add(V(0, -0.6, -3.5))) : at(GALLERY.clone().add(V(0.6, 1.4, 7.0)), GALLERY.clone().add(V(-1.4, 0.1, -3.5)))),
+        ...[0, 1, 2, 3, 4, 5].map((k) => () => (P ? O(screenAt(k), -SCREEN_A[k], 0.08, 7.2, 0, 1.1) : O(screenAt(k), -SCREEN_A[k], 0.1, 6.6, 2.1, 0.6))),
+      ],
+      // the flow: all of it, then each case from somewhere else, then from further off
+      flow: [
+        () => (P ? O(F(0, 0, 0), 0, -0.02, 11, 0, 0.8) : at(F(-0.2, -0.1, 8.2), F(-0.2, -0.3, 0))),
+        () => (P ? O(F(0, 1.0, 0), 0.45, 0.2, 13, 0, 2.5) : O(F(-2.5, 0, 0), 0.45, 0.2, 8.5, 1.0, 1.0)),
+        () => (P ? O(F(0, 0.5, 0), -0.35, 0.3, 13, 0, 2.5) : O(F(0, 0, 0), -0.35, 0.3, 9.5, 1.0, 1.0)),
+        () => (P ? O(F(0, 0, 0), 0.25, -0.1, 13, 0, 2.5) : O(F(1.5, 0, 0), 0.25, -0.1, 9.0, 1.2, 1.1)),
+        () => (P ? O(F(0, -0.5, 0), -0.15, 0.45, 13, 0, 2.5) : O(F(-0.5, 0, 0), -0.15, 0.45, 9.0, 1.0, 1.1)),
+        () => (P ? O(F(0, 0, 0), 0, 0.25, 15, 0, 2.0) : O(F(0, 0, 0), 0, 0.25, 13.0, 1.6, 0.9)),
+      ],
+      // the land: from high, skimming it, around it, its six lights, then all of it again
+      terrain: [
+        () => (P ? at(M(0, 7.7, 11), M(0, -0.4, 0)) : at(M(-1.0, 6.7, 11.5), M(-0.6, 0, 0))),
+        () => (P ? at(M(-2.5, 3, 8), M(0.3, 0, -1.5)) : at(M(-6.5, 2.2, 7.5), M(0.5, 0.2, -1.5))),
+        () => (P ? at(M(3, 7.5, 8.5), M(0, -0.8, -0.5)) : at(M(6.5, 7.5, 8.5), M(-0.5, -0.4, -0.5))),
+        () => (P ? at(M(2, 2.5, -9), M(-0.5, 0, 1)) : at(M(4.5, 1.8, -8.5), M(-1.0, 0, 1.0))),
+        () => (P ? at(M(-4.5, 5, -2), M(0.5, -0.2, -0.5)) : at(M(-8.0, 4.5, -2.0), M(0.5, -0.2, -0.5))),
+        () => (P ? at(M(0, 13, 9), M(0, -1.8, -1)) : at(M(0.5, 11.5, 8.0), M(0.3, -0.6, -0.6))),
+        () => (P ? at(M(-1.2, 7, 8.5), M(-0.7, -0.6, 0.2)) : at(M(-3.0, 6.0, 8.0), M(-2.4, 0.4, 0.0))),
+        () => (P ? at(M(0.9, 7, 7.5), M(0.9, -0.6, -1.2)) : at(M(1.5, 6.0, 7.0), M(1.2, 0.2, -1.0))),
+        () => (P ? at(M(0, 10, 11), M(0, -1.4, -0.8)) : at(M(0, 9, 10), M(0, -0.4, -0.8))),
+      ],
+      final: [
+        () => (P ? at(E(0, -3.4, 19), E(0, -3.4, 0)) : at(E(-4.0, 0.4, 13.8), E(-4.0, 0.2, 0))),
+        () => (P ? at(E(0, -2.6, 18), E(0, -2.6, 0)) : at(E(-3.0, -0.8, 15.5), E(-3.0, -1.0, 0))),
+      ],
+    };
+  }
+  stops();
+  const stopOf = (b, t) => {
+    const x = beats[b], list = STOPS[x.key];
+    return list[Math.min(x.i, list.length - 1)](t);
+  };
+  // (which way is right and up for the camera at a stop)
+  const basis = (k) => {
+    const f = k.look.clone().sub(k.pos).normalize();
+    const right = f.clone().cross(UP).normalize();
+    return { right, up: right.clone().cross(f) };
+  };
+
+  // ---------------------------------------------------------------- the story clock: how far the page has scrolled is how far the story has come
+  // Each stop holds while its words are read, then the camera flies on to the next; between two chapters the
+  // flight is longer, and the shape itself pours into the next one. Nothing snaps: stop anywhere and the picture
+  // waits, half made. (In story time: stop b begins at T[b] and holds until T[b] + HOLD.)
+  const HOLD = 0.5;
+  const T = [0];
+  for (let b = 0; b < NB - 1; b++) T.push(T[b] + (beats[b + 1].ch === beats[b].ch ? 1 : b <= 1 ? 1.2 : 1.4));
+  const END = T[NB - 1] + 0.5;
+  const beatAt = (tau) => {
+    let b = 0;
+    while (b < NB - 1 && T[b + 1] <= tau) b++;
+    return b;
+  };
   const smooth = (x) => x * x * (3 - 2 * x);
-  function camAt(s, t, push) {
-    const k = Math.min(Math.floor(s), LAST - 1), f = smooth(Math.min(1, Math.max(0, s - k)));
-    const a = KEYS[k], b = KEYS[k + 1];
-    const pos = a.pos.clone().lerp(b.pos, f), look = a.look.clone().lerp(b.look, f);
-    pos.lerp(look, 0.07 * smooth(push));
-    // between two places the camera rises a little, as if it took a breath
-    pos.y += Math.sin(Math.PI * f) * 0.9;
+  const clamp = (x) => Math.min(1, Math.max(0, x));
+  // where the story is: at stop b, flown g of the way to the next
+  const whereOf = (tau) => {
+    const b = beatAt(tau);
+    return { b, g: b < NB - 1 ? clamp((tau - T[b] - HOLD) / (T[b + 1] - T[b] - HOLD)) : 0 };
+  };
+  // the shape of the particles: a chapter's own number, and between two chapters on the way from one to the next
+  const stageOf = ({ b, g }) => beats[b].ch + (b < NB - 1 && beats[b + 1].ch !== beats[b].ch ? g : 0);
+  function camAt(tau, t, w, stage) {
+    const { b, g } = w, f = smooth(g);
+    const A = stopOf(b, t), pos = A.pos.clone(), look = A.look.clone();
+    const other = b < NB - 1 && beats[b + 1].ch !== beats[b].ch;
+    if (b < NB - 1) {
+      const B = stopOf(b + 1, t);
+      pos.lerp(B.pos, f);
+      look.lerp(B.look, f);
+    }
+    // while a stop holds the camera keeps drifting in, and lets go as it flies on
+    pos.lerp(look, 0.07 * smooth(g > 0 ? 1 - g : clamp((tau - T[b]) / HOLD)));
+    // on the way the camera rises a little, as if it took a breath (more between two chapters)
+    pos.y += Math.sin(Math.PI * f) * (other ? 0.9 : 0.3);
     // at the mark it turns slowly around it (hardly at all on the first screen, where the words sit beside it)
-    const near = (k) => Math.max(0, 1 - Math.abs(s - k) * 1.5);
+    const near = (k) => Math.max(0, 1 - Math.abs(stage - k) * 1.5);
     const near1 = near(1) + near(2) * 0.15 + near(LAST);
     pos.x += Math.sin(t * 0.22) * (PORT ? 0.8 : 1.4) * near1;
     pos.y += Math.cos(t * 0.17) * 0.4 * near1;
@@ -723,67 +940,110 @@ async function world() {
     return { pos, look };
   }
 
-  // ---------------------------------------------------------------- the words that follow places, the words of each stage, the rail
+  // ---------------------------------------------------------------- the words that follow places
+  // (a point beside c as the camera sees it at stop i of a chapter: dx to the right of it, dy above it)
+  const beside = (c, key, i, dx, dy, t) => {
+    const { right, up } = basis(stopOf(first[key] + i, t));
+    return c.clone().addScaledVector(right, dx).addScaledVector(up, dy);
+  };
+  const KNOT = [[-2.9, 1.3], [2.5, 1.7], [2.7, -1.5], [-1.6, -2.3]];
+  const KNOT_P = [[-1.3, 1.7], [1.2, 1.0], [-1.1, -1.1], [1.0, -1.9]];
+  const knot = (k, i, t) => {
+    const [dx, dy] = (PORT ? KNOT_P : KNOT)[k], f = i === 2 ? 0.75 : 1;
+    return beside(PORT ? STORM_P : STORM, 'storm', i, dx * f, dy * f, t);
+  };
   const anchors = {
     idea: () => V(0, -0.55, 0),
     brand: () => V(0, -2.75, 0),
+    // the river's three places, and the five steps of the work along it
     n0: () => riverC(NODES[0]).add(V(0, 0.95, 0)),
     n1: () => riverC(NODES[1]).add(V(0, 0.95, 0)),
     n2: () => riverC(NODES[2]).add(V(0, 0.95, 0)),
-    // 3: the four troubles, around the restless mass
-    ...Object.fromEntries([0, 1, 2, 3].map((k) => ['p' + k, () => (PORT ? STORM_P.clone().addScaledVector(PAIN_AT[k], 0.72) : STORM.clone().add(PAIN_AT[k]))])),
-    // 4: each assistant's name rides just beyond the tip of its petal, turning with the flower
+    ...Object.fromEntries([0, 1, 2, 3, 4].map((k) => ['f' + k, () => riverC(0.28 + k * 0.03).add(V(0, 1.0, 0))])),
+    // the troubles, around the restless mass as each stop sees it
+    ...Object.fromEntries([0, 1, 2, 3, 4, 5].map((k) => ['k' + k, (t) => knot(k % 3, 1 + Math.floor(k / 3), t)])),
+    ...Object.fromEntries([0, 1, 2, 3].map((k) => ['p' + k, (t) => knot(k, 3, t)])),
+    // each assistant's name rides just beyond the tip of its petal, turning with the flower
     ...Object.fromEntries([0, 1, 2, 3, 4].map((g) => ['a' + g, (t) => {
       const open = 0.85 + 0.15 * Math.sin(t * 0.5 + g * 1.3);
       const q = rotY(V(2.95, 1.5 * open + 0.3, 0), g * 1.2566 + t * 0.07).multiplyScalar(PORT ? 0.72 : 1);
       return (PORT ? BLOOM_P : BLOOM).clone().add(q);
     }])),
-    // 5: the four first tasks, riding just above the waves
+    // the four first tasks, riding just above the waves
     ...Object.fromEntries([0, 1, 2, 3].map((k) => ['l' + k, (t) => {
       const q = (PORT ? LAYER_AT_P : LAYER_AT)[k];
       return (PORT ? LAYER_P : LAYER).clone().add(V(q.x, waveY(q.x, q.z, t) + 0.95, q.z));
     }])),
-    // 6: the four cases, where the flow is still tangled
+    // the results, at the six lights along the ribbon
+    ...Object.fromEntries([0, 1, 2, 3, 4, 5].map((k) => ['o' + k, () => (PORT ? RISE_P : RISE).clone().addScaledVector(riseAt(RISE_U[k]), PORT ? 0.62 : 1).add(V(0, 0.55, 0))])),
+    // the returns, on top of their columns
+    ...Object.fromEntries([0, 1, 2].map((k) => ['r' + k, () => (PORT ? PILLARS_P : PILLARS).clone().addScaledVector(PILLAR[k].clone().add(V(0, PILLAR_H[k] + 0.6, 0)), PORT ? 0.7 : 1)])),
+    // the demos, above their screens
+    ...Object.fromEntries([0, 1, 2, 3, 4, 5].map((k) => ['d' + k, () => screenAt(k).add(V(0, 1.15, 0))])),
+    // the four cases, where the flow is still tangled; then its three stages along it
     ...Object.fromEntries([0, 1, 2, 3].map((k) => ['c' + k, () => (PORT ? FLOW_P.clone().add(CASE_AT_P[k]) : FLOW.clone().add(CASE_AT[k]))])),
-    // 7: each place to start, at the top of its beam of light
-    ...Object.fromEntries([0, 1, 2, 3, 4, 5].map((k) => ['m' + k, () => MAPC.clone().add(V(BEAMS[k][0] * (PORT ? 0.45 : 1), 3.3, BEAMS[k][1] * (PORT ? 1.1 : 1)))])),
+    ...Object.fromEntries([0, 1, 2].map((k) => ['s' + k, () => (PORT ? FLOW_P.clone().add(V(-1.3, (0.5 - [0.18, 0.5, 0.82][k]) * 9, 0.4)) : FLOW.clone().add(V(([0.18, 0.5, 0.82][k] - 0.5) * 14, 2.1, 0.4)))])),
+    // each place to start, at the top of its beam of light
+    ...Object.fromEntries([0, 1, 2, 3, 4, 5].map((k) => ['m' + k, () => mapAt(BEAMS[k][0] * (PORT ? 0.45 : 1), BEAMS[k][1] * (PORT ? 1.1 : 1)).add(V(0, 3.3, 0))])),
   };
-  const STAGE_OF = { idea: 0, brand: 1, n: 3, p: 4, a: 5, l: 6, c: 7, m: 8 };
-  let tags = [];
+  // A label shows while the story is at the stops it belongs to (data-b, counted within its chapter; all of the
+  // chapter without it); the labels of one place come one after another, in the order they are written. One with
+  // data-hl is the one the words speak of at that stop: it lights up and the others step back.
+  let tags = [], lit = new Set();
   const placeTags = () => {
     tags = [...document.querySelectorAll('[data-tag]')].map((el) => {
-      const id = el.dataset.tag;
-      return { el, at: anchors[id], stage: STAGE_OF[id] ?? STAGE_OF[id[0]], w: el.offsetWidth };
+      const b0 = first[el.dataset.ch], bs = el.dataset.b ? el.dataset.b.split(',').map((x) => b0 + +x) : [b0, b0 + beats[b0].n - 1];
+      return {
+        el,
+        at: anchors[el.dataset.tag],
+        from: T[Math.min(...bs)],
+        to: T[Math.max(...bs)],
+        hl: el.dataset.hl != null ? b0 + +el.dataset.hl : -1,
+        group: el.dataset.ch + ':' + (el.dataset.b || ''),
+        w: el.offsetWidth,
+        h: el.offsetHeight,
+      };
     });
-    // the labels of one place come one after another, in the order they are written
     const seen = {};
-    for (const g of tags) g.i = seen[g.stage] = (seen[g.stage] ?? -1) + 1;
-    for (const g of tags) g.n = seen[g.stage] + 1;
+    for (const g of tags) g.i = seen[g.group] = (seen[g.group] ?? -1) + 1;
+    for (const g of tags) g.n = seen[g.group] + 1;
+    lit = new Set(tags.map((g) => g.hl));
   };
   placeTags();
   // (their widths change once the web fonts arrive)
   if (document.fonts) document.fonts.ready.then(placeTags);
   const tmp = new THREE.Vector3();
-  function labels(s) {
+  function labels(tau) {
+    const now = beatAt(tau + 0.25);
     for (const g of tags) {
-      const near = 1 - Math.abs(s - g.stage) * 2.4;
-      let o = Math.min(1, Math.max(0, near * (1 + (g.n - 1) * 0.18) - g.i * 0.18));
-      tmp.copy(g.at(t)).project(camera);
-      if (tmp.z > 1) o = 0;
+      const near = clamp(1 - Math.max(0, g.from - 0.1 - tau, tau - (g.to + 0.45)) * 3.2);
+      let o = clamp(near * (1 + (g.n - 1) * 0.18) - g.i * 0.18);
+      if (g.hl >= 0) {
+        const on = g.hl === now;
+        if (lit.has(now) && !on) o *= 0.32;
+        if (on !== g.on) g.el.classList.toggle('on', (g.on = on));
+      }
+      if (o > 0) {
+        tmp.copy(g.at(t)).project(camera);
+        // (one behind the camera, or off the side of the picture, is not shown)
+        o *= tmp.z > 1 ? 0 : clamp((1.08 - Math.abs(tmp.x)) / 0.12) * clamp((1.04 - Math.abs(tmp.y)) / 0.12);
+      }
       g.el.style.opacity = o.toFixed(3);
       g.el.style.visibility = o > 0.02 ? 'visible' : 'hidden';
       if (o <= 0) continue;
-      // (kept inside the screen, clear of the rail on the right)
+      // (kept inside the screen, clear of the rail on the right and the header at the top)
       const lo = 12 + g.w / 2, hi = W - (PORT ? 16 : 44) - g.w / 2;
       const x = Math.min(Math.max((tmp.x * 0.5 + 0.5) * W, lo), Math.max(lo, hi));
-      g.el.style.transform = `translate3d(${x.toFixed(1)}px, ${((-tmp.y * 0.5 + 0.5) * H).toFixed(1)}px, 0) translate(-50%, -50%)`;
+      const y = Math.min(Math.max((-tmp.y * 0.5 + 0.5) * H, 76 + g.h / 2), H - 12 - g.h / 2);
+      g.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) translate(-50%, -50%)`;
     }
   }
 
   // ---------------------------------------------------------------- the words of the story, played by scrolling
   // Each heading is cut into letters (Chinese) or words (English) that rise into place one after another as its
-  // scene forms; the kicker comes first, the line and the links after. Between two scenes a line of narration
-  // (<p class="sub" data-t="from,to">, in story time) carries the story across while the particles fly.
+  // stop begins; the kicker comes first, then the rest, one line or item after another. Between two chapters a line
+  // of narration (<p class="sub" data-after="the chapter it leaves">) carries the story across while the particles
+  // fly.
   const ZH = /^zh/.test(doc.lang);
   const GRAD = [[0xb9, 0xa4, 0xff], [0x7f, 0xb6, 0xff], [0x8e, 0xf0, 0xff]]; // as --grad in world.css
   const HERO_GRAD = [[0x5a, 0x9c, 0xff], [0x39, 0x7f, 0xeb], [0x6c, 0x66, 0xee]]; // the first screen's own blue
@@ -795,7 +1055,7 @@ async function world() {
     const out = [];
     const walk = (node, coloured) => {
       for (const n of [...node.childNodes]) {
-        if (n.nodeType === 1) walk(n, coloured || n.tagName === 'B');
+        if (n.nodeType === 1) walk(n, coloured || n.tagName === 'B' || n.tagName === 'EM');
         if (n.nodeType !== 3) continue;
         const frag = document.createDocumentFragment();
         for (const p of ZH ? [...n.textContent] : n.textContent.split(/(\s+)/)) {
@@ -819,37 +1079,43 @@ async function world() {
         n.replaceWith(frag);
       }
     };
-    walk(el, false);
-    // (the coloured line keeps its gradient, one letter at a time)
+    walk(el, el.classList.contains('st-big'));
+    // (the coloured words keep their gradient, one letter at a time)
     const c = out.filter((u) => u.coloured);
     const G = el.closest('.st-hero') ? HERO_GRAD : GRAD;
     c.forEach((u, i) => (u.style.color = gradAt(c.length > 1 ? i / (c.length - 1) : 0, G)));
     return out;
   }
   const lines = [
-    ...sections
-      .filter((el) => +el.dataset.stage > 0)
-      .map((el) => {
-        const k = +el.dataset.stage, head = el.querySelector('h1, h2');
+    ...beats
+      .map((x, b) => ({ x, b }))
+      .filter(({ x }) => [...x.el.children].some((c) => !c.matches('.st-only')))
+      .map(({ x, b }) => {
+        const head = x.el.querySelector('h1, h2'), after = [];
+        for (const c of x.el.children) {
+          if (c.matches('h1, h2, .st-k, .st-only')) continue;
+          // (a list comes in one item at a time)
+          if (c.matches('ul, dl')) after.push(...c.children);
+          else after.push(c);
+        }
         return {
-          el,
-          from: k - 0.2,
-          rise: 0.24,
-          to: k === LAST ? Infinity : k + 0.3,
+          el: x.el,
+          from: T[b] - 0.2,
+          rise: 0.28,
+          to: b === NB - 1 ? Infinity : T[b] + 0.45,
           fall: 0.12,
           units: head ? cut(head) : [],
-          before: [...el.querySelectorAll('.st-k')],
-          after: [...el.children].filter((c) => !c.matches('h1, h2, .st-k, .st-only')),
+          before: [...x.el.querySelectorAll(':scope > .st-k')],
+          after,
           key: '',
         };
       }),
     ...[...document.querySelectorAll('.sub')].map((el) => {
-      const [from, to] = el.dataset.t.split(',').map(Number);
-      return { el, from, rise: 0.12, to: to - 0.08, fall: 0.08, units: cut(el), before: [], after: [], key: '' };
+      const b = first[el.dataset.after] + beats[first[el.dataset.after]].n - 1;
+      return { el, from: T[b] + 0.55, rise: 0.12, to: T[b + 1] - 0.24, fall: 0.08, units: cut(el), before: [], after: [], key: '' };
     }),
   ];
   const ease = (x) => 1 - (1 - x) ** 3;
-  const clamp = (x) => Math.min(1, Math.max(0, x));
   const rise = (el, e) => {
     el.style.opacity = e.toFixed(3);
     el.style.transform = e < 1 ? `translate3d(0, ${((1 - e) * 0.65).toFixed(3)}em, 0)` : '';
@@ -870,54 +1136,43 @@ async function world() {
     c.before.forEach((el) => rise(el, ease(clamp(a / 0.3))));
     const n = c.units.length;
     c.units.forEach((u, i) => rise(u, ease(clamp((a - 0.08 - 0.5 * (n > 1 ? i / (n - 1) : 0)) / 0.35))));
-    c.after.forEach((el, j) => rise(el, ease(clamp((a - 0.5 - j * 0.1) / 0.3))));
+    const m = c.after.length, step = Math.min(0.1, 0.35 / Math.max(1, m - 1));
+    c.after.forEach((el, j) => rise(el, ease(clamp((a - (n ? 0.35 : 0.1) - j * step) / 0.3))));
   }
   const rail = [...document.querySelectorAll('.rail button')];
   const hint = document.querySelector('.hint');
-  function story(tau) {
-    for (const c of lines) {
-      // (the first line comes in by itself when the page opens)
-      const a = c.from < 0 ? clamp((t - 0.4) / 1.6) : clamp((tau - c.from) / c.rise);
-      play(c, a, clamp((tau - c.to) / c.fall));
-    }
-    const near = Math.min(LAST, Math.floor(tau + 0.2));
-    rail.forEach((b, i) => b.classList.toggle('on', i === near));
+  function story(tau, over) {
+    for (const c of lines) play(c, clamp((tau - c.from) / c.rise), clamp(Math.max((tau - c.to) / c.fall, over / 0.4)));
+    const ch = CH[beats[beatAt(tau + 0.2)].ch];
+    rail.forEach((b) => b.classList.toggle('on', b.dataset.go === ch));
     if (hint) hint.classList.toggle('gone', tau > 0.04);
+    doc.classList.toggle('past', over > 0.3);
   }
 
-  // ---------------------------------------------------------------- the story clock: how far the page has scrolled is how far the story has come
-  // One scene for every one and a half screens. At the start of each, the scene holds while its words are read;
-  // then the particles fly to the next. Nothing snaps: stop anywhere and the picture waits, half made.
-  const HOLD = 0.4, END = LAST + 0.3;
+  // ---------------------------------------------------------------- scrolling
+  // The film is as long as its story; after it the page goes on as an ordinary page (the form, the footer).
   const space = document.createElement('div');
   space.className = 'space';
   space.setAttribute('aria-hidden', 'true');
-  document.body.append(space);
+  document.body.insertBefore(space, document.querySelector('.after'));
   let VW = innerWidth, VH = innerHeight, SEG = 1;
   const sizeSpace = () => {
-    SEG = VH * 1.5;
+    SEG = VH * 1.25;
     space.style.height = `${Math.round(END * SEG + VH)}px`;
   };
   sizeSpace();
-  const stageOf = (tau) => {
-    const k = Math.floor(tau), f = tau - k;
-    return k >= LAST ? LAST : k + (f < HOLD ? 0 : (f - HOLD) / (1 - HOLD));
-  };
-  // while a scene holds the camera keeps drifting in, and lets go as the next one begins
-  const pushOf = (tau) => {
-    const k = Math.floor(tau), f = tau - k;
-    return k >= LAST ? Math.min(1, f / HOLD) : f < HOLD ? f / HOLD : 1 - (f - HOLD) / (1 - HOLD);
-  };
-  let tauT = 0, tau = -1, stage = 0, t = 0;
+  let tauT = 0, tau = -1, t = 0, over = 0;
   const PTR = { x: 0, y: 0, tx: 0, ty: 0, at: -9 };
-  const jump = (k) => {
-    const to = k <= 0 ? 0 : Math.min(END, k + 0.12);
+  // (to a chapter: its first stop)
+  const jump = (key) => {
+    const b = first[key];
+    if (b == null) return;
+    const to = b === 0 ? 0 : Math.min(END, T[b] + 0.1);
     if (CAPTURE) tauT = to;
     else scrollTo({ top: to * SEG, behavior: 'smooth' });
   };
   initAsk(jump);
-  rail.forEach((b, i) => b.addEventListener('click', () => jump(i)));
-  document.querySelectorAll('[data-go]').forEach((el) => el.addEventListener('click', (e) => (e.preventDefault(), jump(+el.dataset.go))));
+  document.querySelectorAll('[data-go]').forEach((el) => el.addEventListener('click', (e) => (e.preventDefault(), jump(el.dataset.go))));
   if (!CAPTURE)
     addEventListener('pointermove', (e) => {
       PTR.tx = (e.clientX / W - 0.5) * 2;
@@ -937,7 +1192,7 @@ async function world() {
     U.uPort.value = PORT ? 1 : 0;
     U.uVW.value = W * PR;
     U.uVH.value = H * PR;
-    keys();
+    stops();
     placeTags();
     // (a phone's address bar coming and going changes the height a little; that keeps the story where it is)
     if (W !== VW || Math.abs(H - VH) > VH * 0.25) {
@@ -954,23 +1209,32 @@ async function world() {
   const origin = new THREE.Vector3(), ray = new THREE.Raycaster();
   function frame(dt) {
     t += dt;
-    if (!CAPTURE) tauT = Math.min(END, Math.max(0, scrollY / SEG));
+    if (!CAPTURE) {
+      const y = scrollY / SEG;
+      tauT = Math.min(END, Math.max(0, y));
+      over = Math.max(0, y - END);
+    }
     // (the story follows the scroll a moment behind, so even a mouse wheel's steps become one glide)
     tau = tau < 0 ? tauT : tau + (tauT - tau) * (1 - Math.exp(-dt * 6));
-    stage = stageOf(tau);
+    const w = whereOf(tau), stage = stageOf(w);
+    const other = w.b < NB - 1 && beats[w.b + 1].ch !== beats[w.b].ch;
+    story(tau, over);
+    // (once the page after the film covers the picture, there is nothing to draw)
+    if (!CAPTURE && over * SEG > VH * 1.1) return;
     PTR.x += (PTR.tx - PTR.x) * Math.min(1, dt * 2);
     PTR.y += (PTR.ty - PTR.y) * Math.min(1, dt * 2);
-    const { pos, look } = camAt(stage, t, pushOf(tau));
+    const { pos, look } = camAt(tau, t, w, stage);
     camera.position.copy(pos);
     camera.lookAt(look);
     U.uT.value = t;
     U.uS.value = stage;
-    // (the river of light between two places runs from where the camera looked to where it will look; the point
+    // (the river of light between two chapters runs from where the camera looked to where it will look; the point
     // opening into the mark at the start is a burst instead)
-    const k = Math.min(Math.floor(stage), LAST - 1);
-    SU.uC0.value.copy(KEYS[k].look);
-    SU.uC1.value.copy(KEYS[k + 1].look);
-    U.uStream.value = k <= 1 ? 0 : 1;
+    if (other) {
+      SU.uC0.value.copy(stopOf(w.b, t).look);
+      SU.uC1.value.copy(stopOf(w.b + 1, t).look);
+    }
+    U.uStream.value = stage < 2 ? 0 : 1;
     // the simulation keeps its positions around where the camera looks
     SU.uDt.value = Math.min(dt, 1 / 30);
     SU.uOriginPrev.value.copy(origin);
@@ -988,13 +1252,12 @@ async function world() {
     U.uOrigin.value.copy(origin);
     // (in flight the picture is everywhere at once, so less of it is out of focus)
     U.uFocus.value = pos.distanceTo(look);
-    U.uAperture.value = (SMALL ? 7 : 10) * (1 - 0.85 * Math.sin(Math.PI * Math.min(1, stage - k)));
+    U.uAperture.value = (SMALL ? 7 : 10) * (1 - (other ? 0.85 : 0.4) * Math.sin(Math.PI * w.g));
     bgMat.uniforms.uS.value = stage;
     bgMat.uniforms.uT.value = t;
     bgMat.uniforms.uCam.value.copy(pos);
     grain.uniforms.uT.value = t;
-    labels(stage);
-    story(tau);
+    labels(tau);
     composer.render(dt);
     if (CAPTURE) renderer.getContext().finish();
     else {
@@ -1018,8 +1281,10 @@ async function world() {
   }
   window.__w = {
     step: (dt) => frame(dt),
-    // (story time: scene k begins at k, its words leave at k + 0.3, the flight to the next is k + 0.4 to k + 1)
+    // (story time: stop b begins at T[b], its words leave at T[b] + 0.45, the flight to the next is T[b] + 0.5 on)
     scrollTo: (s) => (tauT = Math.min(END, Math.max(0, s))),
+    T,
+    END,
     get t() {
       return t;
     },

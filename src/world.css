@@ -354,7 +354,8 @@ html.webgl .u {
   opacity: 0;
 }
 
-html.webgl .st[data-stage="0"] {
+html.webgl .st[data-ch="seed"],
+html.webgl .st[data-ch="brand"] {
   display: none;
 }
 
@@ -457,6 +458,187 @@ html.webgl .st.st-wide h2 {
   margin-left: 14px;
   white-space: nowrap;
   text-decoration: none;
+}
+
+/* ---------- the kinds of words a stop can hold ---------- */
+
+/* (a coloured phrase inside a heading) */
+.st h1 em,
+.st h2 em {
+  font-style: normal;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+html.webgl .st h1 em,
+html.webgl .st h2 em,
+html.webgl .st h2.st-big {
+  background: none;
+  color: inherit;
+}
+
+/* (a long sentence said as one line of its own) */
+.st h2.st-say {
+  font-size: clamp(24px, 2.3vw, 36px);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+html:lang(en) .st h2.st-say {
+  font-size: clamp(22px, 2vw, 31px);
+  line-height: 1.42;
+}
+
+.st p.st-lead {
+  max-width: 30em;
+  margin: 0;
+  font-size: clamp(17px, 1.35vw, 20px);
+  line-height: 1.75;
+  color: #dfe8fa;
+}
+
+.st p.st-k2 {
+  margin: 22px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(160, 205, 255, 0.78);
+}
+
+.st-k2:first-child {
+  margin-top: 0 !important;
+}
+
+.st-k2 + h2 {
+  margin-top: 14px;
+}
+
+/* a list, one item after another */
+.st-items {
+  list-style: none;
+  display: grid;
+  gap: 14px;
+  max-width: 34em;
+  margin: 16px 0 0;
+  padding: 0;
+}
+
+.st-items:first-child {
+  margin-top: 0;
+}
+
+.st-items li {
+  display: grid;
+  grid-template-columns: 2.6em minmax(0, 1fr);
+  row-gap: 3px;
+  align-items: baseline;
+}
+
+.st-items i {
+  grid-row: 1 / span 2;
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: rgba(160, 205, 255, 0.7);
+}
+
+.st-items b {
+  font-size: 17.5px;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.st-items li > b:first-child,
+.st-items li > b:first-child + span {
+  grid-column: 1 / -1;
+}
+
+.st-items span {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--dim);
+}
+
+/* a figure, large */
+.st h2.st-big {
+  font-size: clamp(64px, 7.4vw, 124px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+html.webgl .st h2.st-big .u {
+  padding-bottom: 0.06em;
+}
+
+.st h2.st-big + .st-k2 {
+  margin-top: 18px;
+}
+
+/* what a demo shows, as a note beside it */
+.st p.st-note {
+  max-width: 30em;
+  padding-left: 14px;
+  border-left: 1px solid rgba(156, 200, 255, 0.35);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--faint);
+}
+
+/* a case: the problem, the solution, the result, side by side */
+html.webgl .st.st-case-wrap {
+  max-width: min(980px, 74vw);
+}
+
+.st-case {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: auto auto;
+  grid-auto-flow: column;
+  gap: 8px 28px;
+  margin: 22px 0 0;
+}
+
+.st-case dt {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #ffb27a;
+}
+
+.st-case dt:nth-of-type(2) {
+  color: #9cc8ff;
+}
+
+.st-case dt:nth-of-type(3) {
+  color: #8ef0e0;
+}
+
+.st-case dd {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--dim);
+}
+
+.st-links a.st-btn {
+  margin-top: 0;
+  padding: 12px 22px;
+  border-bottom: 0;
+  color: #071022;
+}
+
+.st-links {
+  align-items: center;
 }
 
 /* ---------- the first screen, as the home page has always had it: top left, beside the mark ---------- */
@@ -713,6 +895,110 @@ html.no-js .tags {
   --glow: rgba(255, 200, 110, 0.95);
 }
 
+.t-out,
+.t-demo,
+.t-stage {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #f4f8ff;
+  text-decoration: none;
+  text-shadow: 0 0 16px var(--glow), 0 0 2px rgba(2, 5, 13, 0.8);
+}
+
+/* the five steps of the work, along the river */
+.t-step {
+  --glow: rgba(110, 190, 255, 0.95);
+  text-align: center;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  color: #f4f8ff;
+  text-shadow: 0 0 16px var(--glow), 0 0 2px rgba(2, 5, 13, 0.8);
+}
+
+.t-step i {
+  display: block;
+  margin-bottom: 5px;
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  opacity: 0.7;
+}
+
+.t-step small {
+  display: block;
+  margin-top: 5px;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  opacity: 0.72;
+}
+
+.t-out {
+  --glow: rgba(255, 196, 110, 0.95);
+}
+
+.t-roi {
+  --glow: rgba(255, 196, 110, 0.95);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff6e6;
+  text-shadow: 0 0 18px var(--glow), 0 0 2px rgba(2, 5, 13, 0.8);
+}
+
+.t-demo {
+  pointer-events: auto;
+}
+
+.t-demo[data-tag="d0"] {
+  --glow: rgba(80, 210, 255, 0.95);
+}
+
+.t-demo[data-tag="d1"] {
+  --glow: rgba(110, 150, 255, 0.95);
+}
+
+.t-demo[data-tag="d2"] {
+  --glow: rgba(180, 130, 255, 0.95);
+}
+
+.t-demo[data-tag="d3"] {
+  --glow: rgba(250, 130, 220, 0.95);
+}
+
+.t-demo[data-tag="d4"] {
+  --glow: rgba(90, 240, 200, 0.95);
+}
+
+.t-demo[data-tag="d5"] {
+  --glow: rgba(200, 215, 255, 0.95);
+}
+
+.t-stage {
+  --glow: rgba(255, 150, 80, 0.95);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.t-stage[data-tag="s1"] {
+  --glow: rgba(110, 170, 255, 0.95);
+}
+
+.t-stage[data-tag="s2"] {
+  --glow: rgba(90, 230, 220, 0.95);
+}
+
+/* (the one the words speak of at this stop) */
+.tag.on {
+  color: #fff;
+  text-shadow: 0 0 22px var(--glow), 0 0 7px var(--glow), 0 0 2px rgba(2, 5, 13, 0.8);
+}
+
 /* ---------- where you are ---------- */
 
 .rail {
@@ -794,6 +1080,16 @@ html.no-js .tags {
   }
 }
 
+html.past .rail,
+html.past .hint {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rail {
+  transition: opacity 0.5s;
+}
+
 html.static .rail,
 html.static .hint,
 html.no-js .rail,
@@ -821,7 +1117,7 @@ html.no-js .story {
 
 html.static .st,
 html.no-js .st {
-  min-height: 62vh;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -829,8 +1125,13 @@ html.no-js .st {
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-html.static .st[data-stage="0"],
-html.no-js .st[data-stage="0"] {
+html.static .st[data-ch="brand"],
+html.no-js .st[data-ch="brand"] {
+  display: none;
+}
+
+html.static .st[data-ch="seed"],
+html.no-js .st[data-ch="seed"] {
   min-height: 0;
   padding: 0;
   border: 0;
@@ -843,6 +1144,171 @@ html.no-js .st[data-stage="0"] {
 html.static .st-only,
 html.no-js .st-only {
   display: block;
+}
+
+/* ---------- after the film: the form and the footer, as an ordinary page ---------- */
+
+.after {
+  position: relative;
+  z-index: 8;
+  padding: 36vh var(--gut) 0;
+  background: linear-gradient(180deg, rgba(2, 5, 13, 0), rgba(2, 5, 13, 0.94) 26vh, var(--bg) 42vh);
+}
+
+html.static .after,
+html.no-js .after {
+  padding-top: 60px;
+  background: none;
+}
+
+.after-in {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 56px;
+  align-items: start;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.after-l h2 {
+  margin: 0;
+  font-size: clamp(30px, 3vw, 46px);
+  line-height: 1.22;
+  font-weight: 700;
+}
+
+.after-l h2 b {
+  display: block;
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.after-l p:not(.st-k) {
+  margin: 18px 0 0;
+  font-size: 15.5px;
+  line-height: 1.8;
+  color: var(--dim);
+}
+
+.contact-form {
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--dim);
+}
+
+.form-grid label.full {
+  grid-column: 1 / -1;
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(2, 5, 13, 0.6);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14.5px;
+  outline: none;
+}
+
+.form-grid select option {
+  color: #071022;
+}
+
+.form-grid textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus {
+  border-color: rgba(156, 200, 255, 0.7);
+  box-shadow: 0 0 0 3px rgba(120, 180, 255, 0.15);
+}
+
+.consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 16px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--faint);
+}
+
+.contact-form .st-btn {
+  border: 0;
+  cursor: pointer;
+  margin-top: 20px;
+  font-family: inherit;
+}
+
+.after-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1100px;
+  margin: 90px auto 0;
+  padding: 26px 0 40px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--faint);
+}
+
+.after-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.after-brand img {
+  border-radius: 7px;
+}
+
+.after-brand small {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  color: var(--faint);
+}
+
+.after-foot p {
+  margin: 0;
+}
+
+.after-foot nav {
+  display: flex;
+  gap: 18px;
+}
+
+.after-foot nav a {
+  color: var(--dim);
+  text-decoration: none;
 }
 
 /* ---------- phones ---------- */
@@ -959,6 +1425,92 @@ html.no-js .st-only {
 
   .t-case {
     font-size: 12px;
+  }
+
+  .t-out,
+  .t-demo,
+  .t-step {
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+  }
+
+  .t-roi {
+    font-size: 19px;
+  }
+
+  .t-stage {
+    font-size: 10.5px;
+  }
+
+  .st h2.st-say,
+  html:lang(en) .st h2.st-say {
+    font-size: 19px;
+    line-height: 1.5;
+  }
+
+  .st p.st-lead {
+    font-size: 15.5px;
+  }
+
+  .st p.st-k2 {
+    margin-top: 14px;
+  }
+
+  .st-items {
+    gap: 9px;
+    margin-top: 12px;
+  }
+
+  .st-items b {
+    font-size: 15px;
+  }
+
+  .st-items span {
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+
+  .st h2.st-big {
+    font-size: 58px;
+  }
+
+  .st p.st-note {
+    font-size: 12.5px;
+  }
+
+  .st-case {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-flow: row;
+    gap: 3px;
+    margin-top: 12px;
+  }
+
+  .st-case dd {
+    margin-bottom: 7px;
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+
+  .after {
+    padding-top: 30vh;
+  }
+
+  .after-in {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+  }
+
+  .contact-form {
+    padding: 18px;
+  }
+
+  .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .after-foot {
+    margin-top: 56px;
   }
 
   .ask {
